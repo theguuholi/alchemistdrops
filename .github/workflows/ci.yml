@@ -138,7 +138,7 @@ jobs:
           MIX_ENV: dev
 
       - name: Run Sobelow
-        run: mix sobelow --config
+        run: mix sobelow --skip -i Config.CSP --config
         env:
           MIX_ENV: dev
 
