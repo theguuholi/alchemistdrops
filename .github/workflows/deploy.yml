@@ -3,7 +3,7 @@ name: Deploy to Gigalixir
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 permissions:
@@ -13,13 +13,13 @@ jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: master
           fetch-depth: 0
 
       - name: Setup Python
@@ -34,5 +34,5 @@ jobs:
           GIGALIXIR_PASSWORD: ${{ secrets.GIGALIXIR_PASSWORD }}
           GIGALIXIR_APP: ${{ secrets.GIGALIXIR_APP }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          MIGRATIONS: false
+          MIGRATIONS: true
 
