@@ -13,13 +13,7 @@ defmodule Alchemistdrops.MixProject do
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
       listeners: [Phoenix.CodeReloader],
       dialyzer: dialyzer(),
-      test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [
-        coveralls: :test,
-        "coveralls.detail": :test,
-        "coveralls.post": :test,
-        "coveralls.html": :test
-      ]
+      test_coverage: [summary: [threshold: 80]]
     ]
   end
 
@@ -29,7 +23,7 @@ defmodule Alchemistdrops.MixProject do
   def application do
     [
       mod: {Alchemistdrops.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :tools]
     ]
   end
 
@@ -85,9 +79,8 @@ defmodule Alchemistdrops.MixProject do
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.18.5", only: :test},
-      {:sobelow, "~> 0.8", only: :dev},
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:sobelow, "~> 0.8", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
     ]
   end
@@ -118,7 +111,7 @@ defmodule Alchemistdrops.MixProject do
         "credo --strict",
         "sobelow --config",
         "dialyzer",
-        "test"
+        "test --cover"
       ]
     ]
   end

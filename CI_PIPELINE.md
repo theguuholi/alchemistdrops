@@ -78,15 +78,16 @@ The CI pipeline is split into three separate workflows, each serving a specific 
 - **Benefits:** Catches type errors before runtime
 
 #### Test Job
-- **Command:** `mix test --trace`
-- **Purpose:** Execute full test suite
+- **Command:** `mix test --cover --trace`
+- **Purpose:** Execute full test suite with coverage
 - **Duration:** ~1-3 minutes
 - **Services:** PostgreSQL 16 database
 - **Features:**
   - Runs all tests with detailed output
-  - Generates HTML coverage reports
+  - Generates HTML coverage reports (built-in :cover tool)
   - Uploads coverage as artifacts (7-day retention)
   - Warnings treated as errors during compilation
+  - Coverage threshold set to 80%
 
 ## Caching Strategy
 
@@ -180,8 +181,7 @@ mix sobelow --config --verbose
 mix dialyzer
 
 # Tests with coverage
-mix test
-mix coveralls.html
+mix test --cover
 
 # Check unused dependencies
 mix deps.unlock --check-unused

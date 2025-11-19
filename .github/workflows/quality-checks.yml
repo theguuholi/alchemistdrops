@@ -68,7 +68,7 @@ jobs:
         run: mix credo --strict --all
 
       - name: Run Sobelow (security scan)
-        run: mix sobelow --verbose --config
+        run: mix sobelow --config
 
       - name: Run Dialyzer
         run: mix dialyzer

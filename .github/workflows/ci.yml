@@ -222,12 +222,8 @@ jobs:
       - name: Compile project
         run: mix compile --warnings-as-errors
 
-      - name: Run tests
-        run: mix test --trace
-
-      - name: Generate coverage report
-        run: mix coveralls.html
-        if: always()
+      - name: Run tests with coverage
+        run: mix test --cover --trace
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
