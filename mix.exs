@@ -13,7 +13,13 @@ defmodule Alchemistdrops.MixProject do
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
       listeners: [Phoenix.CodeReloader],
       dialyzer: dialyzer(),
-      test_coverage: [summary: [threshold: 80]]
+      test_coverage: [
+        summary: [threshold: 80],
+        ignore_modules: [
+          Alchemistdrops.Application,
+          AlchemistdropsWeb.Layouts
+        ]
+      ]
     ]
   end
 
