@@ -35,3 +35,6 @@ alchemistdrops-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Ignore Dialyzer PLT files
+/priv/plts/
+
