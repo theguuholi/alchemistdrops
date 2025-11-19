@@ -5,13 +5,21 @@ defmodule Alchemistdrops.MixProject do
     [
       app: :alchemistdrops,
       version: "0.1.0",
-      elixir: "~> 1.15",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
       deps: deps(),
       compilers: [:phoenix_live_view] ++ Mix.compilers(),
-      listeners: [Phoenix.CodeReloader]
+      listeners: [Phoenix.CodeReloader],
+      dialyzer: dialyzer(),
+      test_coverage: [tool: ExCoveralls],
+      preferred_cli_env: [
+        coveralls: :test,
+        "coveralls.detail": :test,
+        "coveralls.post": :test,
+        "coveralls.html": :test
+      ]
     ]
   end
 
@@ -34,6 +42,16 @@ defmodule Alchemistdrops.MixProject do
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
+
+  # Dialyzer configuration
+  defp dialyzer do
+    [
+      plt_file: {:no_warn, "priv/plts/dialyzer.plt"},
+      plt_add_apps: [:mix, :ex_unit],
+      flags: [:error_handling, :underspecs],
+      ignore_warnings: ".dialyzer_ignore.exs"
+    ]
+  end
 
   # Specifies your project dependencies.
   #
@@ -65,7 +83,12 @@ defmodule Alchemistdrops.MixProject do
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.18.5", only: :test},
+      {:sobelow, "~> 0.8", only: :dev},
+      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
     ]
   end
 
@@ -88,7 +111,15 @@ defmodule Alchemistdrops.MixProject do
         "esbuild alchemistdrops --minify",
         "phx.digest"
       ],
-      precommit: ["compile --warning-as-errors", "deps.unlock --unused", "format", "test"]
+      precommit: [
+        "compile --warnings-as-errors",
+        "deps.unlock --check-unused",
+        "format --check-formatted",
+        "credo --strict",
+        "sobelow --config",
+        "dialyzer",
+        "test"
+      ]
     ]
   end
 end
