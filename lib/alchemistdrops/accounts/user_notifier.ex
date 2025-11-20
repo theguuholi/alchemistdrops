@@ -9,7 +9,7 @@ defmodule Alchemistdrops.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Alchemistdrops", "contact@example.com"})
+      |> from({"Alchemistdrops", "support@alchemistdrops.com"})
       |> subject(subject)
       |> text_body(body)
 
