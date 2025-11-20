@@ -10,7 +10,7 @@ defmodule Alchemistdrops.AccountsFixtures do
   alias Alchemistdrops.Accounts.Scope
 
   def unique_user_email, do: "user#{System.unique_integer()}@example.com"
-  def valid_user_password, do: "hello world!"
+  def valid_user_password, do: "HelloWorld123!@Alchemistdrops"
 
   def valid_user_attributes(attrs \\ %{}) do
     Enum.into(attrs, %{

@@ -2,6 +2,8 @@ defmodule Alchemistdrops.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @user_role_type ~w(user admin student)a
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "users" do
@@ -10,6 +12,7 @@ defmodule Alchemistdrops.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
+    field :role, Ecto.Enum, values: @user_role_type, null: false, default: :user
 
     timestamps(type: :utc_datetime)
   end
@@ -27,7 +30,7 @@ defmodule Alchemistdrops.Accounts.User do
   """
   def email_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email])
+    |> cast(attrs, [:email, :role])
     |> validate_email(opts)
   end
 
@@ -85,9 +88,11 @@ defmodule Alchemistdrops.Accounts.User do
     |> validate_required([:password])
     |> validate_length(:password, min: 12, max: 72)
     # Examples of additional password validation:
-    # |> validate_format(:password, ~r/[a-z]/, message: "at least one lower case character")
-    # |> validate_format(:password, ~r/[A-Z]/, message: "at least one upper case character")
-    # |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/, message: "at least one digit or punctuation character")
+    |> validate_format(:password, ~r/[a-z]/, message: "at least one lower case character")
+    |> validate_format(:password, ~r/[A-Z]/, message: "at least one upper case character")
+    |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/,
+      message: "at least one digit or punctuation character"
+    )
     |> maybe_hash_password(opts)
   end
 
