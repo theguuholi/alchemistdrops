@@ -191,13 +191,13 @@ defmodule Alchemistdrops.AccountsTest do
         Accounts.change_user_password(
           %User{},
           %{
-            "password" => "new valid password"
+            "password" => valid_user_password()
           },
           hash_password: false
         )
 
       assert changeset.valid?
-      assert get_change(changeset, :password) == "new valid password"
+      assert get_change(changeset, :password) == valid_user_password()
       assert is_nil(get_change(changeset, :hashed_password))
     end
   end
@@ -215,7 +215,11 @@ defmodule Alchemistdrops.AccountsTest do
         })
 
       assert %{
-               password: ["should be at least 12 character(s)"],
+               password: [
+                 "at least one digit or punctuation character",
+                 "at least one upper case character",
+                 "should be at least 12 character(s)"
+               ],
                password_confirmation: ["does not match password"]
              } = errors_on(changeset)
     end
@@ -232,12 +236,12 @@ defmodule Alchemistdrops.AccountsTest do
     test "updates the password", %{user: user} do
       {:ok, {user, expired_tokens}} =
         Accounts.update_user_password(user, %{
-          password: "new valid password"
+          password: valid_user_password()
         })
 
       assert expired_tokens == []
       assert is_nil(user.password)
-      assert Accounts.get_user_by_email_and_password(user.email, "new valid password")
+      assert Accounts.get_user_by_email_and_password(user.email, valid_user_password())
     end
 
     test "deletes all tokens for the given user", %{user: user} do
@@ -245,7 +249,7 @@ defmodule Alchemistdrops.AccountsTest do
 
       {:ok, {_, _}} =
         Accounts.update_user_password(user, %{
-          password: "new valid password"
+          password: valid_user_password()
         })
 
       refute Repo.get_by(UserToken, user_id: user.id)
