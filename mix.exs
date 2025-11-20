@@ -15,10 +15,7 @@ defmodule Alchemistdrops.MixProject do
       dialyzer: dialyzer(),
       test_coverage: [
         summary: [threshold: 80],
-        ignore_modules: [
-          Alchemistdrops.Application,
-          AlchemistdropsWeb.Layouts
-        ]
+        ignore_modules: ignore_coverage_modules()
       ]
     ]
   end
@@ -42,6 +39,12 @@ defmodule Alchemistdrops.MixProject do
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
+
+  # Test coverage configuration
+  defp ignore_coverage_modules do
+    {modules, _} = Code.eval_file(".test_coverage_ignore.exs")
+    modules
+  end
 
   # Dialyzer configuration
   defp dialyzer do
