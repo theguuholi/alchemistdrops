@@ -12,6 +12,7 @@ defmodule Alchemistdrops.Application do
       Alchemistdrops.Repo,
       {DNSCluster, query: Application.get_env(:alchemistdrops, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Alchemistdrops.PubSub},
+      {Finch, name: Swoosh.Finch},
       # Start a worker by calling: Alchemistdrops.Worker.start_link(arg)
       # {Alchemistdrops.Worker, arg},
       # Start to serve requests, typically the last entry
