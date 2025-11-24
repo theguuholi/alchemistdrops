@@ -1,5 +1,4 @@
 [
   Alchemistdrops.Application,
-  AlchemistdropsWeb.Layouts,
-  AlchemistdropsWeb.PageHTML
+  AlchemistdropsWeb.Layouts
 ]
