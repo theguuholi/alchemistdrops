@@ -2,5 +2,6 @@
   Alchemistdrops.Application,
   AlchemistdropsWeb.Layouts,
   Alchemistdrops.Repo,
-  AlchemistdropsWeb.Telemetry
+  AlchemistdropsWeb.Telemetry,
+  Mix.Tasks.Coverage.Index
 ]

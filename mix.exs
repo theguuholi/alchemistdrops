@@ -121,7 +121,8 @@ defmodule Alchemistdrops.MixProject do
         "credo --strict",
         "sobelow --skip -i Config.CSP --config",
         "dialyzer",
-        "test --cover"
+        "test --cover",
+        "coverage.index"
       ]
     ]
   end
