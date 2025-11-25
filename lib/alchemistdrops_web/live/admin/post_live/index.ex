@@ -1,4 +1,4 @@
-defmodule AlchemistdropsWeb.PostLive.Index do
+defmodule AlchemistdropsWeb.Admin.PostLive.Index do
   use AlchemistdropsWeb, :live_view
 
   alias Alchemistdrops.Posts
@@ -10,7 +10,7 @@ defmodule AlchemistdropsWeb.PostLive.Index do
       <.header>
         Listing Posts
         <:actions>
-          <.button variant="primary" navigate={~p"/posts/new"}>
+          <.button variant="primary" navigate={~p"/admin/posts/new"}>
             <.icon name="hero-plus" /> New Post
           </.button>
         </:actions>
@@ -19,7 +19,7 @@ defmodule AlchemistdropsWeb.PostLive.Index do
       <.table
         id="posts"
         rows={@streams.posts}
-        row_click={fn {_id, post} -> JS.navigate(~p"/posts/#{post}") end}
+        row_click={fn {_id, post} -> JS.navigate(~p"/admin/posts/#{post}") end}
       >
         <:col :let={{_id, post}} label="Background">{post.background}</:col>
         <:col :let={{_id, post}} label="Title">{post.title}</:col>
@@ -27,9 +27,9 @@ defmodule AlchemistdropsWeb.PostLive.Index do
         <:col :let={{_id, post}} label="Views">{post.views}</:col>
         <:action :let={{_id, post}}>
           <div class="sr-only">
-            <.link navigate={~p"/posts/#{post}"}>Show</.link>
+            <.link navigate={~p"/admin/posts/#{post}"}>Show</.link>
           </div>
-          <.link navigate={~p"/posts/#{post}/edit"}>Edit</.link>
+          <.link navigate={~p"/admin/posts/#{post}/edit"}>Edit</.link>
         </:action>
         <:action :let={{id, post}}>
           <.link

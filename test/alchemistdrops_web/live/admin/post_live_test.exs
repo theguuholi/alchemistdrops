@@ -28,20 +28,20 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     setup [:register_and_log_in_admin_user, :create_post]
 
     test "lists all posts", %{conn: conn, post: post} do
-      {:ok, _index_live, html} = live(conn, ~p"/posts")
+      {:ok, _index_live, html} = live(conn, ~p"/admin/posts")
 
       assert html =~ "Listing Posts"
       assert html =~ post.background
     end
 
     test "saves new post", %{conn: conn} do
-      {:ok, index_live, _html} = live(conn, ~p"/posts")
+      {:ok, index_live, _html} = live(conn, ~p"/admin/posts")
 
       assert {:ok, form_live, _} =
                index_live
                |> element("a", "New Post")
                |> render_click()
-               |> follow_redirect(conn, ~p"/posts/new")
+               |> follow_redirect(conn, ~p"/admin/posts/new")
 
       assert render(form_live) =~ "New Post"
 
@@ -53,7 +53,7 @@ defmodule AlchemistdropsWeb.PostLiveTest do
                form_live
                |> form("#post-form", post: @create_attrs)
                |> render_submit()
-               |> follow_redirect(conn, ~p"/posts")
+               |> follow_redirect(conn, ~p"/admin/posts")
 
       html = render(index_live)
       assert html =~ "Post created successfully"
@@ -61,13 +61,13 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     end
 
     test "updates post in listing", %{conn: conn, post: post} do
-      {:ok, index_live, _html} = live(conn, ~p"/posts")
+      {:ok, index_live, _html} = live(conn, ~p"/admin/posts")
 
       assert {:ok, form_live, _html} =
                index_live
                |> element("#posts-#{post.id} a", "Edit")
                |> render_click()
-               |> follow_redirect(conn, ~p"/posts/#{post}/edit")
+               |> follow_redirect(conn, ~p"/admin/posts/#{post}/edit")
 
       assert render(form_live) =~ "Edit Post"
 
@@ -79,7 +79,7 @@ defmodule AlchemistdropsWeb.PostLiveTest do
                form_live
                |> form("#post-form", post: @update_attrs)
                |> render_submit()
-               |> follow_redirect(conn, ~p"/posts")
+               |> follow_redirect(conn, ~p"/admin/posts")
 
       html = render(index_live)
       assert html =~ "Post updated successfully"
@@ -87,7 +87,7 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     end
 
     test "deletes post in listing", %{conn: conn, post: post} do
-      {:ok, index_live, _html} = live(conn, ~p"/posts")
+      {:ok, index_live, _html} = live(conn, ~p"/admin/posts")
 
       assert index_live |> element("#posts-#{post.id} a", "Delete") |> render_click()
       refute has_element?(index_live, "#posts-#{post.id}")
@@ -98,20 +98,20 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     setup [:register_and_log_in_admin_user, :create_post]
 
     test "displays post", %{conn: conn, post: post} do
-      {:ok, _show_live, html} = live(conn, ~p"/posts/#{post}")
+      {:ok, _show_live, html} = live(conn, ~p"/admin/posts/#{post}")
 
       assert html =~ "Show Post"
       assert html =~ post.background
     end
 
     test "updates post and returns to show", %{conn: conn, post: post} do
-      {:ok, show_live, _html} = live(conn, ~p"/posts/#{post}")
+      {:ok, show_live, _html} = live(conn, ~p"/admin/posts/#{post}")
 
       assert {:ok, form_live, _} =
                show_live
                |> element("a", "Edit")
                |> render_click()
-               |> follow_redirect(conn, ~p"/posts/#{post}/edit?return_to=show")
+               |> follow_redirect(conn, ~p"/admin/posts/#{post}/edit?return_to=show")
 
       assert render(form_live) =~ "Edit Post"
 
@@ -123,7 +123,7 @@ defmodule AlchemistdropsWeb.PostLiveTest do
                form_live
                |> form("#post-form", post: @update_attrs)
                |> render_submit()
-               |> follow_redirect(conn, ~p"/posts/#{post}")
+               |> follow_redirect(conn, ~p"/admin/posts/#{post}")
 
       html = render(show_live)
       assert html =~ "Post updated successfully"

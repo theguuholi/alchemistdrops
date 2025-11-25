@@ -1,4 +1,4 @@
-defmodule AlchemistdropsWeb.PostLive.Form do
+defmodule AlchemistdropsWeb.Admin.PostLive.Form do
   use AlchemistdropsWeb, :live_view
 
   alias Alchemistdrops.Posts
@@ -92,6 +92,6 @@ defmodule AlchemistdropsWeb.PostLive.Form do
     end
   end
 
-  defp return_path("index", _post), do: ~p"/posts"
-  defp return_path("show", post), do: ~p"/posts/#{post}"
+  defp return_path("index", _post), do: ~p"/admin/posts"
+  defp return_path("show", post), do: ~p"/admin/posts/#{post}"
 end

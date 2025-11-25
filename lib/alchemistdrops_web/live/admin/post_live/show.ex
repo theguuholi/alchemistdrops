@@ -1,4 +1,4 @@
-defmodule AlchemistdropsWeb.PostLive.Show do
+defmodule AlchemistdropsWeb.Admin.PostLive.Show do
   use AlchemistdropsWeb, :live_view
 
   alias Alchemistdrops.Posts
@@ -11,10 +11,10 @@ defmodule AlchemistdropsWeb.PostLive.Show do
         Post {@post.id}
         <:subtitle>This is a post record from your database.</:subtitle>
         <:actions>
-          <.button navigate={~p"/posts"}>
+          <.button navigate={~p"/admin/posts"}>
             <.icon name="hero-arrow-left" />
           </.button>
-          <.button variant="primary" navigate={~p"/posts/#{@post}/edit?return_to=show"}>
+          <.button variant="primary" navigate={~p"/admin/posts/#{@post}/edit?return_to=show"}>
             <.icon name="hero-pencil-square" /> Edit post
           </.button>
         </:actions>
