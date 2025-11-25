@@ -229,7 +229,12 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       assert has_element?(view, ".post-title", "Mastering Phoenix Contexts")
 
       # And: the full body content should be shown in the post body section
-      assert has_element?(view, ".post-body", "Phoenix contexts are a powerful way to organize your code")
+      assert has_element?(
+               view,
+               ".post-body",
+               "Phoenix contexts are a powerful way to organize your code"
+             )
+
       assert has_element?(view, ".post-body", "They provide clear boundaries")
       assert has_element?(view, ".post-body", "Let's explore how to use them effectively")
 
@@ -443,6 +448,77 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
 
       # Then: the date should be formatted as "Month DD, YYYY"
       assert has_element?(view, ".post-date", "March 15, 2024")
+    end
+  end
+
+  describe "edge_cases_and_error_handling" do
+    # Given: a post with nil body
+    # When: rendering the excerpt
+    # Then: should return empty string without error
+    test "handles nil body in excerpt gracefully on index page", %{conn: conn} do
+      # Given: a post with nil body (using direct repo insert to bypass changeset validation)
+      post =
+        %Alchemistdrops.Posts.Post{
+          title: "Post with nil body",
+          body: nil,
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          views: 0
+        }
+        |> Alchemistdrops.Repo.insert!()
+
+      # When: the blog index is rendered
+      {:ok, view, _html} = live(conn, ~p"/blog")
+
+      # Then: the post should be displayed without errors
+      assert has_element?(view, ".post-title", "Post with nil body")
+      # And: the excerpt should be empty
+      assert has_element?(view, "article#posts-#{post.id} .post-excerpt")
+    end
+
+    # Given: a post with nil body
+    # When: viewing the post detail page
+    # Then: should use fallback meta description and render empty content
+    test "handles nil body with fallback meta description on show page", %{conn: conn} do
+      # Given: a post with nil body
+      post =
+        %Alchemistdrops.Posts.Post{
+          title: "Post without content",
+          body: nil,
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          views: 0
+        }
+        |> Alchemistdrops.Repo.insert!()
+
+      # When: the post detail page is rendered
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+
+      # Then: the page should load successfully
+      assert has_element?(view, ".post-title", "Post without content")
+      # And: the post body section should exist (even if empty)
+      assert has_element?(view, ".post-body")
+    end
+
+    # Given: a post with very short body (less than 160 chars)
+    # When: getting excerpt
+    # Then: should not add ellipsis
+    test "does not add ellipsis for short posts", %{conn: conn} do
+      # Given: a post with short body
+      short_body = "This is a short post."
+
+      _post =
+        post_fixture(%{
+          title: "Short Post",
+          body: short_body,
+          views: 5
+        })
+
+      # When: the blog index is rendered
+      {:ok, view, html} = live(conn, ~p"/blog")
+
+      # Then: the post should be displayed
+      assert has_element?(view, ".post-title", "Short Post")
+      # And: the excerpt should not have ellipsis
+      refute html =~ "This is a short post...."
     end
   end
 

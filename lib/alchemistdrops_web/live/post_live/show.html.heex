@@ -1,66 +1,71 @@
-  <div class="min-h-screen bg-white dark:bg-gray-950">
-    <article class="post-detail w-full">
-      <%!-- Back Navigation --%>
-      <nav class="px-6 sm:px-8 lg:px-12 xl:px-16 py-6 border-b border-gray-200 dark:border-gray-800">
-        <.link
-          navigate={~p"/blog"}
-          class="back-link inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors group"
-        >
-          <.icon name="hero-arrow-left" class="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-300" />
-          Back to all posts
-        </.link>
-      </nav>
-      <%!-- Article Header --%>
-      <header class="post-header px-6 sm:px-8 lg:px-12 xl:px-16 py-12 sm:py-16 lg:py-20 border-b border-gray-200 dark:border-gray-800">
-        <div class="max-w-4xl">
-          <div class="inline-block mb-6 px-3 py-1 bg-gray-100 dark:bg-gray-900 rounded-md">
-            <span class="text-xs font-medium text-gray-600 dark:text-gray-400 tracking-wider uppercase">
-              Article
-            </span>
-          </div>
-          
-          <h1 class="post-title text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-gray-100 mb-8 leading-tight">
-            {@post.title}
-          </h1>
-          
-          <div class="post-meta flex flex-wrap items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
-            <time datetime={@post.inserted_at} class="post-date flex items-center gap-2">
-              <.icon name="hero-calendar" class="w-4 h-4" />
-              {format_date(@post.inserted_at)}
-            </time>
-            
-            <span class="post-views flex items-center gap-2">
-              <.icon name="hero-eye" class="w-4 h-4" />
-              {@post.views} views
-            </span>
-          </div>
+<div class="min-h-screen bg-white dark:bg-gray-950">
+  <article class="post-detail w-full">
+    <%!-- Back Navigation --%>
+    <nav class="px-6 sm:px-8 lg:px-12 xl:px-16 py-6 border-b border-gray-200 dark:border-gray-800">
+      <.link
+        navigate={~p"/blog"}
+        class="back-link inline-flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors group"
+      >
+        <.icon
+          name="hero-arrow-left"
+          class="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-300"
+        /> Back to all posts
+      </.link>
+    </nav>
+    <%!-- Article Header --%>
+    <header class="post-header px-6 sm:px-8 lg:px-12 xl:px-16 py-12 sm:py-16 lg:py-20 border-b border-gray-200 dark:border-gray-800">
+      <div class="max-w-4xl">
+        <div class="inline-block mb-6 px-3 py-1 bg-gray-100 dark:bg-gray-900 rounded-md">
+          <span class="text-xs font-medium text-gray-600 dark:text-gray-400 tracking-wider uppercase">
+            Article
+          </span>
         </div>
-      </header>
-      <%!-- Article Content --%>
-      <section class="post-body px-6 sm:px-8 lg:px-12 xl:px-16 py-12 sm:py-16 lg:py-20">
-        <div class="max-w-3xl prose prose-lg prose-gray dark:prose-invert prose-headings:font-bold prose-a:text-gray-900 dark:prose-a:text-gray-100 prose-a:no-underline hover:prose-a:underline prose-code:text-gray-900 dark:prose-code:text-gray-100 prose-code:bg-gray-100 dark:prose-code:bg-gray-900 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:bg-gray-900 dark:prose-pre:bg-gray-900 prose-pre:text-gray-100">
-          {@rendered_body}
-        </div>
-      </section>
-      <%!-- Footer --%>
-      <footer class="post-footer px-6 sm:px-8 lg:px-12 xl:px-16 py-8 border-t border-gray-200 dark:border-gray-800">
-        <div class="max-w-4xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <time
-            datetime={@post.updated_at}
-            class="last-updated text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2"
-          >
-            <.icon name="hero-clock" class="w-4 h-4" />
-            Last updated: {format_date(@post.updated_at)}
+
+        <h1 class="post-title text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-gray-100 mb-8 leading-tight">
+          {@post.title}
+        </h1>
+
+        <div class="post-meta flex flex-wrap items-center gap-6 text-sm text-gray-600 dark:text-gray-400">
+          <time datetime={@post.inserted_at} class="post-date flex items-center gap-2">
+            <.icon name="hero-calendar" class="w-4 h-4" />
+            {format_date(@post.inserted_at)}
           </time>
 
-          <.link
-            navigate={~p"/blog"}
-            class="view-all-link inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 dark:bg-gray-100 hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900 rounded-lg transition-all duration-300 font-medium text-sm group"
-          >
-            View all posts
-            <.icon name="hero-arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
-          </.link>
+          <span class="post-views flex items-center gap-2">
+            <.icon name="hero-eye" class="w-4 h-4" />
+            {@post.views} views
+          </span>
         </div>
-      </footer>
-    </article>
-  </div>
+      </div>
+    </header>
+    <%!-- Article Content --%>
+    <section class="post-body px-6 sm:px-8 lg:px-12 xl:px-16 py-12 sm:py-16 lg:py-20">
+      <div class="max-w-3xl prose prose-lg prose-gray dark:prose-invert prose-headings:font-bold prose-a:text-gray-900 dark:prose-a:text-gray-100 prose-a:no-underline hover:prose-a:underline prose-code:text-gray-900 dark:prose-code:text-gray-100 prose-code:bg-gray-100 dark:prose-code:bg-gray-900 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:content-[''] prose-code:after:content-[''] prose-pre:bg-gray-900 dark:prose-pre:bg-gray-900 prose-pre:text-gray-100">
+        {@rendered_body}
+      </div>
+    </section>
+    <%!-- Footer --%>
+    <footer class="post-footer px-6 sm:px-8 lg:px-12 xl:px-16 py-8 border-t border-gray-200 dark:border-gray-800">
+      <div class="max-w-4xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <time
+          datetime={@post.updated_at}
+          class="last-updated text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2"
+        >
+          <.icon name="hero-clock" class="w-4 h-4" />
+          Last updated: {format_date(@post.updated_at)}
+        </time>
+
+        <.link
+          navigate={~p"/blog"}
+          class="view-all-link inline-flex items-center gap-2 px-5 py-2.5 bg-gray-900 dark:bg-gray-100 hover:bg-gray-800 dark:hover:bg-gray-200 text-white dark:text-gray-900 rounded-lg transition-all duration-300 font-medium text-sm group"
+        >
+          View all posts
+          <.icon
+            name="hero-arrow-right"
+            class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300"
+          />
+        </.link>
+      </div>
+    </footer>
+  </article>
+</div>

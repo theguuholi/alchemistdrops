@@ -3,5 +3,7 @@
   AlchemistdropsWeb.Layouts,
   Alchemistdrops.Repo,
   AlchemistdropsWeb.Telemetry,
-  Mix.Tasks.Coverage.Index
+  Mix.Tasks.Coverage.Index,
+  Alchemistdrops.AccountsFixtures,
+  AlchemistdropsWeb.ErrorHTML
 ]
