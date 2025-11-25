@@ -9,7 +9,7 @@ defmodule Alchemistdrops.Posts do
   alias Alchemistdrops.Posts.Post
 
   @doc """
-  Returns the list of posts.
+  Returns the list of published posts ordered by most recent.
 
   ## Examples
 
@@ -18,19 +18,6 @@ defmodule Alchemistdrops.Posts do
 
   """
   def list_posts do
-    Repo.all(Post)
-  end
-
-  @doc """
-  Returns the list of published posts ordered by most recent.
-
-  ## Examples
-
-      iex> list_published_posts()
-      [%Post{}, ...]
-
-  """
-  def list_published_posts do
     Post
     |> order_by([p], desc: p.inserted_at)
     |> Repo.all()

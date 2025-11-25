@@ -75,6 +75,9 @@
                 <li>
                   <.link href={~p"/users/log-out"} method="delete">Log out</.link>
                 </li>
+                <li :if={@current_scope.user.role == :admin}>
+                  <.link href={~p"/admin/posts"}>Posts</.link>
+                </li>
               <% else %>
                 <li>
                   <.link href={~p"/users/register"}>Register</.link>
@@ -82,10 +85,10 @@
                 <li>
                   <.link href={~p"/users/log-in"}>Log in</.link>
                 </li>
-                <li>
-                  <.link href={~p"/blog"}>Blog</.link>
-                </li>
               <% end %>
+              <li>
+                <.link href={~p"/blog"}>Blog</.link>
+              </li>
             </ul>
           </li>
         </ul>

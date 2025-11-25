@@ -28,10 +28,10 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     setup [:register_and_log_in_admin_user, :create_post]
 
     test "lists all posts", %{conn: conn, post: post} do
-      {:ok, _index_live, html} = live(conn, ~p"/admin/posts")
+      {:ok, view, html} = live(conn, ~p"/admin/posts")
 
       assert html =~ "Listing Posts"
-      assert html =~ post.background
+      assert has_element?(view, "#posts-#{post.id}")
     end
 
     test "saves new post", %{conn: conn} do
@@ -57,7 +57,6 @@ defmodule AlchemistdropsWeb.PostLiveTest do
 
       html = render(index_live)
       assert html =~ "Post created successfully"
-      assert html =~ "some background"
     end
 
     test "updates post in listing", %{conn: conn, post: post} do
@@ -83,7 +82,6 @@ defmodule AlchemistdropsWeb.PostLiveTest do
 
       html = render(index_live)
       assert html =~ "Post updated successfully"
-      assert html =~ "some updated background"
     end
 
     test "deletes post in listing", %{conn: conn, post: post} do

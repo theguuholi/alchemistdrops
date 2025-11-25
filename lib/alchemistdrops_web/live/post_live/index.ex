@@ -8,11 +8,7 @@ defmodule AlchemistdropsWeb.PostLive.Index do
     {:ok,
      socket
      |> assign(:page_title, "Blog - Alchemist's Journal")
-     |> stream(:posts, list_published_posts())}
-  end
-
-  defp list_published_posts do
-    Posts.list_published_posts()
+     |> stream(:posts, Posts.list_posts())}
   end
 
   defp format_date(datetime) do

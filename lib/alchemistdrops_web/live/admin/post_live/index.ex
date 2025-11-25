@@ -21,9 +21,7 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Index do
         rows={@streams.posts}
         row_click={fn {_id, post} -> JS.navigate(~p"/admin/posts/#{post}") end}
       >
-        <:col :let={{_id, post}} label="Background">{post.background}</:col>
         <:col :let={{_id, post}} label="Title">{post.title}</:col>
-        <:col :let={{_id, post}} label="Body">{post.body}</:col>
         <:col :let={{_id, post}} label="Views">{post.views}</:col>
         <:action :let={{_id, post}}>
           <div class="sr-only">
