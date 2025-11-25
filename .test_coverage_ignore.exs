@@ -1,4 +1,9 @@
 [
   Alchemistdrops.Application,
-  AlchemistdropsWeb.Layouts
+  AlchemistdropsWeb.Layouts,
+  Alchemistdrops.Repo,
+  AlchemistdropsWeb.Telemetry,
+  Mix.Tasks.Coverage.Index,
+  Alchemistdrops.AccountsFixtures,
+  AlchemistdropsWeb.ErrorHTML
 ]

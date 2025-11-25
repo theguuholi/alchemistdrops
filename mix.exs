@@ -14,7 +14,7 @@ defmodule Alchemistdrops.MixProject do
       listeners: [Phoenix.CodeReloader],
       dialyzer: dialyzer(),
       test_coverage: [
-        summary: [threshold: 80],
+        summary: [threshold: 93.50],
         ignore_modules: ignore_coverage_modules()
       ]
     ]
@@ -82,6 +82,7 @@ defmodule Alchemistdrops.MixProject do
        depth: 1},
       {:swoosh, "~> 1.16"},
       {:req, "~> 0.5"},
+      {:mdex, "~> 0.2"},
       {:telemetry_metrics, "~> 1.0"},
       {:telemetry_poller, "~> 1.0"},
       {:gettext, "~> 0.26"},
@@ -121,7 +122,8 @@ defmodule Alchemistdrops.MixProject do
         "credo --strict",
         "sobelow --skip -i Config.CSP --config",
         "dialyzer",
-        "test --cover"
+        "test --cover",
+        "coverage.index"
       ]
     ]
   end

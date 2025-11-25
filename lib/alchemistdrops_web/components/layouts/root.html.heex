@@ -7,6 +7,27 @@
     <.live_title default="Alchemistdrops" suffix=" · Phoenix Framework">
       {assigns[:page_title]}
     </.live_title>
+
+    <%!-- SEO Meta Tags --%>
+    <%= if assigns[:meta_description] do %>
+      <meta name="description" content={@meta_description} />
+      <meta property="og:description" content={@meta_description} />
+      <meta name="twitter:description" content={@meta_description} />
+    <% end %>
+
+    <%= if assigns[:page_title] do %>
+      <meta property="og:title" content={@page_title} />
+      <meta name="twitter:title" content={@page_title} />
+    <% end %>
+
+    <%= if assigns[:meta_url] do %>
+      <meta property="og:url" content={@meta_url} />
+      <link rel="canonical" href={@meta_url} />
+    <% end %>
+
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+
     <link phx-track-static rel="stylesheet" href={~p"/assets/css/app.css"} />
     <script defer phx-track-static type="text/javascript" src={~p"/assets/js/app.js"}>
     </script>
@@ -54,6 +75,9 @@
                 <li>
                   <.link href={~p"/users/log-out"} method="delete">Log out</.link>
                 </li>
+                <li :if={@current_scope.user.role == :admin}>
+                  <.link href={~p"/admin/posts"}>Posts</.link>
+                </li>
               <% else %>
                 <li>
                   <.link href={~p"/users/register"}>Register</.link>
@@ -62,6 +86,9 @@
                   <.link href={~p"/users/log-in"}>Log in</.link>
                 </li>
               <% end %>
+              <li>
+                <.link href={~p"/blog"}>Blog</.link>
+              </li>
             </ul>
           </li>
         </ul>
