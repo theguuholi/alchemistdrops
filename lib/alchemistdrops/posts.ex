@@ -22,6 +22,36 @@ defmodule Alchemistdrops.Posts do
   end
 
   @doc """
+  Returns the list of published posts ordered by most recent.
+
+  ## Examples
+
+      iex> list_published_posts()
+      [%Post{}, ...]
+
+  """
+  def list_published_posts do
+    Post
+    |> order_by([p], desc: p.inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Increments the view count for a post.
+
+  ## Examples
+
+      iex> increment_views(post)
+      {:ok, %Post{}}
+
+  """
+  def increment_views(%Post{} = post) do
+    post
+    |> Ecto.Changeset.change(views: post.views + 1)
+    |> Repo.update()
+  end
+
+  @doc """
   Gets a single post.
 
   Raises `Ecto.NoResultsError` if the Post does not exist.

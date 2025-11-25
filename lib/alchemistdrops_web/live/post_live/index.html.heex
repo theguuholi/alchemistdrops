@@ -1,0 +1,69 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <article class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <header class="mb-12 text-center">
+      <h1 class="text-5xl font-bold text-gray-900 mb-4 tracking-tight">
+        Alchemist's Journal
+      </h1>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Discover insights, tutorials, and stories from the world of alchemy and web development
+      </p>
+    </header>
+
+    <section id="posts-grid" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3" phx-update="stream">
+      <div id="posts-empty-state" class="hidden only:block col-span-full">
+        <div class="text-center py-16">
+          <.icon name="hero-document-text" class="w-24 h-24 mx-auto text-gray-300 mb-4" />
+          <h2 class="text-2xl font-semibold text-gray-700 mb-2">No posts yet</h2>
+          <p class="text-gray-500">Check back soon for new content!</p>
+        </div>
+      </div>
+
+      <article
+        :for={{id, post} <- @streams.posts}
+        id={id}
+        class="group relative bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-1"
+        phx-click={JS.navigate(~p"/blog/#{post}")}
+      >
+        <div class="relative h-48 overflow-hidden">
+          <div
+            class="absolute inset-0 bg-gradient-to-br transition-transform duration-300 group-hover:scale-110"
+            style={"background: #{post.background}"}
+          >
+          </div>
+          <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-300">
+          </div>
+        </div>
+
+        <div class="p-6">
+          <header class="mb-4">
+            <h2 class="text-2xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors duration-200 line-clamp-2">
+              {post.title}
+            </h2>
+            <time
+              datetime={post.inserted_at}
+              class="text-sm text-gray-500 flex items-center gap-1"
+            >
+              <.icon name="hero-calendar" class="w-4 h-4" />
+              {format_date(post.inserted_at)}
+            </time>
+          </header>
+
+          <p class="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
+            {get_excerpt(post.body)}
+          </p>
+
+          <footer class="flex items-center justify-between pt-4 border-t border-gray-100">
+            <div class="flex items-center gap-1 text-sm text-gray-500">
+              <.icon name="hero-eye" class="w-4 h-4" />
+              <span>{post.views} views</span>
+            </div>
+
+            <span class="text-indigo-600 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+              Read more <.icon name="hero-arrow-right" class="w-4 h-4" />
+            </span>
+          </footer>
+        </div>
+      </article>
+    </section>
+  </article>
+</Layouts.app>

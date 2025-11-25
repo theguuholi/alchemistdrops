@@ -67,6 +67,9 @@ defmodule AlchemistdropsWeb.Router do
       live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new
+
+      live "/blog", PostLive.Index, :index
+      live "/blog/:id", PostLive.Show, :show
     end
 
     scope "/admin", Admin do
