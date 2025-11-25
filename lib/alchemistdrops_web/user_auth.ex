@@ -248,7 +248,8 @@ defmodule AlchemistdropsWeb.UserAuth do
   def on_mount(:require_admin_user, _params, session, socket) do
     socket = mount_current_scope(socket, session)
 
-    if socket.assigns.current_scope.user.role == :admin do
+    if socket.assigns.current_scope && socket.assigns.current_scope.user &&
+         socket.assigns.current_scope.user.role == :admin do
       {:cont, socket}
     else
       {:halt, socket}
