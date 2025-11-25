@@ -1,4 +1,6 @@
 [
   Alchemistdrops.Application,
-  AlchemistdropsWeb.Layouts
+  AlchemistdropsWeb.Layouts,
+  Alchemistdrops.Repo,
+  AlchemistdropsWeb.Telemetry
 ]

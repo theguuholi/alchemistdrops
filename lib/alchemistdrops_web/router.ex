@@ -69,6 +69,14 @@ defmodule AlchemistdropsWeb.Router do
       live "/users/log-in/:token", UserLive.Confirmation, :new
     end
 
+    live_session :required_admin_user,
+      on_mount: [{AlchemistdropsWeb.UserAuth, :require_admin_user}] do
+      live "/posts", PostLive.Index, :index
+      live "/posts/new", PostLive.Form, :new
+      live "/posts/:id", PostLive.Show, :show
+      live "/posts/:id/edit", PostLive.Form, :edit
+    end
+
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
   end

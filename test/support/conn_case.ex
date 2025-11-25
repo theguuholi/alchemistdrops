@@ -47,8 +47,8 @@ defmodule AlchemistdropsWeb.ConnCase do
   It stores an updated connection and a registered user in the
   test context.
   """
-  def register_and_log_in_user(%{conn: conn} = context) do
-    user = AccountsFixtures.user_fixture()
+  def register_and_log_in_user(%{conn: conn} = context, role \\ "user") do
+    user = AccountsFixtures.user_fixture(role: role)
     scope = Scope.for_user(user)
 
     opts =
@@ -57,6 +57,10 @@ defmodule AlchemistdropsWeb.ConnCase do
       |> Enum.into([])
 
     %{conn: log_in_user(conn, user, opts), user: user, scope: scope}
+  end
+
+  def register_and_log_in_admin_user(context) do
+    register_and_log_in_user(context, "admin")
   end
 
   @doc """
