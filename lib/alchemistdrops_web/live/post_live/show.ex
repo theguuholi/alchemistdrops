@@ -19,7 +19,8 @@ defmodule AlchemistdropsWeb.PostLive.Show do
      |> assign(:page_title, post.title <> " - Alchemist's Journal")
      |> assign(:meta_description, meta_description)
      |> assign(:meta_url, build_url(~p"/blog/#{post}"))
-     |> assign(:post, post)}
+     |> assign(:post, post)
+     |> assign(:rendered_body, render_markdown(post.body))}
   end
 
   defp format_date(datetime) do
@@ -38,4 +39,13 @@ defmodule AlchemistdropsWeb.PostLive.Show do
   defp build_url(path) do
     AlchemistdropsWeb.Endpoint.url() <> path
   end
+
+  defp render_markdown(content) when is_binary(content) do
+    case MDEx.to_html(content) do
+      {:ok, html} -> Phoenix.HTML.raw(html)
+      {:error, _} -> Phoenix.HTML.raw(content)
+    end
+  end
+
+  defp render_markdown(_), do: Phoenix.HTML.raw("")
 end

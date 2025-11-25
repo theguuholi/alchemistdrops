@@ -5,7 +5,7 @@ defmodule Alchemistdrops.Posts.Post do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "posts" do
-    field :background, :string
+    field :background, :string, default: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
     field :title, :string
     field :body, :string
     field :views, :integer
@@ -17,6 +17,6 @@ defmodule Alchemistdrops.Posts.Post do
   def changeset(post, attrs) do
     post
     |> cast(attrs, [:background, :title, :body, :views])
-    |> validate_required([:background, :title, :body, :views])
+    |> validate_required([:title, :body, :views])
   end
 end

@@ -1,69 +1,83 @@
-<Layouts.app flash={@flash} current_scope={@current_scope}>
-  <article class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <header class="mb-12 text-center">
-      <h1 class="text-5xl font-bold text-gray-900 mb-4 tracking-tight">
-        Alchemist's Journal
-      </h1>
-      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-        Discover insights, tutorials, and stories from the world of alchemy and web development
-      </p>
-    </header>
-
-    <section id="posts-grid" class="grid gap-8 md:grid-cols-2 lg:grid-cols-3" phx-update="stream">
-      <div id="posts-empty-state" class="hidden only:block col-span-full">
-        <div class="text-center py-16">
-          <.icon name="hero-document-text" class="w-24 h-24 mx-auto text-gray-300 mb-4" />
-          <h2 class="text-2xl font-semibold text-gray-700 mb-2">No posts yet</h2>
-          <p class="text-gray-500">Check back soon for new content!</p>
+  <div class="min-h-screen bg-white dark:bg-gray-950">
+    <article class="w-full px-6 sm:px-8 lg:px-12 xl:px-16 py-12 sm:py-16 lg:py-20">
+      <%!-- Hero Header - Full Width --%>
+      <header class="mb-16 sm:mb-20 lg:mb-24">
+        <div class="inline-block mb-4 px-3 py-1 bg-gray-100 dark:bg-gray-900 rounded-md">
+          <span class="text-xs font-medium text-gray-600 dark:text-gray-400 tracking-wider uppercase">
+            Blog
+          </span>
         </div>
-      </div>
-
-      <article
-        :for={{id, post} <- @streams.posts}
-        id={id}
-        class="group relative bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer transform hover:-translate-y-1"
-        phx-click={JS.navigate(~p"/blog/#{post}")}
+        
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-gray-900 dark:text-gray-100 mb-6 tracking-tight">
+          Alchemist's Journal
+        </h1>
+        
+        <p class="text-lg sm:text-xl lg:text-2xl text-gray-600 dark:text-gray-400 max-w-3xl">
+          Discover insights, tutorials, and stories from the world of alchemy and web development
+        </p>
+      </header>
+      <%!-- Posts Grid - Full Width --%>
+      <section
+        id="posts-grid"
+        class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-px bg-gray-200 dark:bg-gray-800 border border-gray-200 dark:border-gray-800"
+        phx-update="stream"
       >
-        <div class="relative h-48 overflow-hidden">
+        <%!-- Empty State --%>
+        <div
+          id="posts-empty-state"
+          class="hidden only:block col-span-full bg-white dark:bg-gray-950"
+        >
+          <div class="empty-state text-center py-24">
+            <div class="w-16 h-16 mx-auto mb-6 bg-gray-100 dark:bg-gray-900 rounded-lg flex items-center justify-center">
+              <.icon name="hero-document-text" class="w-10 h-10 text-gray-400 dark:text-gray-600" />
+            </div>
+            <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+              No posts yet
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400">Check back soon for new content</p>
+          </div>
+        </div>
+        <%!-- Minimalistic Post Cards --%>
+        <article
+          :for={{id, post} <- @streams.posts}
+          id={id}
+          class="post-card group relative bg-white dark:bg-gray-950 p-8 lg:p-10 cursor-pointer transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-900"
+          phx-click={JS.navigate(~p"/blog/#{post}")}
+        >
+          <%!-- Small gradient indicator --%>
           <div
-            class="absolute inset-0 bg-gradient-to-br transition-transform duration-300 group-hover:scale-110"
+            class="absolute top-0 left-0 w-1 h-16 transition-all duration-300 group-hover:h-full"
             style={"background: #{post.background}"}
           >
           </div>
-          <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors duration-300">
-          </div>
-        </div>
-
-        <div class="p-6">
-          <header class="mb-4">
-            <h2 class="text-2xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors duration-200 line-clamp-2">
+          <%!-- Content --%>
+          <div class="relative">
+            <%!-- Meta info --%>
+            <div class="flex items-center justify-between mb-6 text-xs text-gray-500 dark:text-gray-500">
+              <time datetime={post.inserted_at} class="post-date uppercase tracking-wider font-medium">
+                {format_date(post.inserted_at)}
+              </time>
+              
+              <div class="views flex items-center gap-1.5">
+                <.icon name="hero-eye" class="w-3.5 h-3.5" />
+                <span>{post.views}</span>
+              </div>
+            </div>
+            <%!-- Title --%>
+            <h2 class="post-title text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4 leading-tight group-hover:text-gray-700 dark:group-hover:text-gray-300 transition-colors">
               {post.title}
             </h2>
-            <time
-              datetime={post.inserted_at}
-              class="text-sm text-gray-500 flex items-center gap-1"
-            >
-              <.icon name="hero-calendar" class="w-4 h-4" />
-              {format_date(post.inserted_at)}
-            </time>
-          </header>
-
-          <p class="text-gray-600 mb-4 line-clamp-3 leading-relaxed">
-            {get_excerpt(post.body)}
-          </p>
-
-          <footer class="flex items-center justify-between pt-4 border-t border-gray-100">
-            <div class="flex items-center gap-1 text-sm text-gray-500">
-              <.icon name="hero-eye" class="w-4 h-4" />
-              <span>{post.views} views</span>
+            <%!-- Excerpt --%>
+            <p class="post-excerpt text-gray-600 dark:text-gray-400 mb-6 line-clamp-2 leading-relaxed">
+              {get_excerpt(post.body)}
+            </p>
+            <%!-- Read More --%>
+            <div class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+              <span class="read-more">Read article</span>
+              <.icon name="hero-arrow-right" class="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </div>
-
-            <span class="text-indigo-600 font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-              Read more <.icon name="hero-arrow-right" class="w-4 h-4" />
-            </span>
-          </footer>
-        </div>
-      </article>
-    </section>
-  </article>
-</Layouts.app>
+          </div>
+        </article>
+      </section>
+    </article>
+  </div>

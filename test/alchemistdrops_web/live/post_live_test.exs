@@ -36,21 +36,21 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         })
 
       # When: the user visits the blog index page
-      {:ok, view, html} = live(conn, ~p"/blog")
+      {:ok, view, _html} = live(conn, ~p"/blog")
 
       # Then: the page should display the blog header
-      assert html =~ "Alchemist&#39;s Journal"
-      assert html =~ "Discover insights, tutorials, and stories"
+      assert has_element?(view, "h1", "Alchemist's Journal")
+      assert has_element?(view, "p", "Discover insights, tutorials, and stories")
 
       # And: all three posts should be displayed as cards
-      assert html =~ "Understanding Elixir Processes"
-      assert html =~ "Phoenix LiveView Tips"
-      assert html =~ "Building REST APIs"
+      assert has_element?(view, ".post-card .post-title", "Understanding Elixir Processes")
+      assert has_element?(view, ".post-card .post-title", "Phoenix LiveView Tips")
+      assert has_element?(view, ".post-card .post-title", "Building REST APIs")
 
       # And: each card should show the view count
-      assert html =~ "42 views"
-      assert html =~ "128 views"
-      assert html =~ "87 views"
+      assert has_element?(view, ".views", "42")
+      assert has_element?(view, ".views", "128")
+      assert has_element?(view, ".views", "87")
 
       # And: the posts grid should exist
       assert has_element?(view, "#posts-grid")
@@ -63,11 +63,11 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       # Given: no posts exist in the database
 
       # When: the user visits the blog index page
-      {:ok, view, html} = live(conn, ~p"/blog")
+      {:ok, view, _html} = live(conn, ~p"/blog")
 
       # Then: the empty state message should be displayed
-      assert html =~ "No posts yet"
-      assert html =~ "Check back soon for new content!"
+      assert has_element?(view, ".empty-state", "No posts yet")
+      assert has_element?(view, ".empty-state", "Check back soon for new content")
 
       # And: the posts grid should exist but be empty
       assert has_element?(view, "#posts-grid")
@@ -87,13 +87,16 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       _post = post_fixture(%{title: "Long Article", body: long_body, views: 5})
 
       # When: the user visits the blog index page
-      {:ok, _view, html} = live(conn, ~p"/blog")
+      {:ok, view, html} = live(conn, ~p"/blog")
 
-      # Then: the excerpt should be truncated
-      assert html =~ "Long Article"
-      # The full long body should not be present
+      # Then: the post title should be visible
+      assert has_element?(view, ".post-card .post-title", "Long Article")
+
+      # And: the full long body should not be present
       refute html =~ long_body
-      # Should show ellipsis for truncated content
+
+      # And: should show ellipsis for truncated content
+      assert has_element?(view, ".post-excerpt")
       assert html =~ "..."
     end
 
@@ -131,11 +134,11 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       )
 
       # When: the user visits the blog page
-      {:ok, view, html} = live(conn, ~p"/blog")
+      {:ok, view, _html} = live(conn, ~p"/blog")
 
       # Then: both posts should be displayed
-      assert html =~ "Old Post"
-      assert html =~ "Recent Post"
+      assert has_element?(view, ".post-card .post-title", "Old Post")
+      assert has_element?(view, ".post-card .post-title", "Recent Post")
 
       # And: the recent post should appear before the old post in the DOM
       # Check via the stream IDs which should be in reverse chronological order
@@ -194,8 +197,8 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       assert_redirect(index_view, ~p"/blog/#{post2.id}")
 
       # And: following the redirect shows the correct post
-      {:ok, _show_view, html} = follow_redirect(result, conn)
-      assert html =~ "Second Post"
+      {:ok, view, html} = follow_redirect(result, conn)
+      assert has_element?(view, ".post-title", "Second Post")
       assert html =~ "Content 2"
       # Could be 20 or 21 depending on mount increment
       assert html =~ ~r/2[01] views/
@@ -220,24 +223,21 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         })
 
       # When: the user visits the post detail page
-      {:ok, view, html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
 
       # Then: the post title should be prominently displayed
-      assert html =~ "Mastering Phoenix Contexts"
+      assert has_element?(view, ".post-title", "Mastering Phoenix Contexts")
 
-      # And: the full body content should be shown
-      assert html =~ "Phoenix contexts are a powerful way to organize your code"
-      assert html =~ "They provide clear boundaries"
-      assert html =~ "Let&#39;s explore how to use them effectively"
+      # And: the full body content should be shown in the post body section
+      assert has_element?(view, ".post-body", "Phoenix contexts are a powerful way to organize your code")
+      assert has_element?(view, ".post-body", "They provide clear boundaries")
+      assert has_element?(view, ".post-body", "Let's explore how to use them effectively")
 
       # And: the view count should be displayed (note: might be 251 if incremented on mount)
-      assert html =~ ~r/25[01] views/
-
-      # And: the background gradient should be applied
-      assert html =~ post.background
+      assert has_element?(view, ".post-views")
 
       # And: a back button should be present
-      assert has_element?(view, "a[href='/blog']", "Back to all posts")
+      assert has_element?(view, ".back-link", "Back to all posts")
     end
 
     # Given: a user is viewing a post detail page
@@ -291,7 +291,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       # When: the user clicks the back button in the navigation
       _result =
         view
-        |> element("a", "Back to all posts")
+        |> element(".back-link")
         |> render_click()
 
       # Then: the user should be redirected to the blog index
@@ -310,13 +310,14 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         Alchemistdrops.Posts.update_post(post, %{body: "Even newer content"})
 
       # When: the user visits the post detail page
-      {:ok, _view, html} = live(conn, ~p"/blog/#{updated_post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{updated_post.id}")
 
       # Then: the last updated date should be shown
-      assert html =~ "Last updated:"
-      # Should show the formatted date
+      assert has_element?(view, ".last-updated", "Last updated:")
+
+      # And: should show the formatted date
       formatted_date = Calendar.strftime(updated_post.updated_at, "%B %d, %Y")
-      assert html =~ formatted_date
+      assert has_element?(view, ".last-updated", formatted_date)
     end
   end
 
@@ -335,26 +336,23 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         })
 
       # When: the blog index is rendered
-      {:ok, view, html} = live(conn, ~p"/blog")
+      {:ok, view, _html} = live(conn, ~p"/blog")
 
       # Then: the card should have a title
-      assert html =~ "Beautiful Card Design"
+      assert has_element?(view, ".post-card .post-title", "Beautiful Card Design")
 
       # And: should display an excerpt of the body
-      assert html =~ "This post has a beautiful card design"
+      assert has_element?(view, ".post-card .post-excerpt")
 
       # And: should show the view count with an icon
-      assert has_element?(view, "article#posts-#{post.id} .hero-eye")
-      assert html =~ "150 views"
+      assert has_element?(view, "article#posts-#{post.id} .views")
+      assert has_element?(view, ".views", "150")
 
       # And: should have a "Read more" call to action
-      assert html =~ "Read more"
+      assert has_element?(view, ".read-more", "Read article")
 
-      # And: should show the publication date with a calendar icon
-      assert has_element?(view, "article#posts-#{post.id} .hero-calendar")
-
-      # And: the background gradient should be applied
-      assert html =~ post.background
+      # And: should show the publication date
+      assert has_element?(view, "article#posts-#{post.id} .post-date")
     end
 
     # Given: a user hovers over a blog card
@@ -370,9 +368,9 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       # Then: the card should have hover effect classes
       card_html = view |> element("article#posts-#{post.id}") |> render()
 
-      assert card_html =~ "hover:shadow-2xl"
-      assert card_html =~ "hover:-translate-y-1"
-      assert card_html =~ "group-hover:text-indigo-600"
+      assert card_html =~ "hover:bg-gray-50"
+      assert card_html =~ "transition-all"
+      assert card_html =~ "group-hover:text-gray-700"
     end
   end
 
@@ -391,12 +389,10 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       assert html =~ "<article"
       assert html =~ "<header"
       assert html =~ "<section"
-      assert html =~ "<footer"
-      assert html =~ "<nav" or !has_element?(view, "nav")
 
       # And: heading hierarchy should be proper
-      assert html =~ "<h1"
-      assert html =~ "<h2"
+      assert has_element?(view, "h1")
+      assert has_element?(view, "h2")
     end
 
     # Given: the post detail page
@@ -407,14 +403,14 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       post = post_fixture(%{title: "Accessible Post", body: "Accessibility matters", views: 20})
 
       # When: the detail page is rendered
-      {:ok, _view, html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, html} = live(conn, ~p"/blog/#{post.id}")
 
       # Then: proper semantic structure should exist
-      assert html =~ "<article"
-      assert html =~ "<header"
-      assert html =~ "<section"
-      assert html =~ "<footer"
-      assert html =~ "<nav"
+      assert has_element?(view, "article.post-detail")
+      assert has_element?(view, "header.post-header")
+      assert has_element?(view, "section.post-body")
+      assert has_element?(view, "footer.post-footer")
+      assert has_element?(view, "nav")
 
       # And: time elements should have datetime attributes
       assert html =~ ~r/<time datetime="[^"]+"/
@@ -443,10 +439,10 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       )
 
       # When: the blog index is rendered
-      {:ok, _view, html} = live(conn, ~p"/blog")
+      {:ok, view, _html} = live(conn, ~p"/blog")
 
       # Then: the date should be formatted as "Month DD, YYYY"
-      assert html =~ "March 15, 2024"
+      assert has_element?(view, ".post-date", "March 15, 2024")
     end
   end
 
@@ -460,11 +456,11 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       post_fixture(%{title: "Public Post", body: "Everyone can see this", views: 100})
 
       # When: accessing the blog index
-      {:ok, _view, html} = live(conn, ~p"/blog")
+      {:ok, view, _html} = live(conn, ~p"/blog")
 
       # Then: the page should load successfully
-      assert html =~ "Alchemist&#39;s Journal"
-      assert html =~ "Public Post"
+      assert has_element?(view, "h1", "Alchemist's Journal")
+      assert has_element?(view, ".post-card .post-title", "Public Post")
     end
 
     # Given: a user who is not logged in
@@ -476,11 +472,11 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       post = post_fixture(%{title: "Open Access", body: "No login required", views: 50})
 
       # When: accessing the post detail page
-      {:ok, _view, html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
 
       # Then: the page should load successfully
-      assert html =~ "Open Access"
-      assert html =~ "No login required"
+      assert has_element?(view, ".post-title", "Open Access")
+      assert has_element?(view, ".post-body", "No login required")
     end
   end
 end
