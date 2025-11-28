@@ -24,30 +24,6 @@ config :alchemistdrops,
   ecto_repos: [Alchemistdrops.Repo],
   generators: [timestamp_type: :utc_datetime, binary_id: true]
 
-# Money library configuration
-config :money,
-  default_currency: :USD,
-  separator: ".",
-  delimiter: ",",
-  symbol: true,
-  symbol_on_right: false,
-  symbol_space: false,
-  fractional_unit: true,
-  strip_insignificant_zeros: false
-
-# Custom display options for different currencies
-config :money,
-  custom_display_options: [
-    EUR: %{
-      symbol_on_right: true,
-      symbol_space: true,
-      separator: ".",
-      delimiter: ",",
-      symbol: true
-    },
-    JPY: %{symbol_on_right: false, separator: ",", delimiter: ",", symbol: true}
-  ]
-
 # Configures the endpoint
 config :alchemistdrops, AlchemistdropsWeb.Endpoint,
   url: [host: "localhost"],
