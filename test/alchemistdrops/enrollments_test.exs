@@ -139,7 +139,7 @@ defmodule Alchemistdrops.EnrollmentsTest do
     test "Scenario: Admin users can access any course" do
       # Given an admin user and a paid course
       admin = admin_fixture()
-      course = course_fixture(%{price: Decimal.new("99.99")})
+      course = course_fixture(%{price: Money.new(9999, :USD)})
 
       # When I check if admin can access
       result = Enrollments.can_access_course?(admin, course)
@@ -151,7 +151,7 @@ defmodule Alchemistdrops.EnrollmentsTest do
     test "Scenario: Enrolled users can access paid courses" do
       # Given a regular user enrolled in a paid course
       user = user_fixture()
-      course = course_fixture(%{price: Decimal.new("99.99")})
+      course = course_fixture(%{price: Money.new(9999, :USD)})
       enrollment_fixture(%{user_id: user.id, course_id: course.id})
 
       # When I check if user can access
@@ -176,7 +176,7 @@ defmodule Alchemistdrops.EnrollmentsTest do
     test "Scenario: Non-enrolled users cannot access paid courses" do
       # Given a regular user and a paid course (not enrolled)
       user = user_fixture()
-      course = course_fixture(%{price: Decimal.new("99.99")})
+      course = course_fixture(%{price: Money.new(9999, :USD)})
 
       # When I check if user can access
       result = Enrollments.can_access_course?(user, course)
@@ -188,7 +188,7 @@ defmodule Alchemistdrops.EnrollmentsTest do
     test "Scenario: Cancelled enrollments do not grant access" do
       # Given a user with cancelled enrollment in paid course
       user = user_fixture()
-      course = course_fixture(%{price: Decimal.new("99.99")})
+      course = course_fixture(%{price: Money.new(9999, :USD)})
       cancelled_enrollment_fixture(%{user_id: user.id, course_id: course.id})
 
       # When I check if user can access
@@ -217,7 +217,7 @@ defmodule Alchemistdrops.EnrollmentsTest do
     test "Scenario: Returns false if cannot access parent course" do
       # Given a user not enrolled in a paid course
       user = user_fixture()
-      course = course_fixture(%{price: Decimal.new("99.99")})
+      course = course_fixture(%{price: Money.new(9999, :USD)})
       lesson = lesson_fixture(%{course_id: course.id})
 
       # When I check if user can access the lesson
@@ -230,7 +230,7 @@ defmodule Alchemistdrops.EnrollmentsTest do
     test "Scenario: Admin can access any lesson" do
       # Given an admin user and a lesson in a paid course
       admin = admin_fixture()
-      course = course_fixture(%{price: Decimal.new("99.99")})
+      course = course_fixture(%{price: Money.new(9999, :USD)})
       lesson = lesson_fixture(%{course_id: course.id})
 
       # When I check if admin can access the lesson

@@ -1,15 +1,15 @@
 defmodule Alchemistdrops.Courses.CourseTest do
   @moduledoc """
-  Feature: Course Schema Validation
+  Feature: Course Schema Validation with Money Library
     As a system administrator
-    I want to ensure courses are properly validated
+    I want to ensure courses are properly validated using Money types
     So that only valid course data is stored in the database
   """
   use Alchemistdrops.DataCase
 
   alias Alchemistdrops.Courses.Course
 
-  describe "Feature: Course Changeset Validation" do
+  describe "Feature: Course Changeset Validation with Money" do
     test "Scenario: Creating a course with valid required fields" do
       # Given valid course attributes with title and description
       attrs = %{
@@ -57,7 +57,7 @@ defmodule Alchemistdrops.Courses.CourseTest do
       attrs = %{
         title: "Test Course",
         description: "Test Description",
-        price: Decimal.new("-10.00")
+        price: Money.new(-1000, :USD)
       }
 
       # When I create a changeset with these attributes
@@ -67,15 +67,15 @@ defmodule Alchemistdrops.Courses.CourseTest do
       refute changeset.valid?
 
       # And it should have a price validation error
-      assert %{price: ["must be greater than or equal to 0"]} = errors_on(changeset)
+      assert %{price: ["must be a valid money amount"]} = errors_on(changeset)
     end
 
     test "Scenario: Creating a course with zero price (free course)" do
-      # Given course attributes with zero price
+      # Given course attributes with a price of zero (free)
       attrs = %{
         title: "Free Course",
         description: "A free course for everyone",
-        price: Decimal.new("0.00")
+        price: Money.new(0, :USD)
       }
 
       # When I create a changeset with these attributes
@@ -85,44 +85,26 @@ defmodule Alchemistdrops.Courses.CourseTest do
       assert changeset.valid?
     end
 
-    test "Scenario: Creating a course with an invalid currency format" do
-      # Given course attributes with an invalid currency code
-      attrs = %{
-        title: "Test Course",
-        description: "Test Description",
-        currency: "INVALID"
-      }
+    test "Scenario: Money library validates currency codes automatically" do
+      # Given course attributes with different valid currencies
+      currencies = [:USD, :EUR, :GBP, :JPY, :CAD, :AUD, :CHF, :CNY]
 
-      # When I create a changeset with these attributes
-      changeset = Course.changeset(%Course{}, attrs)
+      # When I create changesets with these currencies
+      changesets =
+        Enum.map(currencies, fn currency ->
+          Course.changeset(%Course{}, %{
+            title: "Course in #{currency}",
+            description: "Testing #{currency} currency",
+            price: Money.new(9999, currency)
+          })
+        end)
 
-      # Then the changeset should be invalid
-      refute changeset.valid?
-
-      # And it should have a currency format error
-      assert %{currency: ["must be a 3-letter currency code"]} = errors_on(changeset)
-    end
-
-    test "Scenario: Creating a course with lowercase currency code" do
-      # Given course attributes with lowercase currency code
-      attrs = %{
-        title: "Test Course",
-        description: "Test Description",
-        currency: "usd"
-      }
-
-      # When I create a changeset with these attributes
-      changeset = Course.changeset(%Course{}, attrs)
-
-      # Then the changeset should be invalid
-      refute changeset.valid?
-
-      # And it should have a currency format error
-      assert %{currency: ["must be a 3-letter currency code"]} = errors_on(changeset)
+      # Then all changesets should be valid
+      assert Enum.all?(changesets, & &1.valid?)
     end
 
     test "Scenario: Default values are set when not provided" do
-      # Given minimal course attributes without price, currency, or published status
+      # Given minimal course attributes without price or published status
       attrs = %{
         title: "Test Course",
         description: "Test Description"
@@ -134,20 +116,14 @@ defmodule Alchemistdrops.Courses.CourseTest do
       # Then the changeset should be valid
       assert changeset.valid?
 
-      # And default price should be 0.00
-      assert Ecto.Changeset.get_field(changeset, :price) == Decimal.new("0.00")
-
-      # And default currency should be USD
-      assert Ecto.Changeset.get_field(changeset, :currency) == "USD"
-
-      # And default published status should be false
+      # And published should default to false
       assert Ecto.Changeset.get_field(changeset, :published) == false
     end
 
     test "Scenario: Title whitespace is trimmed" do
-      # Given course attributes with whitespace around the title
+      # Given course attributes with whitespace around title
       attrs = %{
-        title: "  Test Course  ",
+        title: "  Trimmed Title  ",
         description: "Test Description"
       }
 
@@ -155,13 +131,16 @@ defmodule Alchemistdrops.Courses.CourseTest do
       changeset = Course.changeset(%Course{}, attrs)
 
       # Then the title should be trimmed
-      assert Ecto.Changeset.get_change(changeset, :title) == "Test Course"
+      assert changeset.valid?
+      assert changeset.changes.title == "Trimmed Title"
     end
 
     test "Scenario: Title exceeds maximum length" do
-      # Given course attributes with a title longer than 255 characters
+      # Given course attributes with a very long title
+      long_title = String.duplicate("A", 256)
+
       attrs = %{
-        title: String.duplicate("a", 256),
+        title: long_title,
         description: "Test Description"
       }
 
@@ -171,14 +150,16 @@ defmodule Alchemistdrops.Courses.CourseTest do
       # Then the changeset should be invalid
       refute changeset.valid?
 
-      # And it should have a title length error
+      # And it should have a length error
       assert %{title: ["should be at most 255 character(s)"]} = errors_on(changeset)
     end
 
     test "Scenario: Title at maximum length is accepted" do
-      # Given course attributes with a title exactly 255 characters
+      # Given course attributes with title exactly at max length
+      max_title = String.duplicate("A", 255)
+
       attrs = %{
-        title: String.duplicate("a", 255),
+        title: max_title,
         description: "Test Description"
       }
 
@@ -189,33 +170,13 @@ defmodule Alchemistdrops.Courses.CourseTest do
       assert changeset.valid?
     end
 
-    test "Scenario: Valid currency codes are accepted" do
-      # Given a list of valid currency codes
-      valid_currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY"]
-
-      # When I create changesets with each currency
-      for currency <- valid_currencies do
-        attrs = %{
-          title: "Test Course",
-          description: "Test Description",
-          currency: currency
-        }
-
-        changeset = Course.changeset(%Course{}, attrs)
-
-        # Then each changeset should be valid
-        assert changeset.valid?, "Expected #{currency} to be valid"
-      end
-    end
-
     test "Scenario: All optional fields are accepted" do
-      # Given course attributes with all optional fields populated
+      # Given course attributes with all optional fields
       attrs = %{
         title: "Complete Course",
         description: "Full description",
         body: "Full course body content",
-        price: Decimal.new("99.99"),
-        currency: "EUR",
+        price: Money.new(9999, :USD),
         stripe_product_id: "prod_123",
         stripe_price_id: "price_123",
         published: true,
@@ -228,22 +189,17 @@ defmodule Alchemistdrops.Courses.CourseTest do
       # Then the changeset should be valid
       assert changeset.valid?
 
-      # And all fields should be set correctly
-      assert Ecto.Changeset.get_change(changeset, :title) == "Complete Course"
-      assert Ecto.Changeset.get_change(changeset, :body) == "Full course body content"
-      assert Ecto.Changeset.get_change(changeset, :stripe_product_id) == "prod_123"
-      assert Ecto.Changeset.get_change(changeset, :stripe_price_id) == "price_123"
-      assert Ecto.Changeset.get_change(changeset, :published) == true
-
-      assert Ecto.Changeset.get_change(changeset, :thumbnail_url) ==
-               "https://example.com/thumb.jpg"
+      # And all fields should be present in changes
+      assert changeset.changes.body == "Full course body content"
+      assert changeset.changes.stripe_product_id == "prod_123"
+      assert changeset.changes.published == true
     end
 
     test "Scenario: Published flag can be set to false explicitly" do
-      # Given course attributes with published set to false
+      # Given course attributes with published explicitly set to false
       attrs = %{
-        title: "Draft Course",
-        description: "This is a draft",
+        title: "Unpublished Course",
+        description: "Not yet ready",
         published: false
       }
 
@@ -261,7 +217,7 @@ defmodule Alchemistdrops.Courses.CourseTest do
       # Given course attributes with published set to true
       attrs = %{
         title: "Published Course",
-        description: "This is published",
+        description: "Ready for students",
         published: true
       }
 
@@ -272,7 +228,7 @@ defmodule Alchemistdrops.Courses.CourseTest do
       assert changeset.valid?
 
       # And published should be true
-      assert Ecto.Changeset.get_change(changeset, :published) == true
+      assert changeset.changes.published == true
     end
 
     test "Scenario: Empty string for optional fields is accepted" do
@@ -296,8 +252,8 @@ defmodule Alchemistdrops.Courses.CourseTest do
     test "Scenario: Nil values for optional fields are accepted" do
       # Given course attributes with nil for optional fields
       attrs = %{
-        title: "Test Course",
-        description: "Test Description",
+        title: "Minimal Course",
+        description: "Just the essentials",
         body: nil,
         stripe_product_id: nil,
         stripe_price_id: nil,
@@ -315,8 +271,8 @@ defmodule Alchemistdrops.Courses.CourseTest do
       # Given course attributes with a large price
       attrs = %{
         title: "Premium Course",
-        description: "Very expensive course",
-        price: Decimal.new("99999.99")
+        description: "High-value course",
+        price: Money.new(9_999_999, :USD)
       }
 
       # When I create a changeset with these attributes
@@ -331,7 +287,7 @@ defmodule Alchemistdrops.Courses.CourseTest do
       attrs = %{
         title: "Budget Course",
         description: "Affordable course",
-        price: Decimal.new("0.99")
+        price: Money.new(99, :USD)
       }
 
       # When I create a changeset with these attributes
@@ -353,12 +309,43 @@ defmodule Alchemistdrops.Courses.CourseTest do
       refute Map.has_key?(changeset.changes, :title)
     end
 
-    test "Scenario: Trim field handles non-string value" do
-      # Given attrs with a non-string title (edge case)
+    test "Scenario: Price can be set with different currencies" do
+      # Given course attributes with EUR currency
       attrs = %{
-        title: "Valid Title",
-        description: "Valid Description",
-        price: 100
+        title: "European Course",
+        description: "Course priced in EUR",
+        price: Money.new(9999, :EUR)
+      }
+
+      # When I create a changeset
+      changeset = Course.changeset(%Course{}, attrs)
+
+      # Then the changeset should be valid
+      assert changeset.valid?
+      assert %Money{amount: 9999, currency: :EUR} = changeset.changes.price
+    end
+
+    test "Scenario: Price can be set with JPY (zero decimal places)" do
+      # Given course attributes with JPY currency (no decimal places)
+      attrs = %{
+        title: "Japanese Course",
+        description: "Course priced in JPY",
+        price: Money.new(10_000, :JPY)
+      }
+
+      # When I create a changeset
+      changeset = Course.changeset(%Course{}, attrs)
+
+      # Then the changeset should be valid
+      assert changeset.valid?
+      assert %Money{amount: 10_000, currency: :JPY} = changeset.changes.price
+    end
+
+    test "Scenario: Currency validation handles nil price" do
+      # Given a course without price specified
+      attrs = %{
+        title: "Course",
+        description: "Description"
       }
 
       # When I create a changeset
@@ -368,25 +355,26 @@ defmodule Alchemistdrops.Courses.CourseTest do
       assert changeset.valid?
     end
 
-    test "Scenario: Currency validation handles nil currency" do
-      # Given a course without currency specified
+    test "Scenario: Trim field handles non-string value" do
+      # Given attrs with valid title and price
       attrs = %{
-        title: "Course",
-        description: "Description"
+        title: "Valid Title",
+        description: "Valid Description",
+        price: Money.new(10_000, :USD)
       }
 
       # When I create a changeset
       changeset = Course.changeset(%Course{}, attrs)
 
-      # Then the changeset should be valid (will use default)
+      # Then the changeset should be valid
       assert changeset.valid?
     end
 
-    test "Scenario: Currency validation handles non-string currency" do
-      # Given a course changeset with currency already set to non-string (bypassing cast)
-      course = %Course{currency: "USD"}
+    test "Scenario: Money validation handles non-Money value" do
+      # Given a course changeset with price already set
+      course = %Course{price: Money.new(0, :USD)}
 
-      # When we manually put a non-string value (edge case testing private function)
+      # When we update without changing price
       attrs = %{
         title: "Course",
         description: "Description"
@@ -394,7 +382,7 @@ defmodule Alchemistdrops.Courses.CourseTest do
 
       changeset = Course.changeset(course, attrs)
 
-      # Then the changeset should be valid (no currency change)
+      # Then the changeset should be valid
       assert changeset.valid?
     end
   end

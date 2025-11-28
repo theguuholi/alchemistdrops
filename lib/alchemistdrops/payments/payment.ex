@@ -7,8 +7,7 @@ defmodule Alchemistdrops.Payments.Payment do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   schema "payments" do
-    field :amount, :decimal
-    field :currency, :string, default: "USD"
+    field :amount, Money.Ecto.Composite.Type
     field :stripe_payment_intent_id, :string
     field :stripe_checkout_session_id, :string
     field :status, :string, default: "pending"
@@ -27,34 +26,22 @@ defmodule Alchemistdrops.Payments.Payment do
       :user_id,
       :course_id,
       :amount,
-      :currency,
       :stripe_payment_intent_id,
       :stripe_checkout_session_id,
       :status,
       :metadata
     ])
     |> validate_required([:user_id, :course_id, :amount])
-    |> validate_number(:amount, greater_than: 0)
+    |> validate_money(:amount)
     |> validate_inclusion(:status, @statuses)
-    |> validate_currency()
     |> foreign_key_constraint(:user_id)
     |> foreign_key_constraint(:course_id)
   end
 
-  defp validate_currency(changeset) do
-    case get_field(changeset, :currency) do
-      nil ->
-        changeset
-
-      currency when is_binary(currency) ->
-        if String.length(currency) == 3 and String.match?(currency, ~r/^[A-Z]{3}$/) do
-          changeset
-        else
-          add_error(changeset, :currency, "must be a 3-letter currency code")
-        end
-
-      _ ->
-        changeset
-    end
+  defp validate_money(changeset, field) do
+    validate_change(changeset, field, fn
+      ^field, %Money{amount: amount} when amount > 0 -> []
+      ^field, _ -> [{field, "must be greater than 0"}]
+    end)
   end
 end

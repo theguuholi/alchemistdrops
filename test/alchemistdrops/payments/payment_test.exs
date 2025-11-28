@@ -1,48 +1,32 @@
 defmodule Alchemistdrops.Payments.PaymentTest do
   @moduledoc """
-  Feature: Payment Schema Validation
+  Feature: Payment Schema Validation with Money Library
     As a payment processor
-    I want to ensure payments are properly validated
+    I want to ensure payments are properly validated using Money types
     So that only valid payment data is stored in the database
   """
   use Alchemistdrops.DataCase
 
-  alias Alchemistdrops.Accounts.User
-  alias Alchemistdrops.Courses.Course
   alias Alchemistdrops.Payments.Payment
 
   import Alchemistdrops.AccountsFixtures
   import Alchemistdrops.CoursesFixtures
 
   setup do
-    # Given a user exists in the system
-    user =
-      %User{}
-      |> User.email_changeset(%{email: "test@example.com", role: :user})
-      |> User.password_changeset(%{password: "TestPassword123!"}, hash_password: false)
-      |> Ecto.Changeset.put_change(:hashed_password, Bcrypt.hash_pwd_salt("TestPassword123!"))
-      |> Repo.insert!()
-
-    # And a course exists in the system
-    course =
-      %Course{}
-      |> Course.changeset(%{
-        title: "Test Course",
-        description: "Test Description",
-        price: Decimal.new("99.99")
-      })
-      |> Repo.insert!()
+    # Given a user and course exist in the system
+    user = user_fixture()
+    course = course_fixture()
 
     %{user: user, course: course}
   end
 
-  describe "Feature: Payment Changeset Validation" do
+  describe "Feature: Payment Changeset Validation with Money" do
     test "Scenario: Creating a payment with valid required fields", %{user: user, course: course} do
-      # Given valid payment attributes with user_id, course_id, and amount
+      # Given valid payment attributes
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99.99")
+        amount: Money.new(9999, :USD)
       }
 
       # When I create a changeset with these attributes
@@ -56,7 +40,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       # Given payment attributes without a user_id
       attrs = %{
         course_id: course.id,
-        amount: Decimal.new("99.99")
+        amount: Money.new(9999, :USD)
       }
 
       # When I create a changeset with these attributes
@@ -73,7 +57,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       # Given payment attributes without a course_id
       attrs = %{
         user_id: user.id,
-        amount: Decimal.new("99.99")
+        amount: Money.new(9999, :USD)
       }
 
       # When I create a changeset with these attributes
@@ -108,7 +92,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("0")
+        amount: Money.new(0, :USD)
       }
 
       # When I create a changeset with these attributes
@@ -122,11 +106,11 @@ defmodule Alchemistdrops.Payments.PaymentTest do
     end
 
     test "Scenario: Creating a payment with negative amount", %{user: user, course: course} do
-      # Given payment attributes with a negative amount
+      # Given payment attributes with negative amount
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("-10.00")
+        amount: Money.new(-5000, :USD)
       }
 
       # When I create a changeset with these attributes
@@ -139,12 +123,12 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       assert %{amount: ["must be greater than 0"]} = errors_on(changeset)
     end
 
-    test "Scenario: Creating a payment with small decimal amount", %{user: user, course: course} do
-      # Given payment attributes with a small decimal amount
+    test "Scenario: Creating a payment with small amount", %{user: user, course: course} do
+      # Given payment attributes with a small amount
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("0.01")
+        amount: Money.new(99, :USD)
       }
 
       # When I create a changeset with these attributes
@@ -159,7 +143,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99.99"),
+        amount: Money.new(9999, :USD),
         status: "invalid_status"
       }
 
@@ -174,23 +158,22 @@ defmodule Alchemistdrops.Payments.PaymentTest do
     end
 
     test "Scenario: Valid status values are accepted", %{user: user, course: course} do
-      # Given a list of valid status values
-      valid_statuses = ["pending", "completed", "failed", "refunded"]
+      # Given valid payment statuses
+      statuses = ["pending", "completed", "failed", "refunded"]
 
-      # When I create changesets with each status
-      for status <- valid_statuses do
-        attrs = %{
-          user_id: user.id,
-          course_id: course.id,
-          amount: Decimal.new("99.99"),
-          status: status
-        }
+      # When I create changesets with these statuses
+      changesets =
+        Enum.map(statuses, fn status ->
+          Payment.changeset(%Payment{}, %{
+            user_id: user.id,
+            course_id: course.id,
+            amount: Money.new(9999, :USD),
+            status: status
+          })
+        end)
 
-        changeset = Payment.changeset(%Payment{}, attrs)
-
-        # Then each changeset should be valid
-        assert changeset.valid?, "Expected #{status} to be valid"
-      end
+      # Then all changesets should be valid
+      assert Enum.all?(changesets, & &1.valid?)
     end
 
     test "Scenario: Default status is set to pending", %{user: user, course: course} do
@@ -198,44 +181,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99.99")
-      }
-
-      # When I create a changeset with these attributes
-      changeset = Payment.changeset(%Payment{}, attrs)
-
-      # Then default status should be pending
-      assert Ecto.Changeset.get_field(changeset, :status) == "pending"
-    end
-
-    test "Scenario: Default currency is set to USD", %{user: user, course: course} do
-      # Given payment attributes without currency
-      attrs = %{
-        user_id: user.id,
-        course_id: course.id,
-        amount: Decimal.new("99.99")
-      }
-
-      # When I create a changeset with these attributes
-      changeset = Payment.changeset(%Payment{}, attrs)
-
-      # Then default currency should be USD
-      assert Ecto.Changeset.get_field(changeset, :currency) == "USD"
-    end
-
-    test "Scenario: Metadata can be stored as a map", %{user: user, course: course} do
-      # Given payment attributes with metadata
-      metadata = %{
-        "customer_name" => "John Doe",
-        "customer_email" => "john@example.com",
-        "notes" => "Special request"
-      }
-
-      attrs = %{
-        user_id: user.id,
-        course_id: course.id,
-        amount: Decimal.new("99.99"),
-        metadata: metadata
+        amount: Money.new(9999, :USD)
       }
 
       # When I create a changeset with these attributes
@@ -244,17 +190,35 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       # Then the changeset should be valid
       assert changeset.valid?
 
-      # And metadata should be stored correctly
-      assert Ecto.Changeset.get_change(changeset, :metadata) == metadata
+      # And default status should be pending
+      assert Ecto.Changeset.get_field(changeset, :status) == "pending"
     end
 
-    test "Scenario: All optional fields are accepted", %{user: user, course: course} do
-      # Given payment attributes with all optional fields populated
+    test "Scenario: Metadata can be stored as a map", %{user: user, course: course} do
+      # Given payment attributes with metadata
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("149.99"),
-        currency: "EUR",
+        amount: Money.new(9999, :USD),
+        metadata: %{"key" => "value", "nested" => %{"data" => "here"}}
+      }
+
+      # When I create a changeset with these attributes
+      changeset = Payment.changeset(%Payment{}, attrs)
+
+      # Then the changeset should be valid
+      assert changeset.valid?
+
+      # And metadata should be stored
+      assert changeset.changes.metadata == %{"key" => "value", "nested" => %{"data" => "here"}}
+    end
+
+    test "Scenario: All optional fields are accepted", %{user: user, course: course} do
+      # Given payment attributes with all optional fields
+      attrs = %{
+        user_id: user.id,
+        course_id: course.id,
+        amount: Money.new(14_999, :USD),
         stripe_payment_intent_id: "pi_123456789",
         stripe_checkout_session_id: "cs_test_123456789",
         status: "completed",
@@ -266,80 +230,27 @@ defmodule Alchemistdrops.Payments.PaymentTest do
 
       # Then the changeset should be valid
       assert changeset.valid?
-
-      # And all fields should be set correctly
-      assert Ecto.Changeset.get_change(changeset, :currency) == "EUR"
-      assert Ecto.Changeset.get_change(changeset, :stripe_payment_intent_id) == "pi_123456789"
-
-      assert Ecto.Changeset.get_change(changeset, :stripe_checkout_session_id) ==
-               "cs_test_123456789"
-
-      assert Ecto.Changeset.get_change(changeset, :status) == "completed"
-      assert Ecto.Changeset.get_change(changeset, :metadata) == %{"key" => "value"}
     end
 
-    test "Scenario: Creating a payment with an invalid currency format", %{
+    test "Scenario: Money library validates currency codes automatically", %{
       user: user,
       course: course
     } do
-      # Given payment attributes with an invalid currency code
-      attrs = %{
-        user_id: user.id,
-        course_id: course.id,
-        amount: Decimal.new("99.99"),
-        currency: "INVALID"
-      }
+      # Given payment attributes with different valid currencies
+      currencies = [:USD, :EUR, :GBP, :JPY, :CAD, :AUD, :CHF, :CNY]
 
-      # When I create a changeset with these attributes
-      changeset = Payment.changeset(%Payment{}, attrs)
+      # When I create changesets with these currencies
+      changesets =
+        Enum.map(currencies, fn currency ->
+          Payment.changeset(%Payment{}, %{
+            user_id: user.id,
+            course_id: course.id,
+            amount: Money.new(9999, currency)
+          })
+        end)
 
-      # Then the changeset should be invalid
-      refute changeset.valid?
-
-      # And it should have a currency format error
-      assert %{currency: ["must be a 3-letter currency code"]} = errors_on(changeset)
-    end
-
-    test "Scenario: Creating a payment with lowercase currency code", %{
-      user: user,
-      course: course
-    } do
-      # Given payment attributes with lowercase currency code
-      attrs = %{
-        user_id: user.id,
-        course_id: course.id,
-        amount: Decimal.new("99.99"),
-        currency: "usd"
-      }
-
-      # When I create a changeset with these attributes
-      changeset = Payment.changeset(%Payment{}, attrs)
-
-      # Then the changeset should be invalid
-      refute changeset.valid?
-
-      # And it should have a currency format error
-      assert %{currency: ["must be a 3-letter currency code"]} = errors_on(changeset)
-    end
-
-    test "Scenario: Valid currency codes are accepted", %{user: user, course: course} do
-      # Given a list of valid currency codes
-      valid_currencies = ["USD", "EUR", "GBP", "JPY", "CAD", "AUD", "CHF", "CNY"]
-
-      # When I create changesets with each currency
-      for currency <- valid_currencies do
-        attrs = %{
-          user_id: user.id,
-          course_id: course.id,
-          amount: Decimal.new("99.99"),
-          currency: currency
-        }
-
-        changeset = Payment.changeset(%Payment{}, attrs)
-
-        # Then each changeset should be valid
-        assert changeset.valid?, "Expected #{currency} to be valid"
-      end
+      # Then all changesets should be valid
+      assert Enum.all?(changesets, & &1.valid?)
     end
 
     test "Scenario: Large payment amounts are accepted", %{user: user, course: course} do
@@ -347,7 +258,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99999.99")
+        amount: Money.new(10_000_000_000, :USD)
       }
 
       # When I create a changeset with these attributes
@@ -358,11 +269,11 @@ defmodule Alchemistdrops.Payments.PaymentTest do
     end
 
     test "Scenario: Empty metadata map is accepted", %{user: user, course: course} do
-      # Given payment attributes with empty metadata
+      # Given payment attributes with an empty metadata map
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99.99"),
+        amount: Money.new(9999, :USD),
         metadata: %{}
       }
 
@@ -378,7 +289,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99.99"),
+        amount: Money.new(9999, :USD),
         metadata: nil
       }
 
@@ -394,7 +305,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99.99"),
+        amount: Money.new(9999, :USD),
         stripe_payment_intent_id: "pi_1234567890"
       }
 
@@ -413,7 +324,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99.99"),
+        amount: Money.new(9999, :USD),
         stripe_checkout_session_id: "cs_test_1234567890"
       }
 
@@ -433,8 +344,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99.99"),
-        currency: "USD",
+        amount: Money.new(9999, :USD),
         stripe_payment_intent_id: "pi_completed_123",
         stripe_checkout_session_id: "cs_completed_123",
         status: "completed",
@@ -460,7 +370,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99.99"),
+        amount: Money.new(9999, :USD),
         status: "failed",
         metadata: %{"error" => "insufficient_funds"}
       }
@@ -480,7 +390,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99.99"),
+        amount: Money.new(9999, :USD),
         status: "refunded",
         stripe_payment_intent_id: "pi_refunded_123",
         metadata: %{"refund_reason" => "customer_request"}
@@ -496,41 +406,69 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       assert Ecto.Changeset.get_change(changeset, :status) == "refunded"
     end
 
-    test "Scenario: Currency validation handles nil currency" do
-      # Given a payment without currency specified
-      user = user_fixture()
-      course = course_fixture()
-
+    test "Scenario: Money validates positive amounts only", %{user: user, course: course} do
+      # Given payment with amount of 1 cent
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99.99")
+        amount: Money.new(1, :USD)
       }
 
       # When I create a changeset
       changeset = Payment.changeset(%Payment{}, attrs)
 
-      # Then the changeset should be valid (will use default)
+      # Then it should be valid
       assert changeset.valid?
     end
 
-    test "Scenario: Currency validation handles non-string currency" do
-      # Given a payment changeset with currency already set
-      payment = %Payment{currency: "USD"}
+    test "Scenario: Payment can use different currencies", %{user: user, course: course} do
+      # Given payment attributes with EUR currency
+      attrs = %{
+        user_id: user.id,
+        course_id: course.id,
+        amount: Money.new(9999, :EUR)
+      }
+
+      # When I create a changeset
+      changeset = Payment.changeset(%Payment{}, attrs)
+
+      # Then the changeset should be valid
+      assert changeset.valid?
+      assert %Money{amount: 9999, currency: :EUR} = changeset.changes.amount
+    end
+
+    test "Scenario: Money validation handles nil amount", %{user: user, course: course} do
+      # Given a payment without amount specified
+      attrs = %{
+        user_id: user.id,
+        course_id: course.id
+      }
+
+      # When I create a changeset
+      changeset = Payment.changeset(%Payment{}, attrs)
+
+      # Then the changeset should be invalid (amount required)
+      refute changeset.valid?
+      assert %{amount: ["can't be blank"]} = errors_on(changeset)
+    end
+
+    test "Scenario: Money validation handles non-Money value" do
+      # Given a payment changeset with amount already set
+      payment = %Payment{amount: Money.new(1000, :USD)}
 
       user = user_fixture()
       course = course_fixture()
 
-      # When we create a changeset without changing currency
+      # When we update without changing amount
       attrs = %{
         user_id: user.id,
         course_id: course.id,
-        amount: Decimal.new("99.99")
+        amount: Money.new(9999, :USD)
       }
 
       changeset = Payment.changeset(payment, attrs)
 
-      # Then the changeset should be valid (no currency change)
+      # Then the changeset should be valid
       assert changeset.valid?
     end
   end

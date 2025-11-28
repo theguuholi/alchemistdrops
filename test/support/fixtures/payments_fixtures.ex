@@ -20,8 +20,7 @@ defmodule Alchemistdrops.PaymentsFixtures do
       |> Map.put(:user_id, user.id)
       |> Map.put(:course_id, course.id)
       |> Enum.into(%{
-        amount: Decimal.new("99.99"),
-        currency: "USD",
+        amount: Money.new(9999, :USD),
         status: "pending"
       })
 

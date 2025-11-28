@@ -15,8 +15,7 @@ defmodule Alchemistdrops.CoursesFixtures do
         title: "Test Course #{System.unique_integer([:positive])}",
         description: "A comprehensive course on testing",
         body: "Full course content goes here",
-        price: Decimal.new("99.99"),
-        currency: "USD",
+        price: Money.new(9999, :USD),
         published: false
       })
 
@@ -37,7 +36,7 @@ defmodule Alchemistdrops.CoursesFixtures do
   Generate a free course.
   """
   def free_course_fixture(attrs \\ %{}) do
-    attrs = Map.put(attrs, :price, Decimal.new("0.00"))
+    attrs = Map.put(attrs, :price, Money.new(0, :USD))
     course_fixture(attrs)
   end
 

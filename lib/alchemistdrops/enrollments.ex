@@ -98,7 +98,7 @@ defmodule Alchemistdrops.Enrollments do
 
   def can_access_course?(%User{} = user, %Course{price: price} = course) do
     # Free courses are accessible to all authenticated users
-    if Decimal.eq?(price, Decimal.new("0.00")) do
+    if Money.zero?(price) do
       true
     else
       user_enrolled?(user, course)

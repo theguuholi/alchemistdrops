@@ -8,8 +8,7 @@ defmodule Alchemistdrops.Courses.Course do
     field :title, :string
     field :description, :string
     field :body, :string
-    field :price, :decimal, default: Decimal.new("0.00")
-    field :currency, :string, default: "USD"
+    field :price, Money.Ecto.Composite.Type
     field :stripe_product_id, :string
     field :stripe_price_id, :string
     field :published, :boolean, default: false
@@ -30,7 +29,6 @@ defmodule Alchemistdrops.Courses.Course do
       :description,
       :body,
       :price,
-      :currency,
       :stripe_product_id,
       :stripe_price_id,
       :published,
@@ -39,8 +37,7 @@ defmodule Alchemistdrops.Courses.Course do
     |> validate_required([:title, :description])
     |> validate_length(:title, max: 255)
     |> trim_field(:title)
-    |> validate_number(:price, greater_than_or_equal_to: 0)
-    |> validate_currency()
+    |> validate_money(:price)
   end
 
   defp trim_field(changeset, field) do
@@ -51,20 +48,11 @@ defmodule Alchemistdrops.Courses.Course do
     end
   end
 
-  defp validate_currency(changeset) do
-    case get_field(changeset, :currency) do
-      nil ->
-        changeset
-
-      currency when is_binary(currency) ->
-        if String.length(currency) == 3 and String.match?(currency, ~r/^[A-Z]{3}$/) do
-          changeset
-        else
-          add_error(changeset, :currency, "must be a 3-letter currency code")
-        end
-
-      _ ->
-        changeset
-    end
+  defp validate_money(changeset, field) do
+    validate_change(changeset, field, fn
+      ^field, %Money{amount: amount} when amount >= 0 -> []
+      ^field, nil -> []
+      ^field, _ -> [{field, "must be a valid money amount"}]
+    end)
   end
 end

@@ -334,8 +334,7 @@ elixir_course =
     ## Prerequisites
     Basic programming knowledge is helpful but not required.
     """,
-    price: Decimal.new("99.99"),
-    currency: "USD",
+    price: Money.new(9999, :USD),
     published: true,
     thumbnail_url: "https://via.placeholder.com/400x300?text=Elixir+Mastery"
   }
@@ -359,8 +358,7 @@ phoenix_course =
     ## Who This Is For
     Developers with basic Elixir knowledge who want to build web applications.
     """,
-    price: Decimal.new("149.99"),
-    currency: "USD",
+    price: Money.new(14999, :USD),
     published: true,
     thumbnail_url: "https://via.placeholder.com/400x300?text=Phoenix+Framework"
   }
@@ -383,8 +381,7 @@ free_course =
 
     Perfect for beginners!
     """,
-    price: Decimal.new("0.00"),
-    currency: "USD",
+    price: Money.new(0, :USD),
     published: true,
     thumbnail_url: "https://via.placeholder.com/400x300?text=Functional+Programming"
   }
@@ -395,8 +392,7 @@ unpublished_course =
     title: "Advanced Distributed Systems",
     description: "Coming soon: Master distributed systems with Elixir",
     body: "This course is currently under development.",
-    price: Decimal.new("199.99"),
-    currency: "USD",
+    price: Money.new(19999, :USD),
     published: false
   }
   |> Repo.insert!()
@@ -618,7 +614,6 @@ student_payment =
     user_id: student_user.id,
     course_id: elixir_course.id,
     amount: elixir_course.price,
-    currency: elixir_course.currency,
     status: "completed",
     stripe_payment_intent_id: "pi_demo_#{System.unique_integer([:positive])}",
     stripe_checkout_session_id: "cs_demo_#{System.unique_integer([:positive])}",

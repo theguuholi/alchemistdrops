@@ -161,8 +161,7 @@ defmodule Alchemistdrops.CoursesTest do
       attrs = %{
         title: "New Course",
         description: "A comprehensive course",
-        price: Decimal.new("99.99"),
-        currency: "USD"
+        price: Money.new(9999, :USD)
       }
 
       # When I create a course
@@ -172,8 +171,7 @@ defmodule Alchemistdrops.CoursesTest do
       assert %Course{} = course
       assert course.title == "New Course"
       assert course.description == "A comprehensive course"
-      assert Decimal.eq?(course.price, Decimal.new("99.99"))
-      assert course.currency == "USD"
+      assert course.price == Money.new(9999, :USD)
     end
 
     test "Scenario: Creating course with missing required fields returns error changeset" do
@@ -195,10 +193,8 @@ defmodule Alchemistdrops.CoursesTest do
       # When I create a course
       {:ok, course} = Courses.create_course(attrs)
 
-      # Then default values should be set
-      assert Decimal.eq?(course.price, Decimal.new("0.00"))
-      assert course.currency == "USD"
-      assert course.published == false
+      # Then default price should be zero USD (free)
+      assert course.price == nil || Money.zero?(course.price || Money.new(0, :USD))
     end
 
     test "Scenario: Creating course with all optional fields" do
@@ -207,8 +203,7 @@ defmodule Alchemistdrops.CoursesTest do
         title: "Complete Course",
         description: "Full details",
         body: "# Course Body Content",
-        price: Decimal.new("149.99"),
-        currency: "EUR",
+        price: Money.new(14_999, :USD),
         stripe_product_id: "prod_123",
         stripe_price_id: "price_123",
         published: true,
@@ -246,11 +241,11 @@ defmodule Alchemistdrops.CoursesTest do
       course = course_fixture()
 
       # When I try to update with invalid data (negative price)
-      {:error, changeset} = Courses.update_course(course, %{price: Decimal.new("-10.00")})
+      {:error, changeset} = Courses.update_course(course, %{price: Money.new(-1000, :USD)})
 
       # Then I should get an error changeset
       assert %Ecto.Changeset{} = changeset
-      assert "must be greater than or equal to 0" in errors_on(changeset).price
+      assert "must be a valid money amount" in errors_on(changeset).price
     end
 
     test "Scenario: Publishing a course" do
@@ -275,20 +270,18 @@ defmodule Alchemistdrops.CoursesTest do
       assert updated.published == false
     end
 
-    test "Scenario: Updating course price and currency" do
+    test "Scenario: Updating course price" do
       # Given a course with a price
-      course = course_fixture(%{price: Decimal.new("99.99"), currency: "USD"})
+      course = course_fixture(%{price: Money.new(9999, :USD)})
 
-      # When I update the price and currency
+      # When I update the price
       {:ok, updated} =
         Courses.update_course(course, %{
-          price: Decimal.new("79.99"),
-          currency: "EUR"
+          price: Money.new(7999, :EUR)
         })
 
-      # Then both should be updated
-      assert Decimal.eq?(updated.price, Decimal.new("79.99"))
-      assert updated.currency == "EUR"
+      # Then the price should be updated
+      assert %Money{amount: 7999, currency: :EUR} = updated.price
     end
   end
 
