@@ -79,56 +79,6 @@ alchemistdrops/
         └── seeds.exs        # Sample data
 ```
 
-## ✨ Features
-
-### Course Management System
-- ✅ **Phase 1 Complete**: Data modeling & schema tests
-  - 4 database tables (courses, lessons, enrollments, payments)
-  - 100% test coverage with Gherkin-style tests
-  - Comprehensive fixtures and seeds
-  
-- 🚧 **Phase 2 In Progress**: Context functions & business logic
-- 📅 **Planned**: LiveView UI, Stripe integration
-
-### User Management
-- ✅ Authentication with `phx.gen.auth`
-- ✅ Role-based access control (admin, student, user)
-- ✅ Email confirmation and password reset
-
-### Blog System
-- ✅ Post creation and management
-- ✅ Admin and public views
-- ✅ LiveView-powered interface
-
-## 🛠️ Tech Stack
-
-- **Framework**: Phoenix 1.8 with LiveView
-- **Database**: PostgreSQL with Ecto
-- **Testing**: ExUnit with Gherkin-style BDD
-- **Authentication**: phx.gen.auth
-- **Styling**: TailwindCSS v4
-- **Payment**: Stripe (planned integration)
-
-## 📊 Current Status
-
-```
-✅ Phase 1: Data Modeling & Schema Tests - 100% Complete
-   - 4 migrations created
-   - 4 schemas with full validation
-   - 87 Gherkin-style tests
-   - Test fixtures and seeds
-
-🚧 Phase 2: Context Functions - In Progress
-   - Business logic implementation
-   - Access control helpers
-   - CRUD operations
-
-📅 Phase 3: LiveView UI - Planned
-   - Admin panel
-   - Public course catalog
-   - Student dashboard
-```
-
 ## 🧰 Development Commands
 
 ### Database
@@ -185,7 +135,6 @@ mix sobelow
 ## 🤝 Contributing
 
 1. Read the [Documentation Index](./docs/README.md)
-2. Review the [TDD Plan](./docs/course-feature/01-TDD-PLAN.md)
 3. Write tests first (Gherkin-style)
 4. Implement features
 5. Run `mix precommit` before committing
@@ -199,12 +148,6 @@ mix sobelow
 * Docs: https://hexdocs.pm/phoenix
 * Forum: https://elixirforum.com/c/phoenix-forum
 * Source: https://github.com/phoenixframework/phoenix
-
-### Project-Specific
-
-* [Course Feature Documentation](./docs/course-feature/README.md)
-* [Test Coverage Report](./docs/course-feature/04-TEST-COVERAGE.md)
-* [Architecture Diagrams](./docs/course-feature/02-ARCHITECTURE.md)
 
 ## 🚀 Deployment
 
