@@ -12,13 +12,26 @@ defmodule Alchemistdrops.EnrollmentsFixtures do
   Generate an enrollment with default or custom attributes.
   """
   def enrollment_fixture(attrs \\ %{}) do
-    user = Map.get(attrs, :user) || AccountsFixtures.user_fixture()
-    course = Map.get(attrs, :course) || CoursesFixtures.course_fixture()
+    user_id =
+      case attrs do
+        %{user_id: id} -> id
+        %{user: user} -> user.id
+        _ -> AccountsFixtures.user_fixture().id
+      end
+
+    course_id =
+      case attrs do
+        %{course_id: id} -> id
+        %{course: course} -> course.id
+        _ -> CoursesFixtures.course_fixture().id
+      end
 
     attrs =
       attrs
-      |> Map.put(:user_id, user.id)
-      |> Map.put(:course_id, course.id)
+      |> Map.delete(:user)
+      |> Map.delete(:course)
+      |> Map.put(:user_id, user_id)
+      |> Map.put(:course_id, course_id)
       |> Enum.into(%{
         status: "active",
         enrolled_at: DateTime.utc_now(:second)

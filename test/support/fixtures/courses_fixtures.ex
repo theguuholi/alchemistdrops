@@ -45,11 +45,17 @@ defmodule Alchemistdrops.CoursesFixtures do
   Generate a lesson with default or custom attributes.
   """
   def lesson_fixture(attrs \\ %{}) do
-    course = Map.get(attrs, :course) || course_fixture()
+    course_id =
+      case attrs do
+        %{course_id: id} -> id
+        %{course: course} -> course.id
+        _ -> course_fixture().id
+      end
 
     attrs =
       attrs
-      |> Map.put(:course_id, course.id)
+      |> Map.delete(:course)
+      |> Map.put(:course_id, course_id)
       |> Enum.into(%{
         title: "Test Lesson #{System.unique_integer([:positive])}",
         description: "A lesson on testing",

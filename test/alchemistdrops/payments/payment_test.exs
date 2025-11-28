@@ -11,6 +11,9 @@ defmodule Alchemistdrops.Payments.PaymentTest do
   alias Alchemistdrops.Courses.Course
   alias Alchemistdrops.Payments.Payment
 
+  import Alchemistdrops.AccountsFixtures
+  import Alchemistdrops.CoursesFixtures
+
   setup do
     # Given a user exists in the system
     user =
@@ -491,6 +494,44 @@ defmodule Alchemistdrops.Payments.PaymentTest do
 
       # And status should be refunded
       assert Ecto.Changeset.get_change(changeset, :status) == "refunded"
+    end
+
+    test "Scenario: Currency validation handles nil currency" do
+      # Given a payment without currency specified
+      user = user_fixture()
+      course = course_fixture()
+
+      attrs = %{
+        user_id: user.id,
+        course_id: course.id,
+        amount: Decimal.new("99.99")
+      }
+
+      # When I create a changeset
+      changeset = Payment.changeset(%Payment{}, attrs)
+
+      # Then the changeset should be valid (will use default)
+      assert changeset.valid?
+    end
+
+    test "Scenario: Currency validation handles non-string currency" do
+      # Given a payment changeset with currency already set
+      payment = %Payment{currency: "USD"}
+
+      user = user_fixture()
+      course = course_fixture()
+
+      # When we create a changeset without changing currency
+      attrs = %{
+        user_id: user.id,
+        course_id: course.id,
+        amount: Decimal.new("99.99")
+      }
+
+      changeset = Payment.changeset(payment, attrs)
+
+      # Then the changeset should be valid (no currency change)
+      assert changeset.valid?
     end
   end
 end

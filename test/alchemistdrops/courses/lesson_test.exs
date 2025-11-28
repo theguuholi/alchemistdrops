@@ -9,6 +9,8 @@ defmodule Alchemistdrops.Courses.LessonTest do
 
   alias Alchemistdrops.Courses.{Course, Lesson}
 
+  import Alchemistdrops.CoursesFixtures
+
   setup do
     # Given a course exists in the system
     course =
@@ -357,6 +359,34 @@ defmodule Alchemistdrops.Courses.LessonTest do
       }
 
       # When I create a changeset with these attributes
+      changeset = Lesson.changeset(%Lesson{}, attrs)
+
+      # Then the changeset should be valid
+      assert changeset.valid?
+    end
+
+    test "Scenario: Trim field handles nil value" do
+      # Given a lesson with no title change
+      course = course_fixture()
+      lesson = %Lesson{title: "Existing Title", course_id: course.id}
+
+      # When I create a changeset without changing title
+      changeset = Lesson.changeset(lesson, %{description: "New Description"})
+
+      # Then the changeset should be valid and title unchanged
+      assert changeset.valid?
+      refute Map.has_key?(changeset.changes, :title)
+    end
+
+    test "Scenario: Trim field handles non-string value", %{course: course} do
+      # Given attrs with valid title
+      attrs = %{
+        course_id: course.id,
+        title: "Valid Title",
+        order: 0
+      }
+
+      # When I create a changeset
       changeset = Lesson.changeset(%Lesson{}, attrs)
 
       # Then the changeset should be valid

@@ -41,6 +41,16 @@ defmodule Alchemistdrops.AccountsFixtures do
     user
   end
 
+  def admin_fixture(attrs \\ %{}) do
+    attrs = Map.put(attrs, :role, :admin)
+    user_fixture(attrs)
+  end
+
+  def student_fixture(attrs \\ %{}) do
+    attrs = Map.put(attrs, :role, :student)
+    user_fixture(attrs)
+  end
+
   def user_scope_fixture do
     user = user_fixture()
     user_scope_fixture(user)
