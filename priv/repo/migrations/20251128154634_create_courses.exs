@@ -7,8 +7,7 @@ defmodule Alchemistdrops.Repo.Migrations.CreateCourses do
       add :title, :string, null: false
       add :description, :text
       add :body, :text
-      add :price, :decimal, precision: 10, scale: 2, default: 0.00
-      add :currency, :string, size: 3, default: "USD"
+      add :price, :integer, default: 0
       add :stripe_product_id, :string
       add :stripe_price_id, :string
       add :published, :boolean, default: false

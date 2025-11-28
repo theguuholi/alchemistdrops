@@ -15,7 +15,7 @@ defmodule Alchemistdrops.CoursesFixtures do
         title: "Test Course #{System.unique_integer([:positive])}",
         description: "A comprehensive course on testing",
         body: "Full course content goes here",
-        price: Money.new(9999, :USD),
+        price: 99,
         published: false
       })
 
