@@ -5,5 +5,8 @@
   AlchemistdropsWeb.Telemetry,
   Mix.Tasks.Coverage.Index,
   Alchemistdrops.AccountsFixtures,
-  AlchemistdropsWeb.ErrorHTML
+  AlchemistdropsWeb.ErrorHTML,
+  Alchemistdrops.CoursesFixtures,
+  Alchemistdrops.EnrollmentsFixtures,
+  Alchemistdrops.PaymentsFixtures
 ]

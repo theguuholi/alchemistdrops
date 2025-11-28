@@ -253,3 +253,396 @@ Enum.each(posts, fn attrs ->
 end)
 
 Alchemistdrops.Repo.insert!(post)
+
+# ================================================================================
+# Course Feature Seeds
+# ================================================================================
+
+alias Alchemistdrops.Repo
+alias Alchemistdrops.Accounts.User
+alias Alchemistdrops.Courses.{Course, Lesson}
+alias Alchemistdrops.Enrollments.Enrollment
+alias Alchemistdrops.Payments.Payment
+
+# Create additional users with different roles
+_admin_user =
+  case Repo.get_by(User, email: "admin@alchemistdrops.com") do
+    nil ->
+      %User{
+        email: "admin@alchemistdrops.com",
+        hashed_password: Bcrypt.hash_pwd_salt("AdminPassword123!"),
+        confirmed_at: DateTime.truncate(DateTime.utc_now(), :second),
+        role: :admin
+      }
+      |> Repo.insert!()
+
+    user ->
+      user
+  end
+
+student_user =
+  case Repo.get_by(User, email: "student@alchemistdrops.com") do
+    nil ->
+      %User{
+        email: "student@alchemistdrops.com",
+        hashed_password: Bcrypt.hash_pwd_salt("StudentPassword123!"),
+        confirmed_at: DateTime.truncate(DateTime.utc_now(), :second),
+        role: :student
+      }
+      |> Repo.insert!()
+
+    user ->
+      user
+  end
+
+regular_user =
+  case Repo.get_by(User, email: "user@alchemistdrops.com") do
+    nil ->
+      %User{
+        email: "user@alchemistdrops.com",
+        hashed_password: Bcrypt.hash_pwd_salt("UserPassword123!"),
+        confirmed_at: DateTime.truncate(DateTime.utc_now(), :second),
+        role: :user
+      }
+      |> Repo.insert!()
+
+    user ->
+      user
+  end
+
+IO.puts("Created/Found users:")
+IO.puts("  - Admin: admin@alchemistdrops.com (password: AdminPassword123!)")
+IO.puts("  - Student: student@alchemistdrops.com (password: StudentPassword123!)")
+IO.puts("  - User: user@alchemistdrops.com (password: UserPassword123!)")
+
+# Create courses
+elixir_course =
+  %Course{
+    title: "Complete Elixir Mastery",
+    description: "Master Elixir from basics to advanced concepts",
+    body: """
+    # Complete Elixir Mastery
+
+    This comprehensive course will take you from Elixir beginner to advanced practitioner.
+
+    ## What You'll Learn
+    - Elixir fundamentals
+    - Functional programming concepts
+    - OTP and concurrency
+    - Building production applications
+
+    ## Prerequisites
+    Basic programming knowledge is helpful but not required.
+    """,
+    price: Decimal.new("99.99"),
+    currency: "USD",
+    published: true,
+    thumbnail_url: "https://via.placeholder.com/400x300?text=Elixir+Mastery"
+  }
+  |> Repo.insert!()
+
+phoenix_course =
+  %Course{
+    title: "Phoenix Framework Deep Dive",
+    description: "Build modern web applications with Phoenix",
+    body: """
+    # Phoenix Framework Deep Dive
+
+    Learn to build scalable, real-time web applications using Phoenix Framework.
+
+    ## Topics Covered
+    - Phoenix fundamentals
+    - LiveView for real-time UIs
+    - Ecto database operations
+    - Deployment strategies
+
+    ## Who This Is For
+    Developers with basic Elixir knowledge who want to build web applications.
+    """,
+    price: Decimal.new("149.99"),
+    currency: "USD",
+    published: true,
+    thumbnail_url: "https://via.placeholder.com/400x300?text=Phoenix+Framework"
+  }
+  |> Repo.insert!()
+
+free_course =
+  %Course{
+    title: "Introduction to Functional Programming",
+    description: "Get started with functional programming concepts",
+    body: """
+    # Introduction to Functional Programming
+
+    A free course introducing you to the world of functional programming.
+
+    ## What You'll Discover
+    - Immutability
+    - Pure functions
+    - Higher-order functions
+    - Function composition
+
+    Perfect for beginners!
+    """,
+    price: Decimal.new("0.00"),
+    currency: "USD",
+    published: true,
+    thumbnail_url: "https://via.placeholder.com/400x300?text=Functional+Programming"
+  }
+  |> Repo.insert!()
+
+unpublished_course =
+  %Course{
+    title: "Advanced Distributed Systems",
+    description: "Coming soon: Master distributed systems with Elixir",
+    body: "This course is currently under development.",
+    price: Decimal.new("199.99"),
+    currency: "USD",
+    published: false
+  }
+  |> Repo.insert!()
+
+IO.puts("\nCreated courses:")
+IO.puts("  - #{elixir_course.title} ($#{elixir_course.price})")
+IO.puts("  - #{phoenix_course.title} ($#{phoenix_course.price})")
+IO.puts("  - #{free_course.title} (FREE)")
+IO.puts("  - #{unpublished_course.title} (UNPUBLISHED)")
+
+# Create lessons for Elixir course
+elixir_lessons = [
+  %{
+    title: "Introduction to Elixir",
+    description: "Learn the basics of Elixir syntax and concepts",
+    content: """
+    Welcome to Elixir! In this lesson, we'll cover:
+    - Installing Elixir
+    - Basic syntax
+    - The Interactive Elixir shell (IEx)
+    - Your first Elixir program
+    """,
+    order: 0,
+    duration: 20,
+    video_url: "https://example.com/videos/elixir-intro",
+    published: true
+  },
+  %{
+    title: "Pattern Matching",
+    description: "Master Elixir's powerful pattern matching",
+    content: """
+    Pattern matching is a core feature of Elixir. Learn how to:
+    - Match simple values
+    - Destructure data structures
+    - Use pattern matching in function heads
+    - Handle complex matching scenarios
+    """,
+    order: 1,
+    duration: 30,
+    video_url: "https://example.com/videos/pattern-matching",
+    published: true
+  },
+  %{
+    title: "Data Types and Collections",
+    description: "Explore Elixir's data types",
+    content: """
+    Dive into Elixir's built-in data types:
+    - Atoms, tuples, and maps
+    - Lists and keyword lists
+    - Strings and binaries
+    - Working with Enum and Stream
+    """,
+    order: 2,
+    duration: 40,
+    video_url: "https://example.com/videos/data-types",
+    published: true
+  },
+  %{
+    title: "Functions and Modules",
+    description: "Organize code with functions and modules",
+    content: """
+    Learn to structure your Elixir code:
+    - Anonymous functions
+    - Named functions
+    - Module attributes
+    - Function arity and default arguments
+    """,
+    order: 3,
+    duration: 35,
+    published: true
+  },
+  %{
+    title: "Processes and Concurrency",
+    description: "Harness the power of the BEAM",
+    content: """
+    Understand Elixir's concurrency model:
+    - Spawning processes
+    - Message passing
+    - Process supervision
+    - Linking and monitoring
+    """,
+    order: 4,
+    duration: 45,
+    published: false
+  }
+]
+
+Enum.each(elixir_lessons, fn lesson_attrs ->
+  %Lesson{
+    course_id: elixir_course.id,
+    title: lesson_attrs.title,
+    description: lesson_attrs.description,
+    content: lesson_attrs.content,
+    order: lesson_attrs.order,
+    duration: lesson_attrs.duration,
+    video_url: Map.get(lesson_attrs, :video_url),
+    published: lesson_attrs.published
+  }
+  |> Repo.insert!()
+end)
+
+IO.puts("\nCreated #{length(elixir_lessons)} lessons for #{elixir_course.title}")
+
+# Create lessons for Phoenix course
+phoenix_lessons = [
+  %{
+    title: "Phoenix Setup and Architecture",
+    description: "Get started with Phoenix",
+    content: "Learn how to set up Phoenix and understand its architecture.",
+    order: 0,
+    duration: 25,
+    published: true
+  },
+  %{
+    title: "Building Your First Phoenix App",
+    description: "Create a simple Phoenix application",
+    content: "Build a simple CRUD application with Phoenix.",
+    order: 1,
+    duration: 40,
+    published: true
+  },
+  %{
+    title: "Phoenix LiveView Basics",
+    description: "Introduction to real-time with LiveView",
+    content: "Learn the fundamentals of Phoenix LiveView.",
+    order: 2,
+    duration: 50,
+    published: true
+  }
+]
+
+Enum.each(phoenix_lessons, fn lesson_attrs ->
+  %Lesson{
+    course_id: phoenix_course.id,
+    title: lesson_attrs.title,
+    description: lesson_attrs.description,
+    content: lesson_attrs.content,
+    order: lesson_attrs.order,
+    duration: lesson_attrs.duration,
+    published: lesson_attrs.published
+  }
+  |> Repo.insert!()
+end)
+
+IO.puts("Created #{length(phoenix_lessons)} lessons for #{phoenix_course.title}")
+
+# Create lessons for free course
+free_lessons = [
+  %{
+    title: "What is Functional Programming?",
+    description: "Introduction to FP concepts",
+    content: "Learn what makes functional programming unique.",
+    order: 0,
+    duration: 15,
+    published: true
+  },
+  %{
+    title: "Immutability Explained",
+    description: "Understanding immutable data",
+    content: "Discover why immutability is important.",
+    order: 1,
+    duration: 20,
+    published: true
+  }
+]
+
+Enum.each(free_lessons, fn lesson_attrs ->
+  %Lesson{
+    course_id: free_course.id,
+    title: lesson_attrs.title,
+    description: lesson_attrs.description,
+    content: lesson_attrs.content,
+    order: lesson_attrs.order,
+    duration: lesson_attrs.duration,
+    published: lesson_attrs.published
+  }
+  |> Repo.insert!()
+end)
+
+IO.puts("Created #{length(free_lessons)} lessons for #{free_course.title}")
+
+# Create enrollments
+_student_elixir_enrollment =
+  %Enrollment{
+    user_id: student_user.id,
+    course_id: elixir_course.id,
+    status: "active",
+    enrolled_at: DateTime.utc_now(:second)
+  }
+  |> Repo.insert!()
+
+_student_free_enrollment =
+  %Enrollment{
+    user_id: student_user.id,
+    course_id: free_course.id,
+    status: "completed",
+    enrolled_at: DateTime.add(DateTime.utc_now(:second), -30, :day),
+    completed_at: DateTime.add(DateTime.utc_now(:second), -5, :day)
+  }
+  |> Repo.insert!()
+
+_regular_free_enrollment =
+  %Enrollment{
+    user_id: regular_user.id,
+    course_id: free_course.id,
+    status: "active",
+    enrolled_at: DateTime.utc_now(:second)
+  }
+  |> Repo.insert!()
+
+IO.puts("\nCreated enrollments:")
+IO.puts("  - Student enrolled in #{elixir_course.title}")
+IO.puts("  - Student completed #{free_course.title}")
+IO.puts("  - User enrolled in #{free_course.title}")
+
+# Create payment records
+student_payment =
+  %Payment{
+    user_id: student_user.id,
+    course_id: elixir_course.id,
+    amount: elixir_course.price,
+    currency: elixir_course.currency,
+    status: "completed",
+    stripe_payment_intent_id: "pi_demo_#{System.unique_integer([:positive])}",
+    stripe_checkout_session_id: "cs_demo_#{System.unique_integer([:positive])}",
+    metadata: %{
+      "course_title" => elixir_course.title,
+      "user_email" => student_user.email
+    }
+  }
+  |> Repo.insert!()
+
+IO.puts("\nCreated payments:")
+IO.puts("  - Student paid $#{student_payment.amount} for #{elixir_course.title}")
+
+IO.puts("\n✅ Course feature seeds completed successfully!")
+IO.puts("\n📚 Summary:")
+IO.puts("  - 4 courses created (3 published, 1 unpublished)")
+
+IO.puts(
+  "  - #{length(elixir_lessons) + length(phoenix_lessons) + length(free_lessons)} lessons created"
+)
+
+IO.puts("  - 3 enrollments created")
+IO.puts("  - 1 payment record created")
+IO.puts("\n👤 Test Accounts:")
+IO.puts("  - Admin: admin@alchemistdrops.com / AdminPassword123!")
+IO.puts("  - Student: student@alchemistdrops.com / StudentPassword123!")
+IO.puts("  - User: user@alchemistdrops.com / UserPassword123!")
