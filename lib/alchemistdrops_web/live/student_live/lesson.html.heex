@@ -1,0 +1,159 @@
+<div class="flex h-screen overflow-hidden bg-base-200">
+  <%!-- Sidebar - Lesson Navigation --%>
+  <aside class="w-80 bg-base-100 border-r border-base-300 flex flex-col overflow-hidden">
+    <%!-- Course Header --%>
+    <div class="p-6 border-b border-base-300 bg-gradient-to-r from-primary to-secondary">
+      <.link navigate={~p"/courses/#{@course.id}"} class="flex items-center text-primary-content/80 hover:text-primary-content mb-3 transition-colors gap-2">
+        <.icon name="hero-arrow-left" class="w-5 h-5" />
+        Back to Course
+      </.link>
+      <h2 class="text-xl font-bold text-primary-content truncate">
+        {@course.title}
+      </h2>
+      <p class="text-sm text-primary-content/80 mt-1">
+        {length(@lessons)} Lessons
+      </p>
+    </div>
+
+    <%!-- Lessons List --%>
+    <nav class="flex-1 overflow-y-auto p-4 space-y-2">
+      <%= for {lesson, index} <- Enum.with_index(@lessons) do %>
+        <button
+          phx-click="select_lesson"
+          phx-value-id={lesson.id}
+          class={[
+            "w-full text-left p-4 rounded-lg transition-all duration-200",
+            lesson.id == @current_lesson.id && "bg-primary text-primary-content shadow-md",
+            lesson.id != @current_lesson.id && "bg-base-200 hover:bg-base-300"
+          ]}
+        >
+          <div class="flex items-start">
+            <span class={[
+              "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-semibold text-sm mr-3",
+              lesson.id == @current_lesson.id && "bg-primary-content/20 text-primary-content",
+              lesson.id != @current_lesson.id && "bg-primary/20 text-primary"
+            ]}>
+              {index + 1}
+            </span>
+            <div class="flex-1 min-w-0">
+              <p class={[
+                "font-medium text-sm truncate",
+                lesson.id == @current_lesson.id && "text-primary-content",
+                lesson.id != @current_lesson.id && "text-base-content"
+              ]}>
+                {lesson.title}
+              </p>
+              <%= if lesson.duration do %>
+                <p class={[
+                  "text-xs mt-1 flex items-center gap-1",
+                  lesson.id == @current_lesson.id && "text-primary-content/80",
+                  lesson.id != @current_lesson.id && "text-base-content/60"
+                ]}>
+                  <.icon name="hero-clock" class="w-3 h-3" />
+                  {format_duration(lesson.duration)}
+                </p>
+              <% end %>
+            </div>
+            <%= if lesson.id == @current_lesson.id do %>
+              <.icon name="hero-play-circle" class="w-5 h-5 text-primary-content flex-shrink-0 ml-2" />
+            <% end %>
+          </div>
+        </button>
+      <% end %>
+    </nav>
+  </aside>
+
+  <%!-- Main Content Area --%>
+  <div class="flex-1 flex flex-col overflow-hidden">
+    <%!-- Lesson Content --%>
+    <main role="main" class="flex-1 overflow-y-auto bg-base-100">
+      <article class="max-w-4xl mx-auto p-8">
+        <%!-- Lesson Header --%>
+        <header class="mb-8">
+          <h1 class="text-4xl font-bold text-base-content mb-4">
+            {@current_lesson.title}
+          </h1>
+          <%= if @current_lesson.description do %>
+            <p class="text-lg text-base-content/70">
+              {@current_lesson.description}
+            </p>
+          <% end %>
+        </header>
+
+        <%!-- Video Player --%>
+        <%= if @current_lesson.video_url do %>
+          <div class="mb-8 rounded-lg overflow-hidden shadow-lg bg-base-300">
+            <video
+              controls
+              class="w-full aspect-video"
+              src={@current_lesson.video_url}
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        <% end %>
+
+        <%!-- Lesson Content --%>
+        <%= if @current_lesson.content do %>
+          <div class="prose prose-lg max-w-none card bg-base-100 shadow-lg border border-base-300">
+            <div class="card-body">
+              {@current_lesson.content}
+            </div>
+          </div>
+        <% end %>
+      </article>
+    </main>
+
+    <%!-- Navigation Footer --%>
+    <footer class="bg-base-100 border-t border-base-300 px-8 py-6">
+      <div class="max-w-4xl mx-auto flex items-center justify-between">
+        <%!-- Previous Button --%>
+        <%= if @has_prev do %>
+          <button
+            id="prev-lesson"
+            phx-click="prev_lesson"
+            class="btn btn-ghost gap-2"
+          >
+            <.icon name="hero-arrow-left" class="w-5 h-5" />
+            Previous
+          </button>
+        <% else %>
+          <button class="btn btn-disabled gap-2">
+            <.icon name="hero-arrow-left" class="w-5 h-5" />
+            Previous
+          </button>
+        <% end %>
+
+        <%!-- Progress Indicator --%>
+        <div class="text-center">
+          <p class="text-sm text-base-content/70 mb-2">
+            Lesson <%= Enum.find_index(@lessons, &(&1.id == @current_lesson.id)) |> Kernel.+(1) %> of {length(@lessons)}
+          </p>
+          <progress
+            class="progress progress-primary w-48"
+            value={Enum.find_index(@lessons, &(&1.id == @current_lesson.id)) + 1}
+            max={length(@lessons)}
+          >
+          </progress>
+        </div>
+
+        <%!-- Next Button --%>
+        <%= if @has_next do %>
+          <button
+            id="next-lesson"
+            phx-click="next_lesson"
+            class="btn btn-primary gap-2"
+          >
+            Next
+            <.icon name="hero-arrow-right" class="w-5 h-5" />
+          </button>
+        <% else %>
+          <div class="badge badge-success badge-lg gap-2 p-4">
+            <.icon name="hero-check-circle" class="w-5 h-5" />
+            Complete!
+          </div>
+        <% end %>
+      </div>
+    </footer>
+  </div>
+</div>

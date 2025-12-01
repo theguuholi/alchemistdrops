@@ -1,0 +1,181 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="space-y-6">
+    <%!-- Back Button --%>
+    <.link
+      navigate={~p"/courses"}
+      class="btn btn-ghost btn-sm gap-2"
+    >
+      <.icon name="hero-arrow-left" class="w-5 h-5" />
+      Back to Courses
+    </.link>
+
+    <%!-- Course Header --%>
+    <article class="card bg-base-100 shadow-lg border border-base-300">
+      <div class="grid lg:grid-cols-2 gap-0">
+        <%!-- Course Image --%>
+        <figure class="aspect-video lg:aspect-auto bg-gradient-to-br from-primary to-secondary relative">
+          <%= if @course.thumbnail_url do %>
+            <img
+              src={@course.thumbnail_url}
+              alt={"Thumbnail for #{@course.title}"}
+              class="w-full h-full object-cover"
+            />
+          <% else %>
+            <div class="w-full h-full flex items-center justify-center">
+              <.icon name="hero-academic-cap" class="w-32 h-32 text-primary-content/80" />
+            </div>
+          <% end %>
+        </figure>
+
+        <%!-- Course Info --%>
+        <div class="card-body">
+          <%!-- Price Badge --%>
+          <div class="mb-4">
+            <span class={[
+              "badge badge-lg gap-1",
+              Money.zero?(@course.price) && "badge-success",
+              !Money.zero?(@course.price) && "badge-info"
+            ]}>
+              {format_price(@course.price)}
+            </span>
+          </div>
+
+          <%!-- Title --%>
+          <h1 class="text-4xl font-bold text-base-content mb-4">
+            {@course.title}
+          </h1>
+
+          <%!-- Description --%>
+          <p class="text-lg text-base-content/70 mb-6">
+            {@course.description}
+          </p>
+
+          <%!-- Course Stats --%>
+          <div class="flex gap-6 mb-8 text-base-content/70">
+            <div class="flex items-center gap-2">
+              <.icon name="hero-book-open" class="w-5 h-5" />
+              <span>{length(@lessons)} Lessons</span>
+            </div>
+            <%= if @total_duration > 0 do %>
+              <div class="flex items-center gap-2">
+                <.icon name="hero-clock" class="w-5 h-5" />
+                <span>{@total_duration} min</span>
+              </div>
+            <% end %>
+          </div>
+
+          <%!-- Action Button --%>
+          <div class="mt-auto">
+            <%= cond do %>
+              <%!-- Logged in and enrolled --%>
+              <% @enrolled && Map.has_key?(@current_scope || %{}, :user) -> %>
+                <div class="space-y-3">
+                  <div class="alert alert-success">
+                    <.icon name="hero-check-circle" class="w-6 h-6" />
+                    <span>You're enrolled in this course</span>
+                  </div>
+                  <%= if length(@lessons) > 0 do %>
+                    <.link
+                      navigate={~p"/student/courses/#{@course.id}/lessons"}
+                      class="btn btn-primary w-full gap-2"
+                    >
+                      <.icon name="hero-play" class="w-6 h-6" />
+                      Start Learning
+                    </.link>
+                  <% end %>
+                </div>
+
+              <%!-- Logged in, not enrolled, free course --%>
+              <% !@enrolled && Map.has_key?(@current_scope || %{}, :user) && Money.zero?(@course.price) -> %>
+                <button
+                  id="enroll-button"
+                  phx-click="enroll_free"
+                  class="btn btn-success w-full gap-2"
+                >
+                  <.icon name="hero-check-circle" class="w-6 h-6" />
+                  Enroll Now - It's Free!
+                </button>
+
+              <%!-- Logged in, not enrolled, paid course --%>
+              <% !@enrolled && Map.has_key?(@current_scope || %{}, :user) && !Money.zero?(@course.price) -> %>
+                <button
+                  id="purchase-button"
+                  class="btn btn-primary w-full gap-2"
+                >
+                  <.icon name="hero-shopping-cart" class="w-6 h-6" />
+                  Purchase Course
+                </button>
+
+              <%!-- Not logged in --%>
+              <% true -> %>
+                <.link
+                  navigate={~p"/users/log-in"}
+                  class="btn btn-primary w-full gap-2"
+                >
+                  <.icon name="hero-arrow-right-on-rectangle" class="w-6 h-6" />
+                  Sign in to Enroll
+                </.link>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <%!-- Course Content Section --%>
+    <div class="grid lg:grid-cols-3 gap-6">
+      <%!-- Main Content --%>
+      <div class="lg:col-span-2 space-y-6">
+        <%!-- Course Description --%>
+        <%= if @course.body do %>
+          <section class="card bg-base-100 shadow-lg border border-base-300">
+            <div class="card-body">
+              <h2 class="card-title text-2xl">About This Course</h2>
+              <div class="prose max-w-none text-base-content/80">
+                {@course.body}
+              </div>
+            </div>
+          </section>
+        <% end %>
+      </div>
+
+      <%!-- Sidebar - Curriculum --%>
+      <div class="lg:col-span-1">
+        <section id="curriculum" class="card bg-base-100 shadow-lg border border-base-300 lg:sticky lg:top-6">
+          <div class="card-body">
+            <h3 class="card-title flex items-center gap-2">
+              <.icon name="hero-list-bullet" class="w-6 h-6 text-primary" />
+              Course Content
+            </h3>
+
+            <%= if Enum.empty?(@lessons) do %>
+              <p class="text-base-content/60 text-center py-8">
+                No lessons available yet
+              </p>
+            <% else %>
+              <ol class="space-y-2 mt-4">
+                <%= for lesson <- @lessons do %>
+                  <li class="flex items-start p-3 rounded-lg hover:bg-base-200 transition-colors">
+                    <span class="badge badge-primary badge-sm mr-3 mt-0.5">
+                      {lesson.order}
+                    </span>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium text-base-content truncate">
+                        {lesson.title}
+                      </p>
+                      <%= if lesson.duration do %>
+                        <p class="text-xs text-base-content/60 flex items-center gap-1 mt-1">
+                          <.icon name="hero-clock" class="w-3 h-3" />
+                          {format_duration(lesson.duration)}
+                        </p>
+                      <% end %>
+                    </div>
+                  </li>
+                <% end %>
+              </ol>
+            <% end %>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</Layouts.app>

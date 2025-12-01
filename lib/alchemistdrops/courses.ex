@@ -31,6 +31,20 @@ defmodule Alchemistdrops.Courses do
   end
 
   @doc """
+  Returns the list of published courses ordered by title.
+  Alias for list_courses/0.
+
+  ## Examples
+
+      iex> list_published_courses()
+      [%Course{}, ...]
+
+  """
+  def list_published_courses do
+    list_courses()
+  end
+
+  @doc """
   Returns all courses including unpublished ones, ordered by title.
   Intended for admin use.
 
@@ -149,6 +163,38 @@ defmodule Alchemistdrops.Courses do
   end
 
   ## Lesson functions
+
+  @doc """
+  Returns the list of lessons for a course, ordered by the order field.
+
+  ## Options
+
+  - `:only_published` - if true, only returns published lessons (default: false)
+
+  ## Examples
+
+      iex> list_course_lessons(course_id)
+      [%Lesson{}, ...]
+
+      iex> list_course_lessons(course_id, only_published: true)
+      [%Lesson{}, ...]
+
+  """
+  def list_course_lessons(course_id, opts \\ []) do
+    query =
+      Lesson
+      |> where([l], l.course_id == ^course_id)
+      |> order_by([l], asc: l.order)
+
+    query =
+      if Keyword.get(opts, :only_published, false) do
+        where(query, [l], l.published == true)
+      else
+        query
+      end
+
+    Repo.all(query)
+  end
 
   @doc """
   Creates a lesson for a course.

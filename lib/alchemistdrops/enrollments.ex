@@ -22,34 +22,37 @@ defmodule Alchemistdrops.Enrollments do
 
   Sets the enrolled_at timestamp and status to "active".
 
+  Accepts either structs or IDs for both user and course.
+
   ## Examples
 
       iex> enroll_user(user, course)
+      {:ok, %Enrollment{}}
+
+      iex> enroll_user(user_id, course_id)
       {:ok, %Enrollment{}}
 
       iex> enroll_user(user, course)
       {:error, %Ecto.Changeset{}}
 
   """
-  def enroll_user(%User{} = user, %Course{} = course) do
+  def enroll_user(user_id, course_id) when is_binary(user_id) and is_binary(course_id) do
     %Enrollment{}
     |> Enrollment.changeset(%{
-      user_id: user.id,
-      course_id: course.id,
+      user_id: user_id,
+      course_id: course_id,
       enrolled_at: DateTime.utc_now()
     })
     |> Repo.insert()
   end
 
+  def enroll_user(%User{} = user, %Course{} = course) do
+    enroll_user(user.id, course.id)
+  end
+
   def enroll_user(%User{} = user, course) when is_map(course) do
     # Handle case where course is a map (for testing error cases)
-    %Enrollment{}
-    |> Enrollment.changeset(%{
-      user_id: user.id,
-      course_id: Map.get(course, :id),
-      enrolled_at: DateTime.utc_now()
-    })
-    |> Repo.insert()
+    enroll_user(user.id, Map.get(course, :id))
   end
 
   @doc """
@@ -58,23 +61,29 @@ defmodule Alchemistdrops.Enrollments do
   Returns true if the user has an active or completed enrollment.
   Returns false for cancelled enrollments or no enrollment.
 
+  Accepts either structs or IDs for both user and course.
+
   ## Examples
 
       iex> user_enrolled?(user, course)
       true
 
-      iex> user_enrolled?(user, course)
+      iex> user_enrolled?(user_id, course_id)
       false
 
   """
-  def user_enrolled?(%User{} = user, %Course{} = course) do
+  def user_enrolled?(user_id, course_id) when is_binary(user_id) and is_binary(course_id) do
     query =
       from e in Enrollment,
-        where: e.user_id == ^user.id,
-        where: e.course_id == ^course.id,
+        where: e.user_id == ^user_id,
+        where: e.course_id == ^course_id,
         where: e.status in ["active", "completed"]
 
     Repo.exists?(query)
+  end
+
+  def user_enrolled?(%User{} = user, %Course{} = course) do
+    user_enrolled?(user.id, course.id)
   end
 
   @doc """
