@@ -35,6 +35,9 @@ config :alchemistdrops, AlchemistdropsWeb.Endpoint,
   pubsub_server: Alchemistdrops.PubSub,
   live_view: [signing_salt: "CNpJGqkr"]
 
+config :money,
+  default_currency: :USD
+
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails

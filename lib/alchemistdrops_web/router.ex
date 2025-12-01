@@ -13,9 +13,9 @@ defmodule AlchemistdropsWeb.Router do
     plug :fetch_current_scope_for_user
   end
 
-  pipeline :api do
-    plug :accepts, ["json"]
-  end
+  # pipeline :api do
+  #   plug :accepts, ["json"]
+  # end
 
   scope "/", AlchemistdropsWeb do
     pipe_through :browser
