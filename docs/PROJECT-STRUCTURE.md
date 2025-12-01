@@ -358,3 +358,4 @@ Example: docs/course-feature/01-TDD-PLAN.md
 
 **This structure follows Phoenix best practices and Clean Architecture principles.**
 
+
