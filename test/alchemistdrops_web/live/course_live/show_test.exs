@@ -10,13 +10,14 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
     test "given a published course when visitor loads the page then they see course details", %{
       conn: conn
     } do
-      course = course_fixture(%{
-        title: "Elixir Mastery",
-        description: "Master Elixir programming",
-        body: "Complete guide to Elixir",
-        price: Money.new(9999, :USD),
-        published: true
-      })
+      course =
+        course_fixture(%{
+          title: "Elixir Mastery",
+          description: "Master Elixir programming",
+          body: "Complete guide to Elixir",
+          price: Money.new(9999, :USD),
+          published: true
+        })
 
       {:ok, view, _html} = live(conn, ~p"/courses/#{course}")
 
@@ -39,8 +40,12 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
       conn: conn
     } do
       course = course_fixture(%{published: true})
-      _lesson1 = lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
-      _lesson2 = lesson_fixture(%{course_id: course.id, title: "Lesson 2", order: 2, published: true})
+
+      _lesson1 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
+
+      _lesson2 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 2", order: 2, published: true})
 
       {:ok, view, _html} = live(conn, ~p"/courses/#{course}")
 
@@ -49,9 +54,10 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
       assert has_element?(view, "li", "Lesson 2")
     end
 
-    test "given a course with no lessons when visitor loads the page then they see empty state", %{
-      conn: conn
-    } do
+    test "given a course with no lessons when visitor loads the page then they see empty state",
+         %{
+           conn: conn
+         } do
       course = course_fixture(%{published: true})
 
       {:ok, view, _html} = live(conn, ~p"/courses/#{course}")
@@ -149,8 +155,12 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
     test "given published and unpublished lessons when visitor views course then they see only published",
          %{conn: conn} do
       course = course_fixture(%{published: true})
-      _published = lesson_fixture(%{course_id: course.id, title: "Published Lesson", published: true})
-      _unpublished = lesson_fixture(%{course_id: course.id, title: "Secret Lesson", published: false})
+
+      _published =
+        lesson_fixture(%{course_id: course.id, title: "Published Lesson", published: true})
+
+      _unpublished =
+        lesson_fixture(%{course_id: course.id, title: "Secret Lesson", published: false})
 
       {:ok, view, _html} = live(conn, ~p"/courses/#{course}")
 
@@ -174,9 +184,15 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
     test "given lessons in specific order when visitor views course then they see correct order",
          %{conn: conn} do
       course = course_fixture(%{published: true})
-      _lesson3 = lesson_fixture(%{course_id: course.id, title: "Lesson 3", order: 3, published: true})
-      _lesson1 = lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
-      _lesson2 = lesson_fixture(%{course_id: course.id, title: "Lesson 2", order: 2, published: true})
+
+      _lesson3 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 3", order: 3, published: true})
+
+      _lesson1 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
+
+      _lesson2 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 2", order: 2, published: true})
 
       {:ok, view, _html} = live(conn, ~p"/courses/#{course}")
 

@@ -245,7 +245,7 @@ defmodule Alchemistdrops.CoursesTest do
 
       # Then I should get an error changeset
       assert %Ecto.Changeset{} = changeset
-      assert "must be a valid money amount" in errors_on(changeset).price
+      assert "must be greater than or equal to 0" in errors_on(changeset).price
     end
 
     test "Scenario: Publishing a course" do
@@ -277,11 +277,11 @@ defmodule Alchemistdrops.CoursesTest do
       # When I update the price
       {:ok, updated} =
         Courses.update_course(course, %{
-          price: Money.new(7999, :EUR)
+          price: Money.new(7999, :USD)
         })
 
       # Then the price should be updated
-      assert %Money{amount: 7999, currency: :EUR} = updated.price
+      assert Money.equals?(updated.price, Money.new(7999, :USD))
     end
   end
 

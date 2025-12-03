@@ -46,8 +46,7 @@
                 <%!-- Enrollment Badge --%>
                 <%= if Map.get(course, :enrolled, false) do %>
                   <div class="absolute top-4 right-4 badge badge-success gap-1 shadow-lg">
-                    <.icon name="hero-check-circle" class="w-4 h-4" />
-                    Enrolled
+                    <.icon name="hero-check-circle" class="w-4 h-4" /> Enrolled
                   </div>
                 <% end %>
               </figure>
@@ -83,11 +82,9 @@
                     aria-label={"View details for #{course.title}"}
                   >
                     <%= if Map.get(course, :enrolled, false) do %>
-                      <.icon name="hero-arrow-right" class="w-4 h-4" />
-                      Continue
+                      <.icon name="hero-arrow-right" class="w-4 h-4" /> Continue
                     <% else %>
-                      <.icon name="hero-eye" class="w-4 h-4" />
-                      View
+                      <.icon name="hero-eye" class="w-4 h-4" /> View
                     <% end %>
                   </.link>
                 </div>
@@ -99,4 +96,3 @@
     </section>
   </div>
 </Layouts.app>
-

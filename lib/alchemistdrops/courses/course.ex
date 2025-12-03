@@ -36,5 +36,31 @@ defmodule Alchemistdrops.Courses.Course do
     ])
     |> validate_required([:title, :description])
     |> validate_length(:title, max: 255)
+    |> trim_field(:title)
+    |> validate_money(:price)
+  end
+
+  defp trim_field(changeset, field) do
+    case get_change(changeset, field) do
+      nil -> changeset
+      value when is_binary(value) -> put_change(changeset, field, String.trim(value))
+      _ -> changeset
+    end
+  end
+
+  defp validate_money(changeset, field) do
+    validate_change(changeset, field, fn
+      ^field, %Money{amount: amount} when amount < 0 ->
+        [{field, "must be greater than or equal to 0"}]
+
+      ^field, %Money{} ->
+        []
+
+      ^field, nil ->
+        []
+
+      ^field, _ ->
+        [{field, "must be a valid money amount"}]
+    end)
   end
 end

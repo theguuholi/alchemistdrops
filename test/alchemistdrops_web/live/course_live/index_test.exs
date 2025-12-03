@@ -40,8 +40,11 @@ defmodule AlchemistdropsWeb.CourseLive.IndexTest do
 
     test "given courses with different prices when visitor loads the page then they see formatted prices",
          %{conn: conn} do
-      _free_course = course_fixture(%{title: "Free Course", price: Money.new(0, :USD), published: true})
-      _paid_course = course_fixture(%{title: "Premium Course", price: Money.new(9999, :USD), published: true})
+      _free_course =
+        course_fixture(%{title: "Free Course", price: Money.new(0, :USD), published: true})
+
+      _paid_course =
+        course_fixture(%{title: "Premium Course", price: Money.new(9999, :USD), published: true})
 
       {:ok, view, _html} = live(conn, ~p"/courses")
 

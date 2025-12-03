@@ -3,4 +3,3 @@ defmodule Alchemistdrops.Payments do
   The Payments context.
   """
 end
-

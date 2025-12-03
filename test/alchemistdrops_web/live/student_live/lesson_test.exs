@@ -12,12 +12,15 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
     } do
       user = user_fixture()
       course = course_fixture(%{published: true})
-      _lesson = lesson_fixture(%{
-        course_id: course.id,
-        title: "Introduction to Elixir",
-        content: "Welcome to Elixir programming",
-        published: true
-      })
+
+      _lesson =
+        lesson_fixture(%{
+          course_id: course.id,
+          title: "Introduction to Elixir",
+          content: "Welcome to Elixir programming",
+          published: true
+        })
+
       enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
 
       {:ok, view, _html} =
@@ -58,8 +61,13 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
          %{conn: conn} do
       user = user_fixture()
       course = course_fixture(%{published: true})
-      _lesson1 = lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
-      _lesson2 = lesson_fixture(%{course_id: course.id, title: "Lesson 2", order: 2, published: true})
+
+      _lesson1 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
+
+      _lesson2 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 2", order: 2, published: true})
+
       enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
 
       {:ok, view, _html} =
@@ -79,8 +87,19 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
     } do
       user = user_fixture()
       course = course_fixture(%{published: true})
-      _lesson1 = lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
-      lesson2 = lesson_fixture(%{course_id: course.id, title: "Lesson 2", content: "Second lesson content", order: 2, published: true})
+
+      _lesson1 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
+
+      lesson2 =
+        lesson_fixture(%{
+          course_id: course.id,
+          title: "Lesson 2",
+          content: "Second lesson content",
+          order: 2,
+          published: true
+        })
+
       enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
 
       {:ok, view, _html} =
@@ -95,8 +114,13 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
     test "given no lesson param when user visits then they see first lesson", %{conn: conn} do
       user = user_fixture()
       course = course_fixture(%{published: true})
-      _lesson1 = lesson_fixture(%{course_id: course.id, title: "First Lesson", order: 1, published: true})
-      _lesson2 = lesson_fixture(%{course_id: course.id, title: "Second Lesson", order: 2, published: true})
+
+      _lesson1 =
+        lesson_fixture(%{course_id: course.id, title: "First Lesson", order: 1, published: true})
+
+      _lesson2 =
+        lesson_fixture(%{course_id: course.id, title: "Second Lesson", order: 2, published: true})
+
       enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
 
       {:ok, view, _html} =
@@ -112,8 +136,13 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
     test "given current lesson when user clicks next then they see next lesson", %{conn: conn} do
       user = user_fixture()
       course = course_fixture(%{published: true})
-      _lesson1 = lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
-      _lesson2 = lesson_fixture(%{course_id: course.id, title: "Lesson 2", order: 2, published: true})
+
+      _lesson1 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
+
+      _lesson2 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 2", order: 2, published: true})
+
       enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
 
       {:ok, view, _html} =
@@ -131,7 +160,10 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
     test "given last lesson when user clicks next then button is disabled", %{conn: conn} do
       user = user_fixture()
       course = course_fixture(%{published: true})
-      lesson = lesson_fixture(%{course_id: course.id, title: "Last Lesson", order: 1, published: true})
+
+      lesson =
+        lesson_fixture(%{course_id: course.id, title: "Last Lesson", order: 1, published: true})
+
       enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
 
       {:ok, view, _html} =
@@ -147,8 +179,13 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
     test "given second lesson when user clicks prev then they see first lesson", %{conn: conn} do
       user = user_fixture()
       course = course_fixture(%{published: true})
-      _lesson1 = lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
-      lesson2 = lesson_fixture(%{course_id: course.id, title: "Lesson 2", order: 2, published: true})
+
+      _lesson1 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
+
+      lesson2 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 2", order: 2, published: true})
+
       enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
 
       {:ok, view, _html} =
@@ -166,7 +203,10 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
     test "given first lesson when viewing then prev button is disabled", %{conn: conn} do
       user = user_fixture()
       course = course_fixture(%{published: true})
-      _lesson = lesson_fixture(%{course_id: course.id, title: "First Lesson", order: 1, published: true})
+
+      _lesson =
+        lesson_fixture(%{course_id: course.id, title: "First Lesson", order: 1, published: true})
+
       enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
 
       {:ok, view, _html} =
@@ -184,11 +224,14 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
     } do
       user = user_fixture()
       course = course_fixture(%{published: true})
-      _lesson = lesson_fixture(%{
-        course_id: course.id,
-        video_url: "https://example.com/video.mp4",
-        published: true
-      })
+
+      _lesson =
+        lesson_fixture(%{
+          course_id: course.id,
+          video_url: "https://example.com/video.mp4",
+          published: true
+        })
+
       enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
 
       {:ok, view, _html} =

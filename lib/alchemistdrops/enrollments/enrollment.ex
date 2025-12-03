@@ -36,4 +36,3 @@ defmodule Alchemistdrops.Enrollments.Enrollment do
     end
   end
 end
-

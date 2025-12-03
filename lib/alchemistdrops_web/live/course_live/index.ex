@@ -37,7 +37,8 @@ defmodule AlchemistdropsWeb.CourseLive.Index do
     assign(socket, :courses, courses)
   end
 
-  defp maybe_load_enrollment_status(courses, nil), do: Enum.map(courses, &Map.put(&1, :enrolled, false))
+  defp maybe_load_enrollment_status(courses, nil),
+    do: Enum.map(courses, &Map.put(&1, :enrolled, false))
 
   defp maybe_load_enrollment_status(courses, user) do
     Enum.map(courses, fn course ->

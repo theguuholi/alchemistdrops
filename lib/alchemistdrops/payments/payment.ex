@@ -32,8 +32,18 @@ defmodule Alchemistdrops.Payments.Payment do
       :metadata
     ])
     |> validate_required([:user_id, :course_id, :amount])
+    |> validate_money(:amount)
     |> validate_inclusion(:status, @statuses)
     |> foreign_key_constraint(:user_id)
     |> foreign_key_constraint(:course_id)
+  end
+
+  defp validate_money(changeset, field) do
+    validate_change(changeset, field, fn
+      ^field, %Money{amount: amount} when amount <= 0 -> [{field, "must be greater than 0"}]
+      ^field, %Money{} -> []
+      ^field, nil -> []
+      ^field, _ -> [{field, "must be a valid money amount"}]
+    end)
   end
 end
