@@ -43,7 +43,6 @@ defmodule Alchemistdrops.Courses.Lesson do
     case get_change(changeset, field) do
       nil -> changeset
       value when is_binary(value) -> put_change(changeset, field, String.trim(value))
-      _ -> changeset
     end
   end
 end

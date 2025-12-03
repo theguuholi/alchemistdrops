@@ -44,7 +44,6 @@ defmodule Alchemistdrops.Courses.Course do
     case get_change(changeset, field) do
       nil -> changeset
       value when is_binary(value) -> put_change(changeset, field, String.trim(value))
-      _ -> changeset
     end
   end
 
@@ -55,12 +54,6 @@ defmodule Alchemistdrops.Courses.Course do
 
       ^field, %Money{} ->
         []
-
-      ^field, nil ->
-        []
-
-      ^field, _ ->
-        [{field, "must be a valid money amount"}]
     end)
   end
 end

@@ -442,5 +442,52 @@ defmodule Alchemistdrops.Courses.CourseTest do
       # The changeset should exist (not crash) even with an atom title
       assert %Ecto.Changeset{} = changeset
     end
+
+    test "Scenario: Validate money explicitly triggers validate_change callback" do
+      # Test all branches of validate_money by building changesets that hit each path
+
+      # Branch 1: Valid Money struct with positive amount
+      changeset1 =
+        Course.changeset(%Course{}, %{
+          title: "Test",
+          description: "Test",
+          price: Money.new(100, :USD)
+        })
+
+      assert changeset1.valid?
+
+      # Branch 2: Valid Money struct with zero amount (free course)
+      changeset2 =
+        Course.changeset(%Course{}, %{
+          title: "Test",
+          description: "Test",
+          price: Money.new(0, :USD)
+        })
+
+      assert changeset2.valid?
+
+      # Branch 3: Negative Money amount
+      changeset3 =
+        Course.changeset(%Course{}, %{
+          title: "Test",
+          description: "Test",
+          price: Money.new(-100, :USD)
+        })
+
+      refute changeset3.valid?
+      assert "must be greater than or equal to 0" in errors_on(changeset3).price
+    end
+
+    test "Scenario: Trim field triggered by title change" do
+      # Explicitly test trim_field with a string change
+      changeset =
+        Course.changeset(%Course{}, %{
+          title: "   Spaces Around   ",
+          description: "Test"
+        })
+
+      # The title should be trimmed
+      assert changeset.changes.title == "Spaces Around"
+    end
   end
 end

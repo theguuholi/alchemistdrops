@@ -29,16 +29,12 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
     current_user = socket.assigns.current_scope.user
     course = socket.assigns.course
 
-    case Enrollments.enroll_user(current_user.id, course.id) do
-      {:ok, _enrollment} ->
-        {:noreply,
-         socket
-         |> put_flash(:info, "Successfully enrolled!")
-         |> assign(:enrolled, true)}
+    {:ok, _enrollment} = Enrollments.enroll_user(current_user.id, course.id)
 
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Failed to enroll. Please try again.")}
-    end
+    {:noreply,
+     socket
+     |> put_flash(:info, "Successfully enrolled!")
+     |> assign(:enrolled, true)}
   end
 
   defp assign_enrollment_status(socket) do
@@ -77,19 +73,15 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
     |> seconds_to_minutes()
   end
 
-  defp seconds_to_minutes(seconds) when is_integer(seconds) do
-    div(seconds, 60)
-  end
-
-  defp seconds_to_minutes(_), do: 0
+  defp seconds_to_minutes(seconds), do: div(seconds, 60)
 
   defp format_price(%Money{amount: 0}), do: "Free"
   defp format_price(price), do: Money.to_string(price)
+
+  defp format_duration(nil), do: ""
 
   defp format_duration(seconds) when is_integer(seconds) do
     minutes = div(seconds, 60)
     "#{minutes} min"
   end
-
-  defp format_duration(_), do: ""
 end

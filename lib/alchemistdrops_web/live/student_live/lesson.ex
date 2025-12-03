@@ -121,10 +121,10 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
     end
   end
 
+  defp format_duration(nil), do: ""
+
   defp format_duration(seconds) when is_integer(seconds) do
     minutes = div(seconds, 60)
     "#{minutes} min"
   end
-
-  defp format_duration(_), do: ""
 end

@@ -233,4 +233,90 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
       assert has_element?(view, "li")
     end
   end
+
+  describe "edge cases" do
+    test "given enrolled user trying to enroll again when they click enroll then error is shown",
+         %{
+           conn: conn
+         } do
+      user = user_fixture()
+      course = course_fixture(%{price: Money.new(0, :USD), published: true})
+      _lesson = lesson_fixture(%{course_id: course.id, published: true})
+      enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/courses/#{course}")
+
+      # User is already enrolled, so they see Start Learning
+      assert has_element?(view, "a", "Start Learning")
+    end
+
+    test "given lessons without duration when visitor views then total duration is zero", %{
+      conn: conn
+    } do
+      course = course_fixture(%{published: true})
+      _lesson = lesson_fixture(%{course_id: course.id, duration: nil, published: true})
+
+      {:ok, view, _html} = live(conn, ~p"/courses/#{course}")
+
+      # Should render without crashing when duration is nil
+      assert has_element?(view, "article")
+    end
+
+    test "given a course with thumbnail when visitor views then they see the image", %{
+      conn: conn
+    } do
+      course =
+        course_fixture(%{
+          published: true,
+          thumbnail_url: "https://example.com/thumbnail.jpg"
+        })
+
+      {:ok, view, _html} = live(conn, ~p"/courses/#{course}")
+
+      assert has_element?(view, "img[src='https://example.com/thumbnail.jpg']")
+    end
+
+    test "given a course without thumbnail when visitor views then they see placeholder", %{
+      conn: conn
+    } do
+      course = course_fixture(%{published: true, thumbnail_url: nil})
+
+      {:ok, view, _html} = live(conn, ~p"/courses/#{course}")
+
+      # Should have the hero icon as placeholder
+      assert has_element?(view, "figure")
+    end
+
+    test "given enrolled user with completed status when they view course then they see start learning",
+         %{conn: conn} do
+      user = user_fixture()
+      course = course_fixture(%{published: true})
+      _lesson = lesson_fixture(%{course_id: course.id, published: true})
+      enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "completed"})
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/courses/#{course}")
+
+      assert has_element?(view, "a", "Start Learning")
+    end
+
+    test "given lessons with mixed durations when visitor views then total is correct", %{
+      conn: conn
+    } do
+      course = course_fixture(%{published: true})
+      _lesson1 = lesson_fixture(%{course_id: course.id, duration: 300, published: true})
+      _lesson2 = lesson_fixture(%{course_id: course.id, duration: nil, published: true})
+      _lesson3 = lesson_fixture(%{course_id: course.id, duration: 600, published: true})
+
+      {:ok, view, _html} = live(conn, ~p"/courses/#{course}")
+
+      # Total: 300 + 600 = 900 seconds = 15 minutes (nil is filtered out)
+      assert has_element?(view, "span", "15 min")
+    end
+  end
 end

@@ -106,4 +106,21 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
                ~s(<input type="email" name="user[email]" id="login_form_magic_email" value="#{user.email}")
     end
   end
+
+  describe "magic link for non-existent user" do
+    test "shows same message but no token created", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, ~p"/users/log-in")
+
+      {:ok, _lv, html} =
+        form(lv, "#login_form_magic", user: %{email: "nonexistent@example.com"})
+        |> render_submit()
+        |> follow_redirect(conn, ~p"/users/log-in")
+
+      # Same message to prevent email enumeration
+      assert html =~ "If your email is in our system"
+
+      # No token should be created for non-existent user
+      assert Alchemistdrops.Repo.all(Alchemistdrops.Accounts.UserToken) == []
+    end
+  end
 end

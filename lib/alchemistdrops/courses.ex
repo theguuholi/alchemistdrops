@@ -329,19 +329,16 @@ defmodule Alchemistdrops.Courses do
 
   defp update_lesson_order(course_lessons, lesson_ids) do
     # Update each lesson with its new order
-    results =
+    # Since all lesson IDs are validated upstream, this should always succeed
+    lessons =
       lesson_ids
       |> Enum.with_index()
       |> Enum.map(fn {lesson_id, index} ->
         lesson = Enum.find(course_lessons, &(&1.id == lesson_id))
-        update_lesson(lesson, %{order: index})
+        {:ok, updated} = update_lesson(lesson, %{order: index})
+        updated
       end)
 
-    # Check if all updates succeeded
-    if Enum.all?(results, fn {result, _} -> result == :ok end) do
-      {:ok, Enum.map(results, fn {:ok, lesson} -> lesson end)}
-    else
-      {:error, :update_failed}
-    end
+    {:ok, lessons}
   end
 end

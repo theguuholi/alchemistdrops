@@ -529,6 +529,18 @@ defmodule Alchemistdrops.CoursesTest do
       # Then I should get an error
       assert {:error, :invalid_lessons} = result
     end
+
+    test "Scenario: Reordering with non-existent lesson ids returns error" do
+      # Given a course with no lessons
+      course = course_fixture()
+      fake_id = Ecto.UUID.generate()
+
+      # When I try to reorder with a non-existent lesson id
+      result = Courses.reorder_lessons(course, [fake_id])
+
+      # Then I should get an error
+      assert {:error, :invalid_lessons} = result
+    end
   end
 
   describe "change_course/1" do

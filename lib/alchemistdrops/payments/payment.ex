@@ -42,8 +42,6 @@ defmodule Alchemistdrops.Payments.Payment do
     validate_change(changeset, field, fn
       ^field, %Money{amount: amount} when amount <= 0 -> [{field, "must be greater than 0"}]
       ^field, %Money{} -> []
-      ^field, nil -> []
-      ^field, _ -> [{field, "must be a valid money amount"}]
     end)
   end
 end

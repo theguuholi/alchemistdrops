@@ -27,6 +27,8 @@ defmodule AlchemistdropsWeb.PostLive.Show do
     Calendar.strftime(datetime, "%B %d, %Y")
   end
 
+  defp get_meta_description(nil), do: "Read this post on Alchemist's Journal"
+
   defp get_meta_description(body) when is_binary(body) do
     body
     |> String.slice(0, 160)
@@ -34,11 +36,11 @@ defmodule AlchemistdropsWeb.PostLive.Show do
     |> String.trim()
   end
 
-  defp get_meta_description(_), do: "Read this post on Alchemist's Journal"
-
   defp build_url(path) do
     AlchemistdropsWeb.Endpoint.url() <> path
   end
+
+  defp render_markdown(nil), do: Phoenix.HTML.raw("")
 
   defp render_markdown(content) when is_binary(content) do
     case MDEx.to_html(content) do
@@ -46,6 +48,4 @@ defmodule AlchemistdropsWeb.PostLive.Show do
       {:error, _} -> Phoenix.HTML.raw(content)
     end
   end
-
-  defp render_markdown(_), do: Phoenix.HTML.raw("")
 end

@@ -276,4 +276,100 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
       assert has_element?(view, "article")
     end
   end
+
+  describe "handle_event/3 - select_lesson" do
+    test "given multiple lessons when user clicks a lesson then they navigate to it", %{
+      conn: conn
+    } do
+      user = user_fixture()
+      course = course_fixture(%{published: true})
+
+      _lesson1 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 1", order: 1, published: true})
+
+      lesson2 =
+        lesson_fixture(%{course_id: course.id, title: "Lesson 2", order: 2, published: true})
+
+      enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/student/courses/#{course.id}/lessons")
+
+      view
+      |> element("button[phx-value-id='#{lesson2.id}']")
+      |> render_click()
+
+      assert has_element?(view, "h1", "Lesson 2")
+    end
+  end
+
+  describe "lesson duration display" do
+    test "given lesson with duration when user views then they see formatted duration", %{
+      conn: conn
+    } do
+      user = user_fixture()
+      course = course_fixture(%{published: true})
+      _lesson = lesson_fixture(%{course_id: course.id, duration: 600, published: true})
+      enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/student/courses/#{course.id}/lessons")
+
+      assert has_element?(view, "p", "10 min")
+    end
+
+    test "given lesson without duration when user views then no duration shown", %{conn: conn} do
+      user = user_fixture()
+      course = course_fixture(%{published: true})
+      _lesson = lesson_fixture(%{course_id: course.id, duration: nil, published: true})
+      enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/student/courses/#{course.id}/lessons")
+
+      # The view should render without crashing
+      assert has_element?(view, "h1")
+    end
+  end
+
+  describe "edge cases" do
+    test "given invalid lesson id when user navigates then they are redirected", %{conn: conn} do
+      user = user_fixture()
+      course = course_fixture(%{published: true})
+      _lesson = lesson_fixture(%{course_id: course.id, published: true})
+      enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
+
+      # Invalid UUID redirects with flash error
+      {:error, {:live_redirect, %{to: redirect_path, flash: flash}}} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/student/courses/#{course.id}/lessons?lesson=invalid-uuid")
+
+      # Should redirect back to course page with error
+      assert redirect_path == "/courses/#{course.id}"
+      assert flash["error"] == "Lesson not found"
+    end
+
+    test "given only one lesson when user views then next button is disabled", %{conn: conn} do
+      user = user_fixture()
+      course = course_fixture(%{published: true})
+      _lesson = lesson_fixture(%{course_id: course.id, title: "Only Lesson", published: true})
+      enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/student/courses/#{course.id}/lessons")
+
+      # No next button should exist (only one lesson)
+      refute has_element?(view, "button#next-lesson")
+      refute has_element?(view, "button#prev-lesson")
+    end
+  end
 end
