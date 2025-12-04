@@ -127,4 +127,41 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
     minutes = div(seconds, 60)
     "#{minutes} min"
   end
+
+  @doc """
+  Converts a YouTube URL to an embed URL if applicable.
+  Returns {:youtube, embed_url} for YouTube videos or {:video, url} for others.
+  """
+  def video_embed_info(nil), do: nil
+
+  def video_embed_info(url) when is_binary(url) do
+    cond do
+      # youtu.be short URL format
+      String.contains?(url, "youtu.be/") ->
+        video_id = url |> String.split("youtu.be/") |> List.last() |> String.split("?") |> hd()
+        {:youtube, "https://www.youtube.com/embed/#{video_id}"}
+
+      # youtube.com/watch?v= format
+      String.contains?(url, "youtube.com/watch") ->
+        video_id = extract_youtube_video_id(url)
+        {:youtube, "https://www.youtube.com/embed/#{video_id}"}
+
+      # youtube.com/embed/ format (already embedded)
+      String.contains?(url, "youtube.com/embed/") ->
+        {:youtube, url}
+
+      # Regular video file
+      true ->
+        {:video, url}
+    end
+  end
+
+  defp extract_youtube_video_id(url) do
+    uri = URI.parse(url)
+
+    case uri.query do
+      nil -> ""
+      query -> URI.decode_query(query) |> Map.get("v", "")
+    end
+  end
 end

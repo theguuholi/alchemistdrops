@@ -242,6 +242,53 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
       assert has_element?(view, "video")
     end
 
+    test "given a lesson with YouTube short URL when user views then they see embedded iframe", %{
+      conn: conn
+    } do
+      user = user_fixture()
+      course = course_fixture(%{published: true})
+
+      _lesson =
+        lesson_fixture(%{
+          course_id: course.id,
+          video_url: "https://youtu.be/NjBUcTEVsJo",
+          published: true
+        })
+
+      enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/student/courses/#{course.id}/lessons")
+
+      assert has_element?(view, "iframe[src='https://www.youtube.com/embed/NjBUcTEVsJo']")
+      refute has_element?(view, "video")
+    end
+
+    test "given a lesson with YouTube watch URL when user views then they see embedded iframe", %{
+      conn: conn
+    } do
+      user = user_fixture()
+      course = course_fixture(%{published: true})
+
+      _lesson =
+        lesson_fixture(%{
+          course_id: course.id,
+          video_url: "https://www.youtube.com/watch?v=IbHyK6a0-xQ",
+          published: true
+        })
+
+      enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/student/courses/#{course.id}/lessons")
+
+      assert has_element?(view, "iframe[src='https://www.youtube.com/embed/IbHyK6a0-xQ']")
+    end
+
     test "given a lesson without video when user views then they see content only", %{
       conn: conn
     } do
@@ -256,6 +303,39 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
         |> live(~p"/student/courses/#{course.id}/lessons")
 
       refute has_element?(view, "video")
+    end
+  end
+
+  describe "video_embed_info/1" do
+    alias AlchemistdropsWeb.StudentLive.Lesson
+
+    test "given nil when called then returns nil" do
+      assert Lesson.video_embed_info(nil) == nil
+    end
+
+    test "given youtu.be short URL when called then returns YouTube embed" do
+      assert {:youtube, "https://www.youtube.com/embed/NjBUcTEVsJo"} =
+               Lesson.video_embed_info("https://youtu.be/NjBUcTEVsJo")
+    end
+
+    test "given youtu.be URL with query params when called then extracts video id" do
+      assert {:youtube, "https://www.youtube.com/embed/IbHyK6a0-xQ"} =
+               Lesson.video_embed_info("https://youtu.be/IbHyK6a0-xQ?feature=shared")
+    end
+
+    test "given youtube.com watch URL when called then returns YouTube embed" do
+      assert {:youtube, "https://www.youtube.com/embed/abc123"} =
+               Lesson.video_embed_info("https://www.youtube.com/watch?v=abc123")
+    end
+
+    test "given youtube.com embed URL when called then returns same URL" do
+      url = "https://www.youtube.com/embed/already-embedded"
+      assert {:youtube, ^url} = Lesson.video_embed_info(url)
+    end
+
+    test "given regular video URL when called then returns video tuple" do
+      url = "https://example.com/video.mp4"
+      assert {:video, ^url} = Lesson.video_embed_info(url)
     end
   end
 

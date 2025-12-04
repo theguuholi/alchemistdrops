@@ -87,14 +87,25 @@
 
         <%!-- Video Player --%>
         <%= if @current_lesson.video_url do %>
-          <div class="mb-8 rounded-lg overflow-hidden shadow-lg bg-base-300">
-            <video
-              controls
-              class="w-full aspect-video"
-              src={@current_lesson.video_url}
-            >
-              Your browser does not support the video tag.
-            </video>
+          <div class="mb-8 rounded-xl overflow-hidden shadow-2xl bg-base-300">
+            <%= case video_embed_info(@current_lesson.video_url) do %>
+              <% {:youtube, embed_url} -> %>
+                <iframe
+                  src={embed_url}
+                  title={@current_lesson.title}
+                  class="w-full aspect-video"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allowfullscreen
+                >
+                </iframe>
+              <% {:video, url} -> %>
+                <video controls class="w-full aspect-video" src={url}>
+                  Your browser does not support the video tag.
+                </video>
+              <% _ -> %>
+            <% end %>
           </div>
         <% end %>
 

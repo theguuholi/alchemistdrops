@@ -397,10 +397,36 @@ unpublished_course =
   }
   |> Repo.insert!()
 
+# Course with real YouTube video lessons
+video_course =
+  %Course{
+    title: "Elixir Video Tutorials",
+    description: "Learn Elixir with real video tutorials from the community",
+    body: """
+    # Elixir Video Tutorials
+
+    A curated collection of video tutorials to help you learn Elixir effectively.
+
+    ## What's Included
+    - Real-world video tutorials
+    - Community-created content
+    - Step-by-step guidance
+    - Practical examples
+
+    ## Perfect For
+    Visual learners who prefer video content over text-based learning.
+    """,
+    price: Money.new(2999, :USD),
+    published: true,
+    thumbnail_url: "https://via.placeholder.com/400x300?text=Video+Tutorials"
+  }
+  |> Repo.insert!()
+
 IO.puts("\nCreated courses:")
 IO.puts("  - #{elixir_course.title} ($#{elixir_course.price})")
 IO.puts("  - #{phoenix_course.title} ($#{phoenix_course.price})")
 IO.puts("  - #{free_course.title} (FREE)")
+IO.puts("  - #{video_course.title} ($#{video_course.price})")
 IO.puts("  - #{unpublished_course.title} (UNPUBLISHED)")
 
 # Create lessons for Elixir course
@@ -544,9 +570,19 @@ free_lessons = [
   %{
     title: "What is Functional Programming?",
     description: "Introduction to FP concepts",
-    content: "Learn what makes functional programming unique.",
+    content: """
+    Functional programming is a programming paradigm that treats computation as the evaluation of mathematical functions.
+
+    In this video, you'll learn:
+    - What makes FP different from other paradigms
+    - Core principles: immutability, pure functions, first-class functions
+    - Why Elixir is a great functional language
+
+    Watch the video and discover the power of functional programming!
+    """,
     order: 0,
     duration: 15,
+    video_url: "https://youtu.be/NjBUcTEVsJo",
     published: true
   },
   %{
@@ -567,12 +603,72 @@ Enum.each(free_lessons, fn lesson_attrs ->
     content: lesson_attrs.content,
     order: lesson_attrs.order,
     duration: lesson_attrs.duration,
+    video_url: Map.get(lesson_attrs, :video_url),
     published: lesson_attrs.published
   }
   |> Repo.insert!()
 end)
 
 IO.puts("Created #{length(free_lessons)} lessons for #{free_course.title}")
+
+# Create lessons for video course with real YouTube URLs
+video_lessons = [
+  %{
+    title: "Elixir Fundamentals - Getting Started",
+    description: "Introduction to Elixir programming language basics",
+    content: """
+    In this video lesson, you'll learn the fundamentals of Elixir:
+
+    - Setting up your development environment
+    - Understanding the basic syntax
+    - Working with data types
+    - Interactive Elixir shell (IEx)
+
+    Watch the video above and follow along with the examples!
+    """,
+    order: 0,
+    duration: 15,
+    video_url: "https://youtu.be/NjBUcTEVsJo",
+    published: true
+  },
+  %{
+    title: "Pattern Matching Deep Dive",
+    description: "Master pattern matching in Elixir",
+    content: """
+    Pattern matching is one of Elixir's most powerful features!
+
+    This lesson covers:
+    - Basic pattern matching
+    - Destructuring lists and maps
+    - Using pattern matching in function heads
+    - Advanced matching techniques
+
+    Follow along with the video tutorial above.
+    """,
+    order: 1,
+    duration: 20,
+    video_url: "https://youtu.be/IbHyK6a0-xQ",
+    published: true
+  }
+]
+
+Enum.each(video_lessons, fn lesson_attrs ->
+  %Lesson{
+    course_id: video_course.id,
+    title: lesson_attrs.title,
+    description: lesson_attrs.description,
+    content: lesson_attrs.content,
+    order: lesson_attrs.order,
+    duration: lesson_attrs.duration,
+    video_url: lesson_attrs.video_url,
+    published: lesson_attrs.published
+  }
+  |> Repo.insert!()
+end)
+
+IO.puts(
+  "Created #{length(video_lessons)} lessons for #{video_course.title} (with YouTube videos)"
+)
 
 # Create enrollments
 _student_elixir_enrollment =
@@ -629,10 +725,10 @@ IO.puts("  - Student paid $#{student_payment.amount} for #{elixir_course.title}"
 
 IO.puts("\n✅ Course feature seeds completed successfully!")
 IO.puts("\n📚 Summary:")
-IO.puts("  - 4 courses created (3 published, 1 unpublished)")
+IO.puts("  - 5 courses created (4 published, 1 unpublished)")
 
 IO.puts(
-  "  - #{length(elixir_lessons) + length(phoenix_lessons) + length(free_lessons)} lessons created"
+  "  - #{length(elixir_lessons) + length(phoenix_lessons) + length(free_lessons) + length(video_lessons)} lessons created"
 )
 
 IO.puts("  - 3 enrollments created")
