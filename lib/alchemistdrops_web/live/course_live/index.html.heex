@@ -32,16 +32,12 @@
               class="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-base-300 hover:border-primary/50"
             >
               <%!-- Course Thumbnail --%>
-              <figure class="aspect-video bg-gradient-to-br from-primary to-secondary relative overflow-hidden">
-                <%= if course.thumbnail_url do %>
-                  <img
-                    src={course.thumbnail_url}
-                    alt={"Thumbnail for #{course.title}"}
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                <% else %>
-                  <.icon name="hero-academic-cap" class="w-20 h-20 text-primary-content/80" />
-                <% end %>
+              <figure class="aspect-video relative overflow-hidden">
+                <img
+                  src={course.thumbnail_url || ~p"/images/course-placeholder.svg"}
+                  alt={"Thumbnail for #{course.title}"}
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
 
                 <%!-- Enrollment Badge --%>
                 <%= if Map.get(course, :enrolled, false) do %>

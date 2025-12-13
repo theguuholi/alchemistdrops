@@ -336,7 +336,7 @@ elixir_course =
     """,
     price: Money.new(9999, :USD),
     published: true,
-    thumbnail_url: "https://via.placeholder.com/400x300?text=Elixir+Mastery"
+    thumbnail_url: nil
   }
   |> Repo.insert!()
 
@@ -360,7 +360,7 @@ phoenix_course =
     """,
     price: Money.new(14999, :USD),
     published: true,
-    thumbnail_url: "https://via.placeholder.com/400x300?text=Phoenix+Framework"
+    thumbnail_url: nil
   }
   |> Repo.insert!()
 
@@ -383,7 +383,7 @@ free_course =
     """,
     price: Money.new(0, :USD),
     published: true,
-    thumbnail_url: "https://via.placeholder.com/400x300?text=Functional+Programming"
+    thumbnail_url: nil
   }
   |> Repo.insert!()
 
@@ -418,7 +418,7 @@ video_course =
     """,
     price: Money.new(2999, :USD),
     published: true,
-    thumbnail_url: "https://via.placeholder.com/400x300?text=Video+Tutorials"
+    thumbnail_url: nil
   }
   |> Repo.insert!()
 

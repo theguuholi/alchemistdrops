@@ -12,18 +12,12 @@
     <article class="card bg-base-100 shadow-lg border border-base-300">
       <div class="grid lg:grid-cols-2 gap-0">
         <%!-- Course Image --%>
-        <figure class="aspect-video lg:aspect-auto bg-gradient-to-br from-primary to-secondary relative">
-          <%= if @course.thumbnail_url do %>
-            <img
-              src={@course.thumbnail_url}
-              alt={"Thumbnail for #{@course.title}"}
-              class="w-full h-full object-cover"
-            />
-          <% else %>
-            <div class="w-full h-full flex items-center justify-center">
-              <.icon name="hero-academic-cap" class="w-32 h-32 text-primary-content/80" />
-            </div>
-          <% end %>
+        <figure class="aspect-video lg:aspect-auto relative">
+          <img
+            src={@course.thumbnail_url || ~p"/images/course-placeholder.svg"}
+            alt={"Thumbnail for #{@course.title}"}
+            class="w-full h-full object-cover"
+          />
         </figure>
 
         <%!-- Course Info --%>

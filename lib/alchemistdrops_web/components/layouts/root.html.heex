@@ -65,18 +65,21 @@
           </li>
           <li>
             <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
+              <li>
+                <.link href={~p"/courses"}>Courses</.link>
+              </li>
+              <li>
+                <.link href={~p"/blog"}>Blog</.link>
+              </li>
               <%= if @current_scope do %>
-                <li>
-                  {@current_scope.user.email}
+                <li :if={@current_scope.user.role == :admin}>
+                  <.link href={~p"/admin/posts"} class="text-warning">Admin</.link>
                 </li>
                 <li>
-                  <.link href={~p"/users/settings"}>Settings</.link>
+                  <.link href={~p"/users/settings"}>{@current_scope.user.email}</.link>
                 </li>
                 <li>
                   <.link href={~p"/users/log-out"} method="delete">Log out</.link>
-                </li>
-                <li :if={@current_scope.user.role == :admin}>
-                  <.link href={~p"/admin/posts"}>Posts</.link>
                 </li>
               <% else %>
                 <li>
@@ -86,9 +89,6 @@
                   <.link href={~p"/users/log-in"}>Log in</.link>
                 </li>
               <% end %>
-              <li>
-                <.link href={~p"/blog"}>Blog</.link>
-              </li>
             </ul>
           </li>
         </ul>
