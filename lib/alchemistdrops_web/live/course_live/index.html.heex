@@ -1,0 +1,94 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="space-y-8">
+    <%!-- Hero Section --%>
+    <header class="text-center">
+      <h1 class="text-5xl font-bold text-primary mb-4">
+        Explore Our Courses
+      </h1>
+      <p class="text-xl text-base-content/70 max-w-2xl mx-auto">
+        Discover transformative learning experiences crafted by industry experts
+      </p>
+    </header>
+
+    <%!-- Courses Grid --%>
+    <section aria-label="Available courses">
+      <%= if Enum.empty?(@courses) do %>
+        <%!-- Empty State --%>
+        <div class="text-center py-20 card bg-base-200">
+          <.icon name="hero-academic-cap" class="w-24 h-24 mx-auto text-base-content/30 mb-4" />
+          <h2 class="text-2xl font-semibold text-base-content mb-2">
+            No courses available yet
+          </h2>
+          <p class="text-base-content/60">
+            Check back soon for exciting new content
+          </p>
+        </div>
+      <% else %>
+        <%!-- Course Cards Grid --%>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <%= for course <- @courses do %>
+            <article
+              data-role="course-card"
+              class="card bg-base-100 shadow-lg hover:shadow-xl transition-all duration-300 border border-base-300 hover:border-primary/50"
+            >
+              <%!-- Course Thumbnail --%>
+              <figure class="aspect-video relative overflow-hidden">
+                <img
+                  src={course.thumbnail_url || ~p"/images/course-placeholder.svg"}
+                  alt={"Thumbnail for #{course.title}"}
+                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+
+                <%!-- Enrollment Badge --%>
+                <%= if Map.get(course, :enrolled, false) do %>
+                  <div class="absolute top-4 right-4 badge badge-success gap-1 shadow-lg">
+                    <.icon name="hero-check-circle" class="w-4 h-4" /> Enrolled
+                  </div>
+                <% end %>
+              </figure>
+
+              <%!-- Course Content --%>
+              <div class="card-body">
+                <%!-- Price Badge --%>
+                <div class="mb-2">
+                  <span class={[
+                    "badge gap-1",
+                    Money.zero?(course.price) && "badge-success",
+                    !Money.zero?(course.price) && "badge-info"
+                  ]}>
+                    {format_price(course.price)}
+                  </span>
+                </div>
+
+                <%!-- Title --%>
+                <h3 class="card-title text-base-content hover:text-primary transition-colors">
+                  {course.title}
+                </h3>
+
+                <%!-- Description --%>
+                <p class="text-base-content/70 line-clamp-3 flex-1">
+                  {course.description}
+                </p>
+
+                <%!-- Action Button --%>
+                <div class="card-actions justify-end mt-4">
+                  <.link
+                    navigate={~p"/courses/#{course}"}
+                    class="btn btn-primary btn-sm gap-2"
+                    aria-label={"View details for #{course.title}"}
+                  >
+                    <%= if Map.get(course, :enrolled, false) do %>
+                      <.icon name="hero-arrow-right" class="w-4 h-4" /> Continue
+                    <% else %>
+                      <.icon name="hero-eye" class="w-4 h-4" /> View
+                    <% end %>
+                  </.link>
+                </div>
+              </div>
+            </article>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+  </div>
+</Layouts.app>

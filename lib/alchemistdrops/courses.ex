@@ -31,6 +31,20 @@ defmodule Alchemistdrops.Courses do
   end
 
   @doc """
+  Returns the list of published courses ordered by title.
+  Alias for list_courses/0.
+
+  ## Examples
+
+      iex> list_published_courses()
+      [%Course{}, ...]
+
+  """
+  def list_published_courses do
+    list_courses()
+  end
+
+  @doc """
   Returns all courses including unpublished ones, ordered by title.
   Intended for admin use.
 
@@ -149,6 +163,38 @@ defmodule Alchemistdrops.Courses do
   end
 
   ## Lesson functions
+
+  @doc """
+  Returns the list of lessons for a course, ordered by the order field.
+
+  ## Options
+
+  - `:only_published` - if true, only returns published lessons (default: false)
+
+  ## Examples
+
+      iex> list_course_lessons(course_id)
+      [%Lesson{}, ...]
+
+      iex> list_course_lessons(course_id, only_published: true)
+      [%Lesson{}, ...]
+
+  """
+  def list_course_lessons(course_id, opts \\ []) do
+    query =
+      Lesson
+      |> where([l], l.course_id == ^course_id)
+      |> order_by([l], asc: l.order)
+
+    query =
+      if Keyword.get(opts, :only_published, false) do
+        where(query, [l], l.published == true)
+      else
+        query
+      end
+
+    Repo.all(query)
+  end
 
   @doc """
   Creates a lesson for a course.
@@ -283,19 +329,16 @@ defmodule Alchemistdrops.Courses do
 
   defp update_lesson_order(course_lessons, lesson_ids) do
     # Update each lesson with its new order
-    results =
+    # Since all lesson IDs are validated upstream, this should always succeed
+    lessons =
       lesson_ids
       |> Enum.with_index()
       |> Enum.map(fn {lesson_id, index} ->
         lesson = Enum.find(course_lessons, &(&1.id == lesson_id))
-        update_lesson(lesson, %{order: index})
+        {:ok, updated} = update_lesson(lesson, %{order: index})
+        updated
       end)
 
-    # Check if all updates succeeded
-    if Enum.all?(results, fn {result, _} -> result == :ok end) do
-      {:ok, Enum.map(results, fn {:ok, lesson} -> lesson end)}
-    else
-      {:error, :update_failed}
-    end
+    {:ok, lessons}
   end
 end

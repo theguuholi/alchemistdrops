@@ -54,6 +54,8 @@ defmodule AlchemistdropsWeb.Router do
       on_mount: [{AlchemistdropsWeb.UserAuth, :require_authenticated}] do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
+
+      live "/student/courses/:course_id/lessons", StudentLive.Lesson, :index
     end
 
     post "/users/update-password", UserSessionController, :update_password
@@ -70,6 +72,9 @@ defmodule AlchemistdropsWeb.Router do
 
       live "/blog", PostLive.Index, :index
       live "/blog/:id", PostLive.Show, :show
+
+      live "/courses", CourseLive.Index, :index
+      live "/courses/:id", CourseLive.Show, :show
     end
 
     scope "/admin", Admin do
