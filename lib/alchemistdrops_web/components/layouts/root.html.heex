@@ -72,8 +72,22 @@
                 <.link href={~p"/blog"}>Blog</.link>
               </li>
               <%= if @current_scope do %>
-                <li :if={@current_scope.user.role == :admin}>
-                  <.link href={~p"/admin/posts"} class="text-warning">Admin</.link>
+                <li :if={@current_scope.user.role == :admin} class="relative group">
+                  <button class="flex items-center gap-1 text-warning font-medium">
+                    Admin
+                    <.icon name="hero-chevron-down" class="w-4 h-4 transition-transform group-hover:rotate-180" />
+                  </button>
+                  <ul class="invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute right-0 top-full mt-1 w-40 bg-base-200 rounded-lg py-1 shadow-xl transition-all">
+                    <li>
+                      <.link href={~p"/admin/courses"} class="block px-4 py-2 hover:bg-base-300">Courses</.link>
+                    </li>
+                    <li>
+                      <.link href={~p"/admin/posts"} class="block px-4 py-2 hover:bg-base-300">Posts</.link>
+                    </li>
+                    <li>
+                      <.link href={~p"/admin/users"} class="block px-4 py-2 hover:bg-base-300">Users</.link>
+                    </li>
+                  </ul>
                 </li>
                 <li>
                   <.link href={~p"/users/settings"}>{@current_scope.user.email}</.link>
