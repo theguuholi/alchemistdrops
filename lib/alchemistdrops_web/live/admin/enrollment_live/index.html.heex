@@ -1,0 +1,179 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <.header>
+    <div class="flex items-center gap-3">
+      <.icon name="hero-user-group" class="size-7 text-primary" />
+      <span>Manage Enrollments</span>
+    </div>
+    <:subtitle>
+      View and manage student enrollments across all courses
+    </:subtitle>
+  </.header>
+
+  <%!-- Mobile-first card view --%>
+  <div class="block lg:hidden space-y-4 mt-6" id="enrollments-mobile">
+    <div
+      :for={{id, enrollment} <- @streams.enrollments}
+      id={"#{id}-mobile"}
+      class="card bg-base-200 shadow-md"
+    >
+      <div class="card-body p-4">
+        <div class="flex items-start justify-between gap-3">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <.icon name="hero-user-circle" class="size-5 text-base-content/50" />
+              <span class="font-medium truncate">{enrollment.user.email}</span>
+            </div>
+            <div class="mt-2 text-sm text-base-content/70">
+              <.icon name="hero-academic-cap" class="size-4 inline" />
+              {enrollment.course.title}
+            </div>
+          </div>
+          <div class={[
+            "badge badge-sm whitespace-nowrap",
+            enrollment.status == "active" && "badge-success",
+            enrollment.status == "completed" && "badge-info",
+            enrollment.status == "cancelled" && "badge-error"
+          ]}>
+            {String.capitalize(enrollment.status)}
+          </div>
+        </div>
+
+        <div class="flex items-center gap-4 mt-3 text-xs text-base-content/60">
+          <span>
+            <.icon name="hero-calendar" class="size-3 inline" />
+            Enrolled {format_date(enrollment.enrolled_at)}
+          </span>
+          <span :if={enrollment.completed_at}>
+            <.icon name="hero-check-badge" class="size-3 inline" />
+            Completed {format_date(enrollment.completed_at)}
+          </span>
+        </div>
+
+        <div class="card-actions justify-end mt-3 pt-3 border-t border-base-300">
+          <button
+            :if={enrollment.status == "active"}
+            phx-click="complete"
+            phx-value-id={enrollment.id}
+            class="btn btn-ghost btn-sm text-success"
+          >
+            <.icon name="hero-check" class="size-4" /> Complete
+          </button>
+          <button
+            :if={enrollment.status == "active"}
+            phx-click="cancel"
+            phx-value-id={enrollment.id}
+            data-confirm="Are you sure you want to cancel this enrollment?"
+            class="btn btn-ghost btn-sm text-error"
+          >
+            <.icon name="hero-x-mark" class="size-4" /> Cancel
+          </button>
+          <button
+            :if={enrollment.status == "cancelled"}
+            phx-click="reactivate"
+            phx-value-id={enrollment.id}
+            class="btn btn-ghost btn-sm text-primary"
+          >
+            <.icon name="hero-arrow-path" class="size-4" /> Reactivate
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div :if={@enrollments_empty?} class="text-center py-12 text-base-content/60">
+      <.icon name="hero-user-group" class="size-16 mx-auto mb-4 opacity-30" />
+      <p class="text-lg">No enrollments found</p>
+      <p class="text-sm mt-1">Enrollments will appear here when students enroll in courses</p>
+    </div>
+  </div>
+
+  <%!-- Desktop table view --%>
+  <div class="hidden lg:block overflow-x-auto mt-6">
+    <.table id="enrollments" rows={@streams.enrollments}>
+      <:col :let={{_id, enrollment}} label="Student">
+        <div class="flex items-center gap-2">
+          <.icon name="hero-user-circle" class="size-5 text-base-content/50" />
+          <span class="font-medium">{enrollment.user.email}</span>
+        </div>
+      </:col>
+      <:col :let={{_id, enrollment}} label="Course">
+        <.link
+          navigate={~p"/admin/courses/#{enrollment.course}"}
+          class="link link-hover text-primary"
+        >
+          {enrollment.course.title}
+        </.link>
+      </:col>
+      <:col :let={{_id, enrollment}} label="Status">
+        <div class={[
+          "badge badge-sm",
+          enrollment.status == "active" && "badge-success",
+          enrollment.status == "completed" && "badge-info",
+          enrollment.status == "cancelled" && "badge-error"
+        ]}>
+          {String.capitalize(enrollment.status)}
+        </div>
+      </:col>
+      <:col :let={{_id, enrollment}} label="Enrolled">
+        {format_date(enrollment.enrolled_at)}
+      </:col>
+      <:col :let={{_id, enrollment}} label="Completed">
+        {if enrollment.completed_at, do: format_date(enrollment.completed_at), else: "-"}
+      </:col>
+      <:action :let={{_id, enrollment}}>
+        <button
+          :if={enrollment.status == "active"}
+          phx-click="complete"
+          phx-value-id={enrollment.id}
+          class="link link-hover text-success"
+        >
+          Complete
+        </button>
+      </:action>
+      <:action :let={{_id, enrollment}}>
+        <button
+          :if={enrollment.status == "active"}
+          phx-click="cancel"
+          phx-value-id={enrollment.id}
+          data-confirm="Are you sure you want to cancel this enrollment?"
+          class="link link-hover text-error"
+        >
+          Cancel
+        </button>
+        <button
+          :if={enrollment.status == "cancelled"}
+          phx-click="reactivate"
+          phx-value-id={enrollment.id}
+          class="link link-hover text-primary"
+        >
+          Reactivate
+        </button>
+      </:action>
+    </.table>
+
+    <div :if={@enrollments_empty?} class="text-center py-12 text-base-content/60">
+      <.icon name="hero-user-group" class="size-16 mx-auto mb-4 opacity-30" />
+      <p class="text-lg">No enrollments found</p>
+      <p class="text-sm mt-1">Enrollments will appear here when students enroll in courses</p>
+    </div>
+  </div>
+
+  <%!-- Stats Summary --%>
+  <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div class="stat bg-base-200 rounded-lg p-4">
+      <div class="stat-title text-xs">Total</div>
+      <div class="stat-value text-2xl">{@stats.total}</div>
+    </div>
+    <div class="stat bg-base-200 rounded-lg p-4">
+      <div class="stat-title text-xs">Active</div>
+      <div class="stat-value text-2xl text-success">{@stats.active}</div>
+    </div>
+    <div class="stat bg-base-200 rounded-lg p-4">
+      <div class="stat-title text-xs">Completed</div>
+      <div class="stat-value text-2xl text-info">{@stats.completed}</div>
+    </div>
+    <div class="stat bg-base-200 rounded-lg p-4">
+      <div class="stat-title text-xs">Cancelled</div>
+      <div class="stat-value text-2xl text-error">{@stats.cancelled}</div>
+    </div>
+  </div>
+</Layouts.app>

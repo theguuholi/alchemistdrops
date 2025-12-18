@@ -75,17 +75,29 @@
                 <li :if={@current_scope.user.role == :admin} class="relative group">
                   <button class="flex items-center gap-1 text-warning font-medium">
                     Admin
-                    <.icon name="hero-chevron-down" class="w-4 h-4 transition-transform group-hover:rotate-180" />
+                    <.icon
+                      name="hero-chevron-down"
+                      class="w-4 h-4 transition-transform group-hover:rotate-180"
+                    />
                   </button>
                   <ul class="invisible group-hover:visible opacity-0 group-hover:opacity-100 absolute right-0 top-full mt-1 w-40 bg-base-200 rounded-lg py-1 shadow-xl transition-all">
                     <li>
-                      <.link href={~p"/admin/courses"} class="block px-4 py-2 hover:bg-base-300">Courses</.link>
+                      <.link href={~p"/admin/courses"} class="block px-4 py-2 hover:bg-base-300">
+                        Courses
+                      </.link>
                     </li>
                     <li>
-                      <.link href={~p"/admin/posts"} class="block px-4 py-2 hover:bg-base-300">Posts</.link>
+                      <.link href={~p"/admin/posts"} class="block px-4 py-2 hover:bg-base-300">
+                        Posts
+                      </.link>
                     </li>
                     <li>
-                      <.link href={~p"/admin/users"} class="block px-4 py-2 hover:bg-base-300">Users</.link>
+                      <.link
+                        href={~p"/admin/enrollments"}
+                        class="block px-4 py-2 hover:bg-base-300"
+                      >
+                        Enrollments
+                      </.link>
                     </li>
                   </ul>
                 </li>

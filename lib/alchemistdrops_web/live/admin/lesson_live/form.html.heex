@@ -1,0 +1,114 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <.header>
+    <div class="flex items-center gap-3">
+      <.icon name="hero-play-circle" class="size-7 text-primary" />
+      <span>{@page_title}</span>
+    </div>
+    <:subtitle>
+      <.link navigate={~p"/admin/courses/#{@course}"} class="link link-hover text-base-content/70">
+        <.icon name="hero-arrow-left" class="size-4 inline" />
+        {@course.title}
+      </.link>
+    </:subtitle>
+  </.header>
+
+  <div class="max-w-2xl mt-6">
+    <.form for={@form} id="lesson-form" phx-change="validate" phx-submit="save" class="space-y-6">
+      <%!-- Basic Information Section --%>
+      <div class="card bg-base-200">
+        <div class="card-body p-4 sm:p-6">
+          <h3 class="card-title text-base mb-4">
+            <.icon name="hero-information-circle" class="size-5" /> Lesson Details
+          </h3>
+
+          <.input
+            field={@form[:title]}
+            type="text"
+            label="Lesson Title"
+            placeholder="e.g., Introduction to LiveView"
+            required
+          />
+
+          <.input
+            field={@form[:description]}
+            type="textarea"
+            label="Short Description"
+            placeholder="Brief overview of what this lesson covers..."
+          />
+
+          <.input
+            field={@form[:content]}
+            type="textarea"
+            label="Lesson Content"
+            placeholder="Full lesson content (supports markdown)..."
+            class="w-full textarea min-h-64"
+          />
+        </div>
+      </div>
+
+      <%!-- Media & Duration Section --%>
+      <div class="card bg-base-200">
+        <div class="card-body p-4 sm:p-6">
+          <h3 class="card-title text-base mb-4">
+            <.icon name="hero-video-camera" class="size-5" /> Media & Duration
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <.input
+              field={@form[:video_url]}
+              type="url"
+              label="Video URL"
+              placeholder="https://youtube.com/..."
+            />
+
+            <.input
+              field={@form[:duration]}
+              type="number"
+              label="Duration (minutes)"
+              placeholder="30"
+              min="1"
+            />
+          </div>
+        </div>
+      </div>
+
+      <%!-- Organization Section --%>
+      <div class="card bg-base-200">
+        <div class="card-body p-4 sm:p-6">
+          <h3 class="card-title text-base mb-4">
+            <.icon name="hero-queue-list" class="size-5" /> Organization
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <.input field={@form[:order]} type="number" label="Order" placeholder="0" min="0" />
+
+            <div class="flex items-end pb-2">
+              <.input field={@form[:published]} type="checkbox" label="Published" />
+            </div>
+          </div>
+
+          <p class="text-sm text-base-content/60 mt-2">
+            <.icon name="hero-information-circle" class="size-4 inline" />
+            Lessons are displayed in ascending order. Published lessons are visible to enrolled students.
+          </p>
+        </div>
+      </div>
+
+      <%!-- Form Actions --%>
+      <div class="flex flex-col sm:flex-row gap-3 pt-4">
+        <.button
+          type="submit"
+          variant="primary"
+          phx-disable-with="Saving..."
+          class="w-full sm:w-auto"
+        >
+          <.icon name="hero-check" class="size-4" />
+          {if @live_action == :new, do: "Create Lesson", else: "Update Lesson"}
+        </.button>
+        <.button navigate={~p"/admin/courses/#{@course}"} class="w-full sm:w-auto">
+          Cancel
+        </.button>
+      </div>
+    </.form>
+  </div>
+</Layouts.app>

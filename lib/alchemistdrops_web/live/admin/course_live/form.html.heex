@@ -1,0 +1,151 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <.header>
+    <div class="flex items-center gap-3">
+      <.icon name="hero-academic-cap" class="size-7 text-primary" />
+      <span>{@page_title}</span>
+    </div>
+    <:subtitle>
+      {if @live_action == :new,
+        do: "Create a new course for your platform",
+        else: "Update course details and settings"}
+    </:subtitle>
+  </.header>
+
+  <div class="max-w-2xl mt-6">
+    <.form for={@form} id="course-form" phx-change="validate" phx-submit="save" class="space-y-6">
+      <%!-- Basic Information Section --%>
+      <div class="card bg-base-200">
+        <div class="card-body p-4 sm:p-6">
+          <h3 class="card-title text-base mb-4">
+            <.icon name="hero-information-circle" class="size-5" /> Basic Information
+          </h3>
+
+          <.input
+            field={@form[:title]}
+            type="text"
+            label="Course Title"
+            placeholder="e.g., Mastering Phoenix LiveView"
+            required
+          />
+
+          <.input
+            field={@form[:description]}
+            type="textarea"
+            label="Short Description"
+            placeholder="A brief overview of what students will learn..."
+            required
+          />
+
+          <.input
+            field={@form[:body]}
+            type="textarea"
+            label="Full Description"
+            placeholder="Detailed course content, curriculum, and what's included..."
+            class="w-full textarea min-h-48"
+          />
+        </div>
+      </div>
+
+      <%!-- Pricing Section --%>
+      <div class="card bg-base-200">
+        <div class="card-body p-4 sm:p-6">
+          <h3 class="card-title text-base mb-4">
+            <.icon name="hero-currency-dollar" class="size-5" /> Pricing
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <.input
+              field={@form[:price]}
+              type="number"
+              label="Price (in cents)"
+              placeholder="0 for free courses"
+              min="0"
+              step="1"
+            />
+          </div>
+
+          <p class="text-sm text-base-content/60 mt-2">
+            <.icon name="hero-information-circle" class="size-4 inline" />
+            Enter 0 for free courses. Price is in cents (e.g., 9900 = $99.00)
+          </p>
+        </div>
+      </div>
+
+      <%!-- Stripe Integration Section --%>
+      <div class="card bg-base-200">
+        <div class="card-body p-4 sm:p-6">
+          <h3 class="card-title text-base mb-4">
+            <.icon name="hero-credit-card" class="size-5" /> Stripe Integration
+          </h3>
+
+          <.input
+            field={@form[:stripe_product_id]}
+            type="text"
+            label="Stripe Product ID"
+            placeholder="prod_..."
+          />
+
+          <.input
+            field={@form[:stripe_price_id]}
+            type="text"
+            label="Stripe Price ID"
+            placeholder="price_..."
+          />
+
+          <p class="text-sm text-base-content/60 mt-2">
+            <.icon name="hero-information-circle" class="size-4 inline" />
+            Optional: Connect to Stripe for payment processing
+          </p>
+        </div>
+      </div>
+
+      <%!-- Media Section --%>
+      <div class="card bg-base-200">
+        <div class="card-body p-4 sm:p-6">
+          <h3 class="card-title text-base mb-4">
+            <.icon name="hero-photo" class="size-5" /> Media
+          </h3>
+
+          <.input
+            field={@form[:thumbnail_url]}
+            type="url"
+            label="Thumbnail URL"
+            placeholder="https://example.com/image.jpg"
+          />
+        </div>
+      </div>
+
+      <%!-- Publishing Section --%>
+      <div class="card bg-base-200">
+        <div class="card-body p-4 sm:p-6">
+          <h3 class="card-title text-base mb-4">
+            <.icon name="hero-globe-alt" class="size-5" /> Publishing
+          </h3>
+
+          <.input field={@form[:published]} type="checkbox" label="Published" />
+
+          <p class="text-sm text-base-content/60 mt-2">
+            <.icon name="hero-information-circle" class="size-4 inline" />
+            Published courses are visible to all users
+          </p>
+        </div>
+      </div>
+
+      <%!-- Form Actions --%>
+      <div class="flex flex-col sm:flex-row gap-3 pt-4">
+        <.button
+          type="submit"
+          variant="primary"
+          phx-disable-with="Saving..."
+          class="w-full sm:w-auto"
+        >
+          <.icon name="hero-check" class="size-4" />
+          {if @live_action == :new, do: "Create Course", else: "Update Course"}
+        </.button>
+        <.button navigate={return_path(@return_to, @course)} class="w-full sm:w-auto">
+          Cancel
+        </.button>
+      </div>
+    </.form>
+  </div>
+</Layouts.app>
