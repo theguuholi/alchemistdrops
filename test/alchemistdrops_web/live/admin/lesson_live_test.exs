@@ -76,6 +76,22 @@ defmodule AlchemistdropsWeb.Admin.LessonLiveTest do
              |> render_change() =~ "can&#39;t be blank"
     end
 
+    test "given lesson data that fails server-side validation, when submitting, then shows error",
+         %{
+           conn: conn,
+           course: course
+         } do
+      {:ok, form_live, _html} = live(conn, ~p"/admin/courses/#{course}/lessons/new")
+
+      # Submit with empty title (server validation will fail)
+      html =
+        form_live
+        |> form("#lesson-form", lesson: %{title: ""})
+        |> render_submit()
+
+      assert html =~ "can&#39;t be blank"
+    end
+
     test "given empty title, when validating form, then shows required error", %{
       conn: conn,
       course: course
@@ -200,6 +216,23 @@ defmodule AlchemistdropsWeb.Admin.LessonLiveTest do
       assert form_live
              |> form("#lesson-form", lesson: @invalid_attrs)
              |> render_change() =~ "can&#39;t be blank"
+    end
+
+    test "given update data that fails server-side validation, when submitting, then shows error",
+         %{
+           conn: conn,
+           course: course,
+           lesson: lesson
+         } do
+      {:ok, form_live, _html} = live(conn, ~p"/admin/courses/#{course}/lessons/#{lesson}/edit")
+
+      # Submit with empty title (server validation will fail)
+      html =
+        form_live
+        |> form("#lesson-form", lesson: %{title: ""})
+        |> render_submit()
+
+      assert html =~ "can&#39;t be blank"
     end
   end
 

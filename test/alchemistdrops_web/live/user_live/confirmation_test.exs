@@ -101,5 +101,25 @@ defmodule AlchemistdropsWeb.UserLive.ConfirmationTest do
 
       assert html =~ "Magic link is invalid or it has expired"
     end
+
+    test "shows simple login button when user is already logged in", %{
+      conn: conn,
+      confirmed_user: user
+    } do
+      # Generate a token for reauth
+      token =
+        extract_user_token(fn url ->
+          Accounts.deliver_login_instructions(user, url)
+        end)
+
+      # Log in the user first
+      conn = log_in_user(conn, user)
+
+      # Visit the confirmation page while logged in
+      {:ok, _lv, html} = live(conn, ~p"/users/log-in/#{token}")
+
+      # When logged in, should show simple "Log in" button instead of remember me options
+      assert html =~ "Log in"
+    end
   end
 end

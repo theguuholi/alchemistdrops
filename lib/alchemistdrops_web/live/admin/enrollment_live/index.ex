@@ -94,8 +94,6 @@ defmodule AlchemistdropsWeb.Admin.EnrollmentLive.Index do
     }
   end
 
-  def format_date(nil), do: "-"
-
   def format_date(%DateTime{} = datetime) do
     Calendar.strftime(datetime, "%b %d, %Y")
   end

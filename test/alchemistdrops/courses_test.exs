@@ -593,4 +593,93 @@ defmodule Alchemistdrops.CoursesTest do
       assert changeset.changes.title == "Updated"
     end
   end
+
+  describe "list_course_lessons/2" do
+    test "Scenario: Listing all lessons without published filter" do
+      # Given a course with both published and unpublished lessons
+      course = course_fixture()
+      published = lesson_fixture(%{course_id: course.id, published: true, order: 0})
+      unpublished = lesson_fixture(%{course_id: course.id, published: false, order: 1})
+
+      # When I list lessons without the only_published option
+      lessons = Courses.list_course_lessons(course.id)
+
+      # Then I should get all lessons
+      assert length(lessons) == 2
+      lesson_ids = Enum.map(lessons, & &1.id)
+      assert published.id in lesson_ids
+      assert unpublished.id in lesson_ids
+    end
+
+    test "Scenario: Listing only published lessons with option" do
+      # Given a course with both published and unpublished lessons
+      course = course_fixture()
+      published = lesson_fixture(%{course_id: course.id, published: true, order: 0})
+      _unpublished = lesson_fixture(%{course_id: course.id, published: false, order: 1})
+
+      # When I list lessons with only_published: true
+      lessons = Courses.list_course_lessons(course.id, only_published: true)
+
+      # Then I should get only published lessons
+      assert length(lessons) == 1
+      assert hd(lessons).id == published.id
+    end
+
+    test "Scenario: Listing lessons for course with no lessons" do
+      # Given a course without any lessons
+      course = course_fixture()
+
+      # When I list lessons
+      lessons = Courses.list_course_lessons(course.id)
+
+      # Then I should get an empty list
+      assert lessons == []
+    end
+  end
+
+  describe "create_lesson/2 with atom keys" do
+    test "Scenario: Creating lesson with atom keys in attributes" do
+      # Given a course exists
+      course = course_fixture()
+
+      # And attributes with atom keys (not strings)
+      attrs = %{
+        title: "Lesson with atom keys",
+        description: "Test description",
+        order: 5
+      }
+
+      # When I create a lesson
+      {:ok, lesson} = Courses.create_lesson(course, attrs)
+
+      # Then the lesson should be created with correct values
+      assert lesson.title == "Lesson with atom keys"
+      assert lesson.order == 5
+      assert lesson.course_id == course.id
+    end
+
+    test "Scenario: Creating lesson with empty map uses defaults" do
+      # Given a course exists
+      course = course_fixture()
+
+      # When I try to create a lesson with empty map (will fail due to required title)
+      {:error, changeset} = Courses.create_lesson(course, %{})
+
+      # Then it should fail with validation error for title
+      assert "can't be blank" in errors_on(changeset).title
+    end
+  end
+
+  describe "list_published_courses/0" do
+    test "Scenario: Alias function works same as list_courses" do
+      # Given published courses exist
+      course_fixture(%{title: "Published Course", published: true})
+
+      # When I call list_published_courses
+      courses = Courses.list_published_courses()
+
+      # Then I should get the same result as list_courses
+      assert courses == Courses.list_courses()
+    end
+  end
 end

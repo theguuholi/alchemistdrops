@@ -90,6 +90,35 @@ defmodule AlchemistdropsWeb.PostLiveTest do
       assert index_live |> element("#posts-#{post.id} a", "Delete") |> render_click()
       refute has_element?(index_live, "#posts-#{post.id}")
     end
+
+    test "given post data that fails server-side validation on create, then shows error", %{
+      conn: conn
+    } do
+      {:ok, form_live, _html} = live(conn, ~p"/admin/posts/new")
+
+      # Submit with empty title (server validation will fail)
+      html =
+        form_live
+        |> form("#post-form", post: %{title: "", body: "", background: "", views: ""})
+        |> render_submit()
+
+      assert html =~ "can&#39;t be blank"
+    end
+
+    test "given post data that fails server-side validation on update, then shows error", %{
+      conn: conn,
+      post: post
+    } do
+      {:ok, form_live, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
+
+      # Submit with empty title (server validation will fail)
+      html =
+        form_live
+        |> form("#post-form", post: %{title: "", body: "", background: "", views: ""})
+        |> render_submit()
+
+      assert html =~ "can&#39;t be blank"
+    end
   end
 
   describe "Show" do

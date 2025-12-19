@@ -337,6 +337,12 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
       url = "https://example.com/video.mp4"
       assert {:video, ^url} = Lesson.video_embed_info(url)
     end
+
+    test "given youtube watch URL without query string when called then handles gracefully" do
+      # Edge case: youtube URL without any query params (no v= parameter)
+      assert {:youtube, "https://www.youtube.com/embed/"} =
+               Lesson.video_embed_info("https://www.youtube.com/watch")
+    end
   end
 
   describe "responsive design and accessibility" do

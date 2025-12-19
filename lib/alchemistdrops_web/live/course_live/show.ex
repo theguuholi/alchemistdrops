@@ -78,8 +78,6 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
   defp format_price(%Money{amount: 0}), do: "Free"
   defp format_price(price), do: Money.to_string(price)
 
-  defp format_duration(nil), do: ""
-
   defp format_duration(seconds) when is_integer(seconds) do
     minutes = div(seconds, 60)
     "#{minutes} min"

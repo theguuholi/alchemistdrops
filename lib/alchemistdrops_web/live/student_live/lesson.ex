@@ -6,13 +6,10 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
 
   @impl true
   def mount(%{"course_id" => course_id}, _session, socket) do
-    current_user =
-      case socket.assigns do
-        %{current_scope: %{user: user}} -> user
-        _ -> nil
-      end
+    # User is guaranteed to be authenticated via require_authenticated hook
+    current_user = socket.assigns.current_scope.user
 
-    if current_user && Enrollments.user_enrolled?(current_user.id, course_id) do
+    if Enrollments.user_enrolled?(current_user.id, course_id) do
       course = Courses.get_course!(course_id)
       lessons = Courses.list_course_lessons(course_id, only_published: true)
 
@@ -120,8 +117,6 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
       nil
     end
   end
-
-  defp format_duration(nil), do: ""
 
   defp format_duration(seconds) when is_integer(seconds) do
     minutes = div(seconds, 60)

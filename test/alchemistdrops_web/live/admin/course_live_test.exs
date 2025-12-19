@@ -402,4 +402,116 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
       {:error, {:redirect, %{to: "/"}}} = live(conn, ~p"/admin/courses/#{course}")
     end
   end
+
+  describe "Show delete_lesson with invalid lesson id" do
+    setup [:register_and_log_in_admin_user, :create_course]
+
+    test "given invalid lesson id, when clicking delete, then does nothing", %{
+      conn: conn,
+      course: course
+    } do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}")
+
+      # Send delete_lesson event with an invalid ID directly
+      send(view.pid, {:event, "delete_lesson", %{"id" => Ecto.UUID.generate()}})
+
+      # The view should remain unchanged (no crash)
+      assert has_element?(view, "h1", course.title)
+    end
+  end
+
+  describe "Form - Save Errors" do
+    setup [:register_and_log_in_admin_user]
+
+    test "given invalid data, when submitting new course form via render_submit, then shows error",
+         %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/admin/courses/new")
+
+      # Submit the form with invalid data that will fail on submission
+      # (title that is too long to pass validation on submit)
+      long_title = String.duplicate("a", 300)
+
+      result =
+        form_live
+        |> form("#course-form", course: %{title: long_title, description: "Valid"})
+        |> render_submit()
+
+      # Should show error, not redirect
+      assert result =~ "should be at most 255 character(s)"
+    end
+
+    test "given invalid data, when submitting edit course form via render_submit, then shows error",
+         %{conn: conn} do
+      course = course_fixture()
+      {:ok, form_live, _html} = live(conn, ~p"/admin/courses/#{course}/edit")
+
+      # Submit the form with invalid data
+      long_title = String.duplicate("a", 300)
+
+      result =
+        form_live
+        |> form("#course-form", course: %{title: long_title})
+        |> render_submit()
+
+      # Should show error, not redirect
+      assert result =~ "should be at most 255 character(s)"
+    end
+  end
+
+  describe "Index format_price helper" do
+    alias AlchemistdropsWeb.Admin.CourseLive.Index
+
+    test "given nil price, when formatting, then returns Free" do
+      assert Index.format_price(nil) == "Free"
+    end
+
+    test "given Money zero, when formatting, then returns Free" do
+      assert Index.format_price(Money.new(0, :USD)) == "Free"
+    end
+
+    test "given non-zero Money, when formatting, then returns formatted price" do
+      result = Index.format_price(Money.new(9999, :USD))
+      assert result == "$99.99"
+    end
+
+    test "given unexpected value, when formatting, then returns Free" do
+      assert Index.format_price("invalid") == "Free"
+      assert Index.format_price(123) == "Free"
+    end
+  end
+
+  describe "Show format_price helper" do
+    alias AlchemistdropsWeb.Admin.CourseLive.Show
+
+    test "given nil price, when formatting, then returns Free" do
+      assert Show.format_price(nil) == "Free"
+    end
+
+    test "given Money zero, when formatting, then returns Free" do
+      assert Show.format_price(Money.new(0, :USD)) == "Free"
+    end
+
+    test "given non-zero Money, when formatting, then returns formatted price" do
+      result = Show.format_price(Money.new(9999, :USD))
+      assert result == "$99.99"
+    end
+
+    test "given unexpected value, when formatting, then returns Free" do
+      assert Show.format_price("invalid") == "Free"
+      assert Show.format_price(123) == "Free"
+    end
+  end
+
+  describe "Form return_path helper" do
+    alias AlchemistdropsWeb.Admin.CourseLive.Form
+
+    test "given return_to index, when getting path, then returns admin courses path" do
+      assert Form.return_path("index", %{id: "123"}) == "/admin/courses"
+    end
+
+    test "given return_to show, when getting path, then returns course show path" do
+      course = course_fixture()
+      assert Form.return_path("show", course) == "/admin/courses/#{course.id}"
+    end
+  end
 end
