@@ -69,7 +69,7 @@ defmodule AlchemistdropsWeb.Admin.EnrollmentLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/enrollments")
 
       view
-      |> element("button[phx-click='complete'][phx-value-id='#{enrollment.id}']")
+      |> element("#enrollments button[phx-click='complete'][phx-value-id='#{enrollment.id}']")
       |> render_click()
 
       updated = Alchemistdrops.Enrollments.get_enrollment!(enrollment.id)
@@ -84,7 +84,7 @@ defmodule AlchemistdropsWeb.Admin.EnrollmentLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/enrollments")
 
       view
-      |> element("button[phx-click='cancel'][phx-value-id='#{enrollment.id}']")
+      |> element("#enrollments button[phx-click='cancel'][phx-value-id='#{enrollment.id}']")
       |> render_click()
 
       updated = Alchemistdrops.Enrollments.get_enrollment!(enrollment.id)
@@ -102,7 +102,7 @@ defmodule AlchemistdropsWeb.Admin.EnrollmentLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/enrollments")
 
       view
-      |> element("button[phx-click='reactivate'][phx-value-id='#{enrollment.id}']")
+      |> element("#enrollments button[phx-click='reactivate'][phx-value-id='#{enrollment.id}']")
       |> render_click()
 
       updated = Alchemistdrops.Enrollments.get_enrollment!(enrollment.id)
@@ -119,7 +119,7 @@ defmodule AlchemistdropsWeb.Admin.EnrollmentLiveTest do
       assert html_before =~ "Active"
 
       view
-      |> element("button[phx-click='complete'][phx-value-id='#{enrollment.id}']")
+      |> element("#enrollments button[phx-click='complete'][phx-value-id='#{enrollment.id}']")
       |> render_click()
 
       html_after = render(view)
@@ -137,7 +137,7 @@ defmodule AlchemistdropsWeb.Admin.EnrollmentLiveTest do
     end
 
     test "given non-admin user, when visiting enrollments index, then redirects", %{conn: conn} do
-      {:ok, conn: conn} = register_and_log_in_user(%{conn: conn})
+      %{conn: conn} = register_and_log_in_user(%{conn: conn})
       {:error, {:redirect, %{to: "/"}}} = live(conn, ~p"/admin/enrollments")
     end
   end

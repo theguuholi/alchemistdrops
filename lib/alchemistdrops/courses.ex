@@ -214,7 +214,7 @@ defmodule Alchemistdrops.Courses do
     attrs =
       attrs
       |> ensure_lesson_order(course)
-      |> Map.put(:course_id, course.id)
+      |> put_lesson_attr(:course_id, course.id)
 
     %Lesson{}
     |> Lesson.changeset(attrs)
@@ -226,9 +226,23 @@ defmodule Alchemistdrops.Courses do
       attrs
     else
       next_order = get_next_lesson_order(course)
-      Map.put(attrs, :order, next_order)
+      put_lesson_attr(attrs, :order, next_order)
     end
   end
+
+  # Put attribute using the same key type as the map (string or atom)
+  defp put_lesson_attr(attrs, key, value) when is_atom(key) do
+    string_key = Atom.to_string(key)
+
+    if has_string_keys?(attrs) do
+      Map.put(attrs, string_key, value)
+    else
+      Map.put(attrs, key, value)
+    end
+  end
+
+  defp has_string_keys?(map) when map == %{}, do: false
+  defp has_string_keys?(map), do: map |> Map.keys() |> List.first() |> is_binary()
 
   defp get_next_lesson_order(course) do
     query =

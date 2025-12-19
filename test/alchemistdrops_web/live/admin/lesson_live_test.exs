@@ -226,7 +226,7 @@ defmodule AlchemistdropsWeb.Admin.LessonLiveTest do
       conn: conn,
       course: course
     } do
-      {:ok, conn: conn} = register_and_log_in_user(%{conn: conn})
+      %{conn: conn} = register_and_log_in_user(%{conn: conn})
       {:error, {:redirect, %{to: "/"}}} = live(conn, ~p"/admin/courses/#{course}/lessons/new")
     end
 
@@ -235,7 +235,7 @@ defmodule AlchemistdropsWeb.Admin.LessonLiveTest do
       course: course,
       lesson: lesson
     } do
-      {:ok, conn: conn} = register_and_log_in_user(%{conn: conn})
+      %{conn: conn} = register_and_log_in_user(%{conn: conn})
 
       {:error, {:redirect, %{to: "/"}}} =
         live(conn, ~p"/admin/courses/#{course}/lessons/#{lesson}/edit")

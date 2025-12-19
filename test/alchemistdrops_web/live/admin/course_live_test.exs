@@ -38,9 +38,9 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
       conn: conn,
       course: course
     } do
-      {:ok, view, html} = live(conn, ~p"/admin/courses")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-      assert html =~ "Manage Courses"
+      assert has_element?(view, "h1", "Manage Courses")
       assert has_element?(view, "#courses-#{course.id}")
     end
 
@@ -85,9 +85,9 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
     } do
       Alchemistdrops.Courses.delete_course(course)
 
-      {:ok, _view, html} = live(conn, ~p"/admin/courses")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-      assert html =~ "No courses yet"
+      assert has_element?(view, "p", "No courses yet")
     end
   end
 
@@ -99,7 +99,7 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
     end
 
     test "given non-admin user, when visiting admin courses, then redirects", %{conn: conn} do
-      {:ok, conn: conn} = register_and_log_in_user(%{conn: conn})
+      %{conn: conn} = register_and_log_in_user(%{conn: conn})
       {:error, {:redirect, %{to: "/"}}} = live(conn, ~p"/admin/courses")
     end
   end
@@ -108,11 +108,11 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
     setup [:register_and_log_in_admin_user]
 
     test "given admin user, when visiting new course page, then displays form", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/admin/courses/new")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/new")
 
-      assert html =~ "New Course"
-      assert html =~ "Course Title"
-      assert html =~ "Short Description"
+      assert has_element?(view, "h1", "New Course")
+      assert has_element?(view, "label", "Course Title")
+      assert has_element?(view, "label", "Short Description")
     end
 
     test "given valid course data, when submitting form, then creates course", %{conn: conn} do
@@ -124,17 +124,18 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
                |> render_submit()
                |> follow_redirect(conn, ~p"/admin/courses")
 
-      html = render(index_live)
-      assert html =~ "Course created successfully"
-      assert html =~ "Test Course Title"
+      assert has_element?(index_live, "[role=alert]", "Course created successfully")
+      assert has_element?(index_live, "td", "Test Course Title")
     end
 
     test "given invalid course data, when submitting form, then displays errors", %{conn: conn} do
       {:ok, form_live, _html} = live(conn, ~p"/admin/courses/new")
 
-      assert form_live
-             |> form("#course-form", course: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
+      form_live
+      |> form("#course-form", course: @invalid_attrs)
+      |> render_change()
+
+      assert has_element?(form_live, "p.text-error", "can't be blank")
     end
 
     test "given empty required fields, when validating form, then shows required errors", %{
@@ -142,12 +143,11 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
     } do
       {:ok, form_live, _html} = live(conn, ~p"/admin/courses/new")
 
-      html =
-        form_live
-        |> form("#course-form", course: %{title: "", description: ""})
-        |> render_change()
+      form_live
+      |> form("#course-form", course: %{title: "", description: ""})
+      |> render_change()
 
-      assert html =~ "can&#39;t be blank"
+      assert has_element?(form_live, "p.text-error", "can't be blank")
     end
 
     test "given title exceeding max length, when validating form, then shows length error", %{
@@ -157,12 +157,11 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
 
       long_title = String.duplicate("a", 300)
 
-      html =
-        form_live
-        |> form("#course-form", course: %{title: long_title, description: "Valid description"})
-        |> render_change()
+      form_live
+      |> form("#course-form", course: %{title: long_title, description: "Valid description"})
+      |> render_change()
 
-      assert html =~ "should be at most 255 character"
+      assert has_element?(form_live, "p.text-error", "should be at most 255 character(s)")
     end
 
     test "given price of zero, when submitting form, then creates free course", %{conn: conn} do
@@ -170,13 +169,13 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
 
       attrs = Map.put(@create_attrs, :price, "0")
 
-      assert {:ok, _index_live, html} =
+      assert {:ok, index_live, _html} =
                form_live
                |> form("#course-form", course: attrs)
                |> render_submit()
                |> follow_redirect(conn, ~p"/admin/courses")
 
-      assert html =~ "Course created successfully"
+      assert has_element?(index_live, "[role=alert]", "Course created successfully")
     end
 
     test "given user on form page, when clicking cancel, then returns to index", %{conn: conn} do
@@ -197,10 +196,10 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
       conn: conn,
       course: course
     } do
-      {:ok, _view, html} = live(conn, ~p"/admin/courses/#{course}/edit")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}/edit")
 
-      assert html =~ "Edit Course"
-      assert html =~ course.title
+      assert has_element?(view, "h1", "Edit Course")
+      assert has_element?(view, "input[value='#{course.title}']")
     end
 
     test "given valid update data, when submitting form, then updates course", %{
@@ -215,9 +214,8 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
                |> render_submit()
                |> follow_redirect(conn, ~p"/admin/courses")
 
-      html = render(index_live)
-      assert html =~ "Course updated successfully"
-      assert html =~ "Updated Course Title"
+      assert has_element?(index_live, "[role=alert]", "Course updated successfully")
+      assert has_element?(index_live, "td", "Updated Course Title")
     end
 
     test "given invalid update data, when submitting form, then displays errors", %{
@@ -226,9 +224,11 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
     } do
       {:ok, form_live, _html} = live(conn, ~p"/admin/courses/#{course}/edit")
 
-      assert form_live
-             |> form("#course-form", course: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
+      form_live
+      |> form("#course-form", course: @invalid_attrs)
+      |> render_change()
+
+      assert has_element?(form_live, "p.text-error", "can't be blank")
     end
 
     test "given return_to=show param, when submitting form, then returns to show page", %{
@@ -243,9 +243,8 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
                |> render_submit()
                |> follow_redirect(conn, ~p"/admin/courses/#{course}")
 
-      html = render(show_live)
-      assert html =~ "Course updated successfully"
-      assert html =~ "Updated Course Title"
+      assert has_element?(show_live, "[role=alert]", "Course updated successfully")
+      assert has_element?(show_live, "h1", "Updated Course Title")
     end
   end
 
@@ -256,11 +255,11 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
       conn: conn,
       course: course
     } do
-      {:ok, _view, html} = live(conn, ~p"/admin/courses/#{course}")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}")
 
-      assert html =~ course.title
-      assert html =~ course.description
-      assert html =~ "Description"
+      assert has_element?(view, "h1", course.title)
+      assert has_element?(view, "p", course.description)
+      assert has_element?(view, "h3.card-title", "Description")
     end
 
     test "given course has lessons, when visiting show page, then displays lessons", %{
@@ -268,10 +267,10 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
       course: course,
       lessons: lessons
     } do
-      {:ok, view, html} = live(conn, ~p"/admin/courses/#{course}")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}")
 
-      assert html =~ "Lessons"
-      assert html =~ "#{length(lessons)}"
+      assert has_element?(view, "h3.card-title", "Lessons")
+      assert has_element?(view, ".badge", "#{length(lessons)}")
 
       for lesson <- lessons do
         assert has_element?(view, "#lesson-#{lesson.id}")
@@ -319,7 +318,7 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
       assert has_element?(show_live, "#lesson-#{lesson.id}")
 
       show_live
-      |> element("#lesson-#{lesson.id} button[phx-click='delete_lesson']")
+      |> element("#lesson-#{lesson.id} button.text-error")
       |> render_click()
 
       refute has_element?(show_live, "#lesson-#{lesson.id}")
@@ -329,9 +328,9 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
       conn: conn
     } do
       course = course_fixture()
-      {:ok, _view, html} = live(conn, ~p"/admin/courses/#{course}")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}")
 
-      assert html =~ "No lessons yet"
+      assert has_element?(view, "p", "No lessons yet")
     end
 
     test "given course exists, when visiting show page, then displays Stripe integration section",
@@ -339,21 +338,21 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
            conn: conn,
            course: course
          } do
-      {:ok, _view, html} = live(conn, ~p"/admin/courses/#{course}")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}")
 
-      assert html =~ "Stripe Integration"
-      assert html =~ "Product ID"
-      assert html =~ "Price ID"
+      assert has_element?(view, "h3.card-title", "Stripe Integration")
+      assert has_element?(view, "dt", "Product ID")
+      assert has_element?(view, "dt", "Price ID")
     end
 
     test "given course exists, when visiting show page, then displays metadata section", %{
       conn: conn,
       course: course
     } do
-      {:ok, _view, html} = live(conn, ~p"/admin/courses/#{course}")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}")
 
-      assert html =~ "Created"
-      assert html =~ "Last Updated"
+      assert has_element?(view, "dt", "Created")
+      assert has_element?(view, "dt", "Last Updated")
     end
 
     test "given user on show page, when clicking edit course, then navigates to edit form", %{
@@ -399,7 +398,7 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
       conn: conn,
       course: course
     } do
-      {:ok, conn: conn} = register_and_log_in_user(%{conn: conn})
+      %{conn: conn} = register_and_log_in_user(%{conn: conn})
       {:error, {:redirect, %{to: "/"}}} = live(conn, ~p"/admin/courses/#{course}")
     end
   end
