@@ -156,6 +156,14 @@ defmodule Alchemistdrops.CoursesTest do
   end
 
   describe "create_course/1" do
+    test "Scenario: Creating course with no arguments uses empty map default" do
+      # When I call create_course without arguments
+      {:error, changeset} = Courses.create_course()
+
+      # Then it should fail validation because title is required
+      assert "can't be blank" in errors_on(changeset).title
+    end
+
     test "Scenario: Creating course with valid attributes" do
       # Given valid course attributes
       attrs = %{
@@ -317,6 +325,17 @@ defmodule Alchemistdrops.CoursesTest do
   end
 
   describe "create_lesson/2" do
+    test "Scenario: Creating lesson with no attrs uses empty map default" do
+      # Given a course exists
+      course = course_fixture()
+
+      # When I call create_lesson without attrs (uses default %{})
+      {:error, changeset} = Courses.create_lesson(course)
+
+      # Then it should fail validation because title is required
+      assert "can't be blank" in errors_on(changeset).title
+    end
+
     test "Scenario: Creating lesson for a course with valid attributes" do
       # Given a course exists
       course = course_fixture()

@@ -12,6 +12,21 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
       assert html =~ "Register"
       assert html =~ "Log in with email"
     end
+
+    test "shows local mail adapter notice when using Local adapter", %{conn: conn} do
+      # Temporarily change mailer adapter to Local
+      original = Application.get_env(:alchemistdrops, Alchemistdrops.Mailer)
+      Application.put_env(:alchemistdrops, Alchemistdrops.Mailer, adapter: Swoosh.Adapters.Local)
+
+      try do
+        {:ok, _lv, html} = live(conn, ~p"/users/log-in")
+
+        assert html =~ "You are running the local mail adapter"
+        assert html =~ "the mailbox page"
+      after
+        Application.put_env(:alchemistdrops, Alchemistdrops.Mailer, original)
+      end
+    end
   end
 
   describe "user login - magic link" do

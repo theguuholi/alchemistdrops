@@ -44,6 +44,35 @@ defmodule AlchemistdropsWeb.UserAuthTest do
       new_token = get_session(conn, :user_token)
       assert new_token != token
     end
+
+    test "reissues session token and preserves remember_me when old", %{conn: conn} do
+      user = user_fixture()
+      token = Accounts.generate_user_session_token(user)
+
+      # Make the token old by updating inserted_at
+      Alchemistdrops.Repo.update_all(
+        from(t in Alchemistdrops.Accounts.UserToken, where: t.token == ^token),
+        set: [inserted_at: DateTime.add(DateTime.utc_now(:second), -8, :day)]
+      )
+
+      # Need to set secret_key_base for cookie signing
+      conn =
+        conn
+        |> Map.put(:secret_key_base, AlchemistdropsWeb.Endpoint.config(:secret_key_base))
+        |> Phoenix.ConnTest.init_test_session(%{})
+        |> Plug.Conn.put_session(:user_token, token)
+        |> Plug.Conn.put_session(:user_remember_me, true)
+        |> Plug.Conn.assign(:current_scope, Accounts.Scope.for_user(nil))
+        |> UserAuth.fetch_current_scope_for_user([])
+
+      # User should still be logged in
+      assert conn.assigns.current_scope.user.id == user.id
+      # New token should be generated
+      new_token = get_session(conn, :user_token)
+      assert new_token != token
+      # Remember me cookie should be written
+      assert conn.resp_cookies["_alchemistdrops_web_user_remember_me"]
+    end
   end
 
   describe "log_in_user/3" do
@@ -97,6 +126,22 @@ defmodule AlchemistdropsWeb.UserAuthTest do
       assert redirected_to(conn) == "/"
       refute get_session(conn, :user_token)
     end
+
+    test "broadcasts disconnect when live_socket_id is present", %{conn: conn} do
+      user = user_fixture()
+      token = Accounts.generate_user_session_token(user)
+
+      conn =
+        conn
+        |> Phoenix.ConnTest.init_test_session(%{})
+        |> Plug.Conn.put_session(:user_token, token)
+        |> Plug.Conn.put_session(:live_socket_id, "users_sessions:#{Base.url_encode64(token)}")
+        |> UserAuth.log_out_user()
+
+      assert redirected_to(conn) == "/"
+      refute get_session(conn, :user_token)
+      refute get_session(conn, :live_socket_id)
+    end
   end
 
   describe "signed_in_path/1" do
@@ -121,6 +166,72 @@ defmodule AlchemistdropsWeb.UserAuthTest do
 
       # This should not raise
       UserAuth.disconnect_sessions([token_struct])
+    end
+  end
+
+  describe "on_mount :require_authenticated" do
+    test "redirects unauthenticated user in LiveView" do
+      socket = %Phoenix.LiveView.Socket{
+        assigns: %{
+          __changed__: %{},
+          flash: %{}
+        }
+      }
+
+      # Test with no user token in session
+      {:halt, updated_socket} = UserAuth.on_mount(:require_authenticated, %{}, %{}, socket)
+
+      assert {:redirect, %{to: "/users/log-in"}} = updated_socket.redirected
+    end
+  end
+
+  describe "require_authenticated_user/2" do
+    test "allows authenticated user", %{conn: conn} do
+      user = user_fixture()
+
+      conn =
+        conn
+        |> Plug.Conn.assign(:current_scope, Accounts.Scope.for_user(user))
+        |> UserAuth.require_authenticated_user([])
+
+      refute conn.halted
+    end
+
+    test "redirects unauthenticated user on GET request", %{conn: conn} do
+      conn =
+        conn
+        |> Phoenix.ConnTest.init_test_session(%{})
+        |> Phoenix.Controller.fetch_flash([])
+        |> Map.put(:method, "GET")
+        |> Map.put(:path_info, ["protected", "page"])
+        |> Map.put(:query_string, "")
+        |> Plug.Conn.assign(:current_scope, Accounts.Scope.for_user(nil))
+        |> UserAuth.require_authenticated_user([])
+
+      assert conn.halted
+      assert redirected_to(conn) == "/users/log-in"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               "You must log in to access this page."
+
+      assert get_session(conn, :user_return_to) == "/protected/page"
+    end
+
+    test "redirects unauthenticated user on POST request without storing return_to", %{conn: conn} do
+      conn =
+        conn
+        |> Phoenix.ConnTest.init_test_session(%{})
+        |> Phoenix.Controller.fetch_flash([])
+        |> Map.put(:method, "POST")
+        |> Map.put(:path_info, ["protected", "page"])
+        |> Map.put(:query_string, "")
+        |> Plug.Conn.assign(:current_scope, Accounts.Scope.for_user(nil))
+        |> UserAuth.require_authenticated_user([])
+
+      assert conn.halted
+      assert redirected_to(conn) == "/users/log-in"
+      # Should NOT store return_to for POST requests
+      refute get_session(conn, :user_return_to)
     end
   end
 end

@@ -43,9 +43,7 @@ defmodule AlchemistdropsWeb.PostLive.Show do
   defp render_markdown(nil), do: Phoenix.HTML.raw("")
 
   defp render_markdown(content) when is_binary(content) do
-    case MDEx.to_html(content) do
-      {:ok, html} -> Phoenix.HTML.raw(html)
-      {:error, _} -> Phoenix.HTML.raw(content)
-    end
+    {:ok, html} = MDEx.to_html(content)
+    Phoenix.HTML.raw(html)
   end
 end

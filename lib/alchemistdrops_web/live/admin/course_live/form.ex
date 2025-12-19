@@ -75,6 +75,7 @@ defmodule AlchemistdropsWeb.Admin.CourseLive.Form do
   def return_path("show", course), do: ~p"/admin/courses/#{course}"
 
   # Convert price from cents string to Money struct
+  # Note: Form params always come as strings, so we only handle string cases
   defp normalize_price(params) do
     case params["price"] do
       "" ->
@@ -85,9 +86,6 @@ defmodule AlchemistdropsWeb.Admin.CourseLive.Form do
           {cents, _} -> Map.put(params, "price", Money.new(cents, :USD))
           :error -> params
         end
-
-      _ ->
-        params
     end
   end
 end
