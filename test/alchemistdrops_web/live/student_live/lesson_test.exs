@@ -377,9 +377,8 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
         |> log_in_user(user)
         |> live(~p"/student/courses/#{course.id}/lessons")
 
-      # Target the desktop sidebar button (aside element)
       view
-      |> element("aside button[phx-value-id='#{lesson2.id}']")
+      |> element("button[phx-value-id='#{lesson2.id}']")
       |> render_click()
 
       assert has_element?(view, "h1", "Lesson 2")
