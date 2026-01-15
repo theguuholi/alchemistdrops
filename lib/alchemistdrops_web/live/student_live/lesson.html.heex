@@ -97,7 +97,9 @@
             <%!-- Progress Indicator --%>
             <div class="text-center order-1 sm:order-2 w-full sm:w-auto">
               <p class="text-sm text-base-content/70 mb-2">
-                Lesson {Enum.find_index(@lessons, &(&1.id == @current_lesson.id)) |> Kernel.+(1)} of {length(@lessons)}
+                Lesson {Enum.find_index(@lessons, &(&1.id == @current_lesson.id)) |> Kernel.+(1)} of {length(
+                  @lessons
+                )}
               </p>
               <progress
                 class="progress progress-primary w-full sm:w-48"
@@ -160,7 +162,8 @@
                 <div class="flex items-start">
                   <span class={[
                     "flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm mr-3",
-                    lesson.id == @current_lesson.id && "bg-primary-content/20 text-primary-content",
+                    lesson.id == @current_lesson.id &&
+                      "bg-primary-content/20 text-primary-content",
                     lesson.id != @current_lesson.id && "bg-primary/20 text-primary"
                   ]}>
                     {index + 1}
