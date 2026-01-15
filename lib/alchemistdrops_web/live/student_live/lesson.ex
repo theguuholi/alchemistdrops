@@ -20,7 +20,8 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
        socket
        |> assign(:course, course)
        |> assign(:lessons, lessons)
-       |> assign(:current_user, current_user)}
+       |> assign(:current_user, current_user)
+       |> assign_new(:current_scope, fn -> socket.assigns[:current_scope] end)}
     else
       {:ok,
        socket

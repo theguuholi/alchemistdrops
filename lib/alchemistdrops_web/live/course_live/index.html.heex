@@ -1,11 +1,11 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <div class="space-y-8">
+  <div class="space-y-6 sm:space-y-8 max-w-6xl mx-auto">
     <%!-- Hero Section --%>
-    <header class="text-center">
-      <h1 class="text-5xl font-bold text-primary mb-4">
+    <header class="text-center px-2">
+      <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary mb-3 sm:mb-4">
         Explore Our Courses
       </h1>
-      <p class="text-xl text-base-content/70 max-w-2xl mx-auto">
+      <p class="text-base sm:text-lg lg:text-xl text-base-content/70 max-w-2xl mx-auto">
         Discover transformative learning experiences crafted by industry experts
       </p>
     </header>
@@ -25,7 +25,7 @@
         </div>
       <% else %>
         <%!-- Course Cards Grid --%>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <%= for course <- @courses do %>
             <article
               data-role="course-card"

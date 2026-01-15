@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="overflow-x-hidden">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
     <meta name="csrf-token" content={get_csrf_token()} />
     <.live_title default="Alchemistdrops" suffix=" · Phoenix Framework">
       {assigns[:page_title]}
@@ -51,47 +51,81 @@
       })();
     </script>
   </head>
-  <body>
-    <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
+  <body class="overflow-x-hidden min-h-screen">
+    <header class="navbar px-4 sm:px-6 lg:px-8 min-h-14 flex-wrap gap-2">
+      <%!-- Logo --%>
+      <div class="flex-1 min-w-0">
+        <a href="/" class="flex w-fit items-center gap-2">
           <img src={~p"/images/logo.svg"} width="36" />
         </a>
       </div>
-      <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
-          <li>
-            <.theme_toggle />
-          </li>
-          <li>
-            <ul class="menu menu-horizontal w-full relative z-10 flex items-center gap-4 px-4 sm:px-6 lg:px-8 justify-end">
-              <li>
-                <.link href={~p"/courses"}>Courses</.link>
-              </li>
-              <li>
-                <.link href={~p"/blog"}>Blog</.link>
-              </li>
-              <%= if @current_scope do %>
-                <li :if={@current_scope.user.role == :admin}>
-                  <.link href={~p"/admin/posts"} class="text-warning">Admin</.link>
-                </li>
-                <li>
-                  <.link href={~p"/users/settings"}>{@current_scope.user.email}</.link>
-                </li>
-                <li>
-                  <.link href={~p"/users/log-out"} method="delete">Log out</.link>
-                </li>
-              <% else %>
-                <li>
-                  <.link href={~p"/users/register"}>Register</.link>
-                </li>
-                <li>
-                  <.link href={~p"/users/log-in"}>Log in</.link>
-                </li>
-              <% end %>
-            </ul>
-          </li>
+
+      <%!-- Desktop Navigation --%>
+      <nav class="hidden md:flex flex-none items-center gap-2">
+        <ul class="menu menu-horizontal items-center gap-1 flex-nowrap">
+          <li><.link href={~p"/courses"}>Courses</.link></li>
+          <li><.link href={~p"/blog"}>Blog</.link></li>
+          <%= if @current_scope do %>
+            <li :if={@current_scope.user.role == :admin}>
+              <.link href={~p"/admin/posts"} class="text-warning">Admin</.link>
+            </li>
+            <li>
+              <.link href={~p"/users/settings"} class="truncate max-w-[120px]">
+                {@current_scope.user.email}
+              </.link>
+            </li>
+            <li><.link href={~p"/users/log-out"} method="delete">Log out</.link></li>
+          <% else %>
+            <li><.link href={~p"/users/register"}>Register</.link></li>
+            <li><.link href={~p"/users/log-in"}>Log in</.link></li>
+          <% end %>
         </ul>
+        <.theme_toggle />
+      </nav>
+
+      <%!-- Mobile Menu --%>
+      <div class="flex md:hidden items-center gap-2">
+        <.theme_toggle />
+        <div class="drawer drawer-end z-50">
+          <input id="mobile-drawer" type="checkbox" class="drawer-toggle" />
+          <div class="drawer-content">
+            <label for="mobile-drawer" class="btn btn-ghost btn-sm btn-square">
+              <.icon name="hero-bars-3" class="w-5 h-5" />
+            </label>
+          </div>
+          <div class="drawer-side">
+            <label for="mobile-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+            <div class="menu bg-base-100 min-h-full w-64 p-4">
+              <div class="flex justify-end mb-2">
+                <label for="mobile-drawer" class="btn btn-ghost btn-square btn-sm">
+                  <.icon name="hero-x-mark" class="w-5 h-5" />
+                </label>
+              </div>
+              <ul class="space-y-1">
+                <li><.link href={~p"/courses"} class="py-3">Courses</.link></li>
+                <li><.link href={~p"/blog"} class="py-3">Blog</.link></li>
+                <%= if @current_scope do %>
+                  <li :if={@current_scope.user.role == :admin}>
+                    <.link href={~p"/admin/posts"} class="py-3 text-warning">Admin</.link>
+                  </li>
+                  <li class="border-t border-base-300 mt-3 pt-3">
+                    <.link href={~p"/users/settings"} class="py-3 truncate">
+                      {@current_scope.user.email}
+                    </.link>
+                  </li>
+                  <li>
+                    <.link href={~p"/users/log-out"} method="delete" class="py-3">Log out</.link>
+                  </li>
+                <% else %>
+                  <li class="border-t border-base-300 mt-3 pt-3">
+                    <.link href={~p"/users/register"} class="py-3">Register</.link>
+                  </li>
+                  <li><.link href={~p"/users/log-in"} class="py-3">Log in</.link></li>
+                <% end %>
+              </ul>
+            </div>
+          </div>
+        </div>
       </div>
     </header>
     {@inner_content}
