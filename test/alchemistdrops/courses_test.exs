@@ -593,4 +593,17 @@ defmodule Alchemistdrops.CoursesTest do
       assert changeset.changes.title == "Updated"
     end
   end
+
+  describe "count_courses/0" do
+    test "returns zero when no courses exist" do
+      assert Courses.count_courses() == 0
+    end
+
+    test "returns correct count of courses" do
+      course_fixture()
+      course_fixture()
+
+      assert Courses.count_courses() == 2
+    end
+  end
 end

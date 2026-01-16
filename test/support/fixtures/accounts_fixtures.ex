@@ -28,17 +28,53 @@ defmodule Alchemistdrops.AccountsFixtures do
   end
 
   def user_fixture(attrs \\ %{}) do
+    # Convert keyword list to map if needed
+    attrs = if is_list(attrs), do: Enum.into(attrs, %{}), else: attrs
+
+    # Extract special attributes before creating user
+    role = Map.get(attrs, :role, :user)
+    # Convert string role to atom if needed
+    role = if is_binary(role), do: String.to_existing_atom(role), else: role
+
+    confirmed_at = Map.get(attrs, :confirmed_at, :default)
+    attrs = Map.drop(attrs, [:role, :confirmed_at])
+
     user = unconfirmed_user_fixture(attrs)
 
-    token =
-      extract_user_token(fn url ->
-        Accounts.deliver_login_instructions(user, url)
-      end)
+    # Handle confirmation
+    user =
+      case confirmed_at do
+        nil ->
+          # Explicitly unconfirmed
+          user
 
-    {:ok, {user, _expired_tokens}} =
-      Accounts.login_user_by_magic_link(token)
+        :default ->
+          # Default: confirm via magic link
+          token =
+            extract_user_token(fn url ->
+              Accounts.deliver_login_instructions(user, url)
+            end)
 
-    user
+          {:ok, {confirmed_user, _expired_tokens}} =
+            Accounts.login_user_by_magic_link(token)
+
+          confirmed_user
+
+        datetime ->
+          # Custom confirmed_at timestamp
+          user
+          |> Ecto.Changeset.change(confirmed_at: datetime)
+          |> Alchemistdrops.Repo.update!()
+      end
+
+    # Set role if different from default
+    if role != :user do
+      user
+      |> Ecto.Changeset.change(role: role)
+      |> Alchemistdrops.Repo.update!()
+    else
+      user
+    end
   end
 
   def admin_fixture(attrs \\ %{}) do

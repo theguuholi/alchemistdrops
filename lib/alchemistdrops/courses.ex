@@ -61,6 +61,19 @@ defmodule Alchemistdrops.Courses do
   end
 
   @doc """
+  Returns the total count of courses.
+
+  ## Examples
+
+      iex> count_courses()
+      10
+
+  """
+  def count_courses do
+    Repo.aggregate(Course, :count)
+  end
+
+  @doc """
   Gets a single course with lessons preloaded.
 
   Raises `Ecto.NoResultsError` if the Course does not exist.

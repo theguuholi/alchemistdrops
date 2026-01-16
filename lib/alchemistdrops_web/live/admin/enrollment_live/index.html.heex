@@ -1,0 +1,53 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <article class="max-w-6xl mx-auto" aria-labelledby="enrollments-heading">
+    <.header>
+      <h1 id="enrollments-heading">Enrollments</h1>
+      <:subtitle>View all student enrollments</:subtitle>
+    </.header>
+
+    <section class="mt-6 sm:mt-8" aria-label="Enrollments list">
+      <%= if @enrollments_empty? do %>
+        <div
+          class="text-center py-12 text-base-content/60"
+          role="status"
+          aria-live="polite"
+        >
+          <.icon name="hero-users" class="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p class="text-lg">No enrollments yet</p>
+          <p class="text-sm mt-2">Enrollments will appear here when students sign up</p>
+        </div>
+      <% else %>
+        <div class="overflow-x-auto">
+          <.table id="enrollments-table" rows={@streams.enrollments}>
+            <:col :let={{_id, enrollment}} label="User">
+              <span class="truncate max-w-[120px] sm:max-w-[200px] inline-block">
+                {enrollment.user.email}
+              </span>
+            </:col>
+            <:col :let={{_id, enrollment}} label="Course">
+              <span class="font-medium truncate max-w-[100px] sm:max-w-[180px] inline-block">
+                {enrollment.course.title}
+              </span>
+            </:col>
+            <:col :let={{_id, enrollment}} label="Status">
+              <span
+                class={["badge badge-sm", status_class(enrollment.status)]}
+                role="status"
+              >
+                {enrollment.status}
+              </span>
+            </:col>
+            <:col :let={{_id, enrollment}} label="Enrolled">
+              <time
+                datetime={enrollment.inserted_at}
+                class="text-sm text-base-content/70"
+              >
+                {format_date(enrollment.inserted_at)}
+              </time>
+            </:col>
+          </.table>
+        </div>
+      <% end %>
+    </section>
+  </article>
+</Layouts.app>
