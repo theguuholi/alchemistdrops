@@ -318,5 +318,19 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
       # Total: 300 + 600 = 900 seconds = 15 minutes (nil is filtered out)
       assert has_element?(view, "span", "15 min")
     end
+
+    test "given only lessons with nil duration when visitor views then page renders", %{
+      conn: conn
+    } do
+      course = course_fixture(%{published: true})
+      _lesson1 = lesson_fixture(%{course_id: course.id, duration: nil, published: true})
+      _lesson2 = lesson_fixture(%{course_id: course.id, duration: nil, published: true})
+
+      {:ok, view, _html} = live(conn, ~p"/courses/#{course}")
+
+      # Page should render without errors even with nil durations
+      assert has_element?(view, "article")
+      assert has_element?(view, "h1", course.title)
+    end
   end
 end

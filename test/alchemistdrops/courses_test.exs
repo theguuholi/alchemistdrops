@@ -606,4 +606,16 @@ defmodule Alchemistdrops.CoursesTest do
       assert Courses.count_courses() == 2
     end
   end
+
+  describe "list_published_courses/0" do
+    test "returns only published courses (alias for list_courses)" do
+      published = course_fixture(%{title: "Published", published: true})
+      _unpublished = course_fixture(%{title: "Unpublished", published: false})
+
+      courses = Courses.list_published_courses()
+
+      assert length(courses) == 1
+      assert hd(courses).id == published.id
+    end
+  end
 end

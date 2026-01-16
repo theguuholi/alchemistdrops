@@ -23,7 +23,6 @@ defmodule AlchemistdropsWeb.Admin.EnrollmentLive.Index do
   defp status_class("active"), do: "badge-success"
   defp status_class("completed"), do: "badge-info"
   defp status_class("cancelled"), do: "badge-error"
-  defp status_class(_), do: "badge-ghost"
 
   defp format_date(datetime) do
     Calendar.strftime(datetime, "%b %d, %Y")
