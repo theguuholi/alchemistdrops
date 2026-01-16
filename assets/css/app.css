@@ -123,12 +123,6 @@ img, video, iframe, embed, object {
 }
 
 /* Ensure tables don't overflow on mobile */
-table {
-  display: block;
-  overflow-x: auto;
-  max-width: 100%;
-}
-
 /* Prevent pre/code blocks from causing horizontal scroll */
 pre {
   overflow-x: auto;

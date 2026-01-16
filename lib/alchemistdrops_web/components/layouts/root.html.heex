@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en" class="overflow-x-hidden">
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
     <.live_title default="Alchemistdrops" suffix=" · Phoenix Framework">
       {assigns[:page_title]}
@@ -51,107 +51,98 @@
       })();
     </script>
   </head>
-  <body class="overflow-x-hidden min-h-screen">
-    <header class="navbar px-4 sm:px-6 lg:px-8 min-h-14 flex-wrap gap-2">
-      <%!-- Logo --%>
-      <div class="flex-1 min-w-0">
-        <a href="/" class="flex w-fit items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
+  <body class="min-h-screen bg-base-100">
+    <header class="bg-base-200 border-b border-base-300">
+      <nav class="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+        <%!-- Logo --%>
+        <a href="/" class="flex items-center gap-2">
+          <img src={~p"/images/logo.svg"} width="36" alt="Alchemistdrops" />
         </a>
-      </div>
 
-      <%!-- Desktop Navigation --%>
-      <nav class="hidden md:flex flex-none items-center gap-2">
-        <ul class="menu menu-horizontal items-center gap-1 flex-nowrap">
-          <li><.link href={~p"/courses"}>Courses</.link></li>
-          <li><.link href={~p"/blog"}>Blog</.link></li>
+        <%!-- Navigation Links --%>
+        <ul class="flex items-center gap-4 sm:gap-6 text-sm">
+          <li>
+            <.link href={~p"/courses"} class="hover:text-primary transition-colors">
+              Courses
+            </.link>
+          </li>
+          <li>
+            <.link href={~p"/blog"} class="hover:text-primary transition-colors">
+              Blog
+            </.link>
+          </li>
+
           <%= if @current_scope do %>
-            <li :if={@current_scope.user.role == :admin} class="dropdown dropdown-end">
-              <div
-                tabindex="0"
-                role="button"
-                class="text-warning flex items-center gap-1 cursor-pointer"
-              >
-                Admin <.icon name="hero-chevron-down" class="w-3 h-3" />
-              </div>
-              <ul
-                tabindex="0"
-                class="dropdown-content menu bg-base-200 rounded-box z-50 w-44 p-2 shadow-lg mt-2"
-              >
-                <li><.link href={~p"/admin/posts"}>Posts</.link></li>
-                <li><.link href={~p"/admin/courses"}>Courses</.link></li>
-                <li><.link href={~p"/admin/enrollments"}>Enrollments</.link></li>
-                <li><.link href={~p"/admin/users"}>Users</.link></li>
-              </ul>
-            </li>
+            <%= if @current_scope.user.role == :admin do %>
+              <li>
+                <details class="relative">
+                  <summary class="text-warning cursor-pointer list-none flex items-center gap-1 hover:text-warning/80">
+                    Admin <.icon name="hero-chevron-down" class="w-3 h-3" />
+                  </summary>
+                  <ul class="absolute right-0 mt-2 w-40 bg-base-200 border border-base-300 rounded-lg shadow-xl z-50 py-2">
+                    <li>
+                      <.link href={~p"/admin/posts"} class="block px-4 py-2 hover:bg-base-300">
+                        Posts
+                      </.link>
+                    </li>
+                    <li>
+                      <.link href={~p"/admin/courses"} class="block px-4 py-2 hover:bg-base-300">
+                        Courses
+                      </.link>
+                    </li>
+                    <li>
+                      <.link
+                        href={~p"/admin/enrollments"}
+                        class="block px-4 py-2 hover:bg-base-300"
+                      >
+                        Enrollments
+                      </.link>
+                    </li>
+                    <li>
+                      <.link href={~p"/admin/users"} class="block px-4 py-2 hover:bg-base-300">
+                        Users
+                      </.link>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+            <% end %>
+
             <li>
-              <.link href={~p"/users/settings"} class="truncate max-w-[120px]">
+              <.link
+                href={~p"/users/settings"}
+                class="hover:text-primary transition-colors truncate max-w-[100px] sm:max-w-[150px] inline-block"
+              >
                 {@current_scope.user.email}
               </.link>
             </li>
-            <li><.link href={~p"/users/log-out"} method="delete">Log out</.link></li>
+            <li>
+              <.link
+                href={~p"/users/log-out"}
+                method="delete"
+                class="hover:text-error transition-colors"
+              >
+                Log out
+              </.link>
+            </li>
           <% else %>
-            <li><.link href={~p"/users/register"}>Register</.link></li>
-            <li><.link href={~p"/users/log-in"}>Log in</.link></li>
+            <li>
+              <.link href={~p"/users/register"} class="hover:text-primary transition-colors">
+                Register
+              </.link>
+            </li>
+            <li>
+              <.link href={~p"/users/log-in"} class="hover:text-primary transition-colors">
+                Log in
+              </.link>
+            </li>
           <% end %>
-        </ul>
-        <.theme_toggle />
-      </nav>
 
-      <%!-- Mobile Menu --%>
-      <div class="flex md:hidden items-center gap-2">
-        <.theme_toggle />
-        <div class="drawer drawer-end z-50">
-          <input id="mobile-drawer" type="checkbox" class="drawer-toggle" />
-          <div class="drawer-content">
-            <label for="mobile-drawer" class="btn btn-ghost btn-sm btn-square">
-              <.icon name="hero-bars-3" class="w-5 h-5" />
-            </label>
-          </div>
-          <div class="drawer-side">
-            <label for="mobile-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-            <div class="menu bg-base-100 min-h-full w-64 p-4">
-              <div class="flex justify-end mb-2">
-                <label for="mobile-drawer" class="btn btn-ghost btn-square btn-sm">
-                  <.icon name="hero-x-mark" class="w-5 h-5" />
-                </label>
-              </div>
-              <ul class="space-y-1">
-                <li><.link href={~p"/courses"} class="py-3">Courses</.link></li>
-                <li><.link href={~p"/blog"} class="py-3">Blog</.link></li>
-                <%= if @current_scope do %>
-                  <li :if={@current_scope.user.role == :admin}>
-                    <details>
-                      <summary class="py-3 text-warning font-medium">Admin</summary>
-                      <ul class="bg-base-200 rounded-box ml-2">
-                        <li><.link href={~p"/admin/posts"} class="py-2">Posts</.link></li>
-                        <li><.link href={~p"/admin/courses"} class="py-2">Courses</.link></li>
-                        <li>
-                          <.link href={~p"/admin/enrollments"} class="py-2">Enrollments</.link>
-                        </li>
-                        <li><.link href={~p"/admin/users"} class="py-2">Users</.link></li>
-                      </ul>
-                    </details>
-                  </li>
-                  <li class="border-t border-base-300 mt-4 pt-4">
-                    <.link href={~p"/users/settings"} class="py-3 truncate">
-                      {@current_scope.user.email}
-                    </.link>
-                  </li>
-                  <li>
-                    <.link href={~p"/users/log-out"} method="delete" class="py-3">Log out</.link>
-                  </li>
-                <% else %>
-                  <li class="border-t border-base-300 mt-4 pt-4">
-                    <.link href={~p"/users/register"} class="py-3">Register</.link>
-                  </li>
-                  <li><.link href={~p"/users/log-in"} class="py-3">Log in</.link></li>
-                <% end %>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
+          <li>
+            <.theme_toggle />
+          </li>
+        </ul>
+      </nav>
     </header>
     {@inner_content}
   </body>

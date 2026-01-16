@@ -1,53 +1,44 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <article class="max-w-6xl mx-auto" aria-labelledby="enrollments-heading">
-    <.header>
-      <h1 id="enrollments-heading">Enrollments</h1>
-      <:subtitle>View all student enrollments</:subtitle>
-    </.header>
+  <h1 class="text-2xl font-bold">Enrollments</h1>
+  <p class="text-base-content/60 text-sm mb-6">Manage student enrollments across all courses</p>
 
-    <section class="mt-6 sm:mt-8" aria-label="Enrollments list">
-      <%= if @enrollments_empty? do %>
-        <div
-          class="text-center py-12 text-base-content/60"
-          role="status"
-          aria-live="polite"
-        >
-          <.icon name="hero-users" class="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p class="text-lg">No enrollments yet</p>
-          <p class="text-sm mt-2">Enrollments will appear here when students sign up</p>
-        </div>
-      <% else %>
-        <div class="overflow-x-auto">
-          <.table id="enrollments-table" rows={@streams.enrollments}>
-            <:col :let={{_id, enrollment}} label="User">
-              <span class="truncate max-w-[120px] sm:max-w-[200px] inline-block">
-                {enrollment.user.email}
-              </span>
-            </:col>
-            <:col :let={{_id, enrollment}} label="Course">
-              <span class="font-medium truncate max-w-[100px] sm:max-w-[180px] inline-block">
-                {enrollment.course.title}
-              </span>
-            </:col>
-            <:col :let={{_id, enrollment}} label="Status">
-              <span
-                class={["badge badge-sm", status_class(enrollment.status)]}
-                role="status"
-              >
-                {enrollment.status}
-              </span>
-            </:col>
-            <:col :let={{_id, enrollment}} label="Enrolled">
-              <time
-                datetime={enrollment.inserted_at}
-                class="text-sm text-base-content/70"
-              >
-                {format_date(enrollment.inserted_at)}
-              </time>
-            </:col>
-          </.table>
-        </div>
-      <% end %>
-    </section>
-  </article>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6">
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Total</div>
+      <div class="text-xl font-bold">{@total_count}</div>
+    </div>
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Active</div>
+      <div class="text-xl font-bold text-success">{@active_count}</div>
+    </div>
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Completed</div>
+      <div class="text-xl font-bold text-info">{@completed_count}</div>
+    </div>
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Cancelled</div>
+      <div class="text-xl font-bold text-error">{@cancelled_count}</div>
+    </div>
+  </div>
+
+  <%= if @enrollments_empty? do %>
+    <p class="text-center py-12 text-base-content/60">No enrollments yet</p>
+  <% else %>
+    <.table id="enrollments-table" rows={@streams.enrollments}>
+      <:col :let={{_id, enrollment}} label="Student">
+        <span class="truncate">{enrollment.user.email}</span>
+      </:col>
+      <:col :let={{_id, enrollment}} label="Course">
+        <span class="truncate font-medium">{enrollment.course.title}</span>
+      </:col>
+      <:col :let={{_id, enrollment}} label="Status">
+        <span class={["badge badge-sm", status_badge_class(enrollment.status)]}>
+          {String.capitalize(enrollment.status)}
+        </span>
+      </:col>
+      <:col :let={{_id, enrollment}} label="Enrolled">
+        <span class="text-sm text-base-content/70">{format_date(enrollment.inserted_at)}</span>
+      </:col>
+    </.table>
+  <% end %>
 </Layouts.app>

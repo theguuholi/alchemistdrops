@@ -1,0 +1,44 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-2xl font-bold">Posts</h1>
+      <p class="text-base-content/60 text-sm">Manage your blog posts</p>
+    </div>
+    <.link navigate={~p"/admin/posts/new"} class="btn btn-primary btn-sm">New Post</.link>
+  </div>
+
+  <div class="grid grid-cols-2 gap-2 sm:gap-4 mb-6">
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Total Posts</div>
+      <div class="text-xl font-bold">{@total_count}</div>
+    </div>
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Total Views</div>
+      <div class="text-xl font-bold text-info">{format_views(@total_views)}</div>
+    </div>
+  </div>
+
+  <%= if @posts_empty? do %>
+    <p class="text-center py-12 text-base-content/60">No posts yet</p>
+  <% else %>
+    <.table id="posts-table" rows={@streams.posts}>
+      <:col :let={{_id, post}} label="Title">
+        <span class="truncate font-medium">{post.title}</span>
+      </:col>
+      <:col :let={{_id, post}} label="Views">
+        <span class="text-base-content/70">{format_views(post.views)}</span>
+      </:col>
+      <:action :let={{id, post}}>
+        <.link navigate={~p"/admin/posts/#{post}"} class="link link-primary">View</.link>
+        <.link navigate={~p"/admin/posts/#{post}/edit"} class="link link-primary">Edit</.link>
+        <.link
+          phx-click={JS.push("delete", value: %{id: post.id}) |> hide("##{id}")}
+          data-confirm="Are you sure?"
+          class="link link-error"
+        >
+          Delete
+        </.link>
+      </:action>
+    </.table>
+  <% end %>
+</Layouts.app>

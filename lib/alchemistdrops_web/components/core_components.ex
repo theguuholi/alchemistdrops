@@ -335,11 +335,11 @@ defmodule AlchemistdropsWeb.CoreComponents do
       end
 
     ~H"""
-    <table class="table table-zebra">
+    <table class="table table-zebra table-fixed w-full">
       <thead>
         <tr>
           <th :for={col <- @col}>{col[:label]}</th>
-          <th :if={@action != []}>
+          <th :if={@action != []} class="text-right">
             <span class="sr-only">{gettext("Actions")}</span>
           </th>
         </tr>
@@ -353,8 +353,8 @@ defmodule AlchemistdropsWeb.CoreComponents do
           >
             {render_slot(col, @row_item.(row))}
           </td>
-          <td :if={@action != []} class="w-0 font-semibold">
-            <div class="flex gap-4">
+          <td :if={@action != []} class="text-right">
+            <div class="flex gap-4 justify-end">
               <%= for action <- @action do %>
                 {render_slot(action, @row_item.(row))}
               <% end %>

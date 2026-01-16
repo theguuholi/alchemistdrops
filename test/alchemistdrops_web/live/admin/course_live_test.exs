@@ -1,12 +1,6 @@
 defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
   @moduledoc """
   Tests for the admin courses LiveView.
-
-  Covers:
-  - Page rendering and accessibility
-  - Course listing with proper data display
-  - Empty state handling
-  - Authorization (admin-only access)
   """
   use AlchemistdropsWeb.ConnCase
 
@@ -19,37 +13,52 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
     test "renders page with correct heading", %{conn: conn} do
       {:ok, view, html} = live(conn, ~p"/admin/courses")
 
-      assert html =~ "Manage Courses"
-      assert has_element?(view, "h1#courses-heading", "Manage Courses")
+      assert html =~ "Courses"
+      assert has_element?(view, "h1", "Courses")
+    end
+
+    test "displays stats", %{conn: conn} do
+      {:ok, _view, html} = live(conn, ~p"/admin/courses")
+
+      assert html =~ "Total"
+      assert html =~ "Published"
+      assert html =~ "Drafts"
+      assert html =~ "Free"
     end
 
     test "displays empty state when no courses exist", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+      {:ok, _view, html} = live(conn, ~p"/admin/courses")
 
-      assert has_element?(view, "[role=status]", "No courses yet")
+      assert html =~ "No courses yet"
     end
 
     test "lists all courses with correct data", %{conn: conn} do
-      course = course_fixture(%{title: "Elixir Basics", published: true})
+      course = course_fixture(%{title: "Phoenix LiveView Course", published: true})
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-      assert has_element?(view, "#courses-table")
       assert has_element?(view, "#courses-#{course.id}")
-      assert has_element?(view, "#courses-#{course.id}", "Elixir Basics")
-      assert has_element?(view, "#courses-#{course.id} [role=status]", "Published")
+      assert has_element?(view, "#courses-#{course.id}", "Phoenix LiveView Course")
     end
 
-    test "displays draft status for unpublished courses", %{conn: conn} do
-      course = course_fixture(%{title: "Draft Course", published: false})
+    test "displays published badge for published courses", %{conn: conn} do
+      course = course_fixture(%{published: true})
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-      assert has_element?(view, "#courses-#{course.id} [role=status]", "Draft")
+      assert has_element?(view, "#courses-#{course.id} .badge-success", "Published")
     end
 
-    test "displays free badge for free courses", %{conn: conn} do
-      course = course_fixture(%{title: "Free Course", price: Money.new(0, :USD)})
+    test "displays draft badge for unpublished courses", %{conn: conn} do
+      course = course_fixture(%{published: false})
+
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      assert has_element?(view, "#courses-#{course.id} .badge-warning", "Draft")
+    end
+
+    test "displays Free label for free courses", %{conn: conn} do
+      course = course_fixture(%{price: Money.new(0, :USD)})
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
@@ -57,7 +66,7 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
     end
 
     test "displays price for paid courses", %{conn: conn} do
-      course = course_fixture(%{title: "Paid Course", price: Money.new(4999, :USD)})
+      course = course_fixture(%{price: Money.new(4999, :USD)})
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
@@ -69,17 +78,7 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
 
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
-      assert has_element?(
-               view,
-               "#courses-#{course.id} a[aria-label='View course: #{course.title}']"
-             )
-    end
-
-    test "sets correct page title", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/admin/courses")
-
-      assert html =~ "Manage Courses"
-      assert html =~ "Phoenix Framework"
+      assert has_element?(view, "#courses-#{course.id} a", "View")
     end
   end
 

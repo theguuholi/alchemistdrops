@@ -1,73 +1,67 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <article class="max-w-6xl mx-auto" aria-labelledby="users-heading">
-    <.header>
-      <h1 id="users-heading">Users</h1>
-      <:subtitle>Manage platform users and their roles</:subtitle>
-    </.header>
+  <h1 class="text-2xl font-bold">Users</h1>
+  <p class="text-base-content/60 text-sm mb-6">Manage platform users and permissions</p>
 
-    <section class="mt-6 sm:mt-8" aria-label="Users list">
-      <%= if @users_empty? do %>
-        <div
-          class="text-center py-12 text-base-content/60"
-          role="status"
-          aria-live="polite"
-        >
-          <.icon name="hero-user-group" class="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p class="text-lg">No users yet</p>
-          <p class="text-sm mt-2">Users will appear here when they register</p>
-        </div>
-      <% else %>
-        <div class="overflow-x-auto">
-          <.table id="users-table" rows={@streams.users}>
-            <:col :let={{_id, user}} label="Email">
-              <span class="truncate max-w-[150px] sm:max-w-[250px] inline-block">
-                {user.email}
-              </span>
-            </:col>
-            <:col :let={{_id, user}} label="Role">
-              <span
-                class={["badge badge-sm", role_class(user.role)]}
-                role="status"
-              >
-                {user.role}
-              </span>
-            </:col>
-            <:col :let={{_id, user}} label="Confirmed">
-              <%= if user.confirmed_at do %>
-                <span class="badge badge-success badge-sm" role="status">Yes</span>
-              <% else %>
-                <span class="badge badge-warning badge-sm" role="status">No</span>
-              <% end %>
-            </:col>
-            <:col :let={{_id, user}} label="Joined">
-              <time datetime={user.inserted_at} class="text-sm text-base-content/70">
-                {format_date(user.inserted_at)}
-              </time>
-            </:col>
-            <:action :let={{_id, user}}>
-              <%= if user.role == :user do %>
-                <button
-                  phx-click="make_admin"
-                  phx-value-id={user.id}
-                  class="link link-warning text-sm"
-                  aria-label={"Make #{user.email} an admin"}
-                >
-                  Make Admin
-                </button>
-              <% else %>
-                <button
-                  phx-click="remove_admin"
-                  phx-value-id={user.id}
-                  class="link link-error text-sm"
-                  aria-label={"Remove admin role from #{user.email}"}
-                >
-                  Remove Admin
-                </button>
-              <% end %>
-            </:action>
-          </.table>
-        </div>
-      <% end %>
-    </section>
-  </article>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6">
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Total</div>
+      <div class="text-xl font-bold">{@total_count}</div>
+    </div>
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Admins</div>
+      <div class="text-xl font-bold text-warning">{@admin_count}</div>
+    </div>
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Confirmed</div>
+      <div class="text-xl font-bold text-success">{@confirmed_count}</div>
+    </div>
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Pending</div>
+      <div class="text-xl font-bold text-info">{@pending_count}</div>
+    </div>
+  </div>
+
+  <%= if @users_empty? do %>
+    <p class="text-center py-12 text-base-content/60">No users yet</p>
+  <% else %>
+    <.table id="users-table" rows={@streams.users}>
+      <:col :let={{_id, user}} label="User">
+        <span class="truncate">{user.email}</span>
+      </:col>
+      <:col :let={{_id, user}} label="Role">
+        <span class={["badge badge-sm", role_badge_class(user.role)]}>
+          {user.role |> to_string() |> String.capitalize()}
+        </span>
+      </:col>
+      <:col :let={{_id, user}} label="Status">
+        <%= if user.confirmed_at do %>
+          <span class="badge badge-success badge-sm">Confirmed</span>
+        <% else %>
+          <span class="badge badge-ghost badge-sm">Pending</span>
+        <% end %>
+      </:col>
+      <:col :let={{_id, user}} label="Joined">
+        <span class="text-sm text-base-content/70">{format_date(user.inserted_at)}</span>
+      </:col>
+      <:action :let={{_id, user}}>
+        <%= if user.role == :admin do %>
+          <button
+            phx-click="remove_admin"
+            phx-value-id={user.id}
+            class="btn btn-xs btn-error btn-outline"
+          >
+            Remove Admin
+          </button>
+        <% else %>
+          <button
+            phx-click="make_admin"
+            phx-value-id={user.id}
+            class="btn btn-xs btn-warning btn-outline"
+          >
+            Make Admin
+          </button>
+        <% end %>
+      </:action>
+    </.table>
+  <% end %>
 </Layouts.app>

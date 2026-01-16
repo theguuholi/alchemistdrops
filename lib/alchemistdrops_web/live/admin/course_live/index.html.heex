@@ -1,57 +1,51 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <article class="max-w-6xl mx-auto" aria-labelledby="courses-heading">
-    <.header>
-      <h1 id="courses-heading">Manage Courses</h1>
-      <:subtitle>View and manage all courses on the platform</:subtitle>
-    </.header>
+  <h1 class="text-2xl font-bold">Courses</h1>
+  <p class="text-base-content/60 text-sm mb-6">Manage all courses on the platform</p>
 
-    <section class="mt-6 sm:mt-8" aria-label="Courses list">
-      <%= if @courses_empty? do %>
-        <div
-          class="text-center py-12 text-base-content/60"
-          role="status"
-          aria-live="polite"
-        >
-          <.icon name="hero-academic-cap" class="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p class="text-lg">No courses yet</p>
-          <p class="text-sm mt-2">Create your first course to get started</p>
-        </div>
-      <% else %>
-        <div class="overflow-x-auto">
-          <.table id="courses-table" rows={@streams.courses}>
-            <:col :let={{_id, course}} label="Title">
-              <span class="font-medium">{course.title}</span>
-            </:col>
-            <:col :let={{_id, course}} label="Price">
-              <%= if Money.zero?(course.price) do %>
-                <span class="badge badge-success badge-sm">Free</span>
-              <% else %>
-                {Money.to_string(course.price)}
-              <% end %>
-            </:col>
-            <:col :let={{_id, course}} label="Status">
-              <span
-                class={[
-                  "badge badge-sm",
-                  if(course.published, do: "badge-success", else: "badge-warning")
-                ]}
-                role="status"
-              >
-                {if course.published, do: "Published", else: "Draft"}
-              </span>
-            </:col>
-            <:action :let={{_id, course}}>
-              <.link
-                navigate={~p"/courses/#{course}"}
-                class="link link-primary text-sm"
-                aria-label={"View course: #{course.title}"}
-              >
-                View
-              </.link>
-            </:action>
-          </.table>
-        </div>
-      <% end %>
-    </section>
-  </article>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6">
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Total</div>
+      <div class="text-xl font-bold">{@total_count}</div>
+    </div>
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Published</div>
+      <div class="text-xl font-bold text-success">{@published_count}</div>
+    </div>
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Drafts</div>
+      <div class="text-xl font-bold text-warning">{@draft_count}</div>
+    </div>
+    <div class="bg-base-200 rounded p-3">
+      <div class="text-xs uppercase text-base-content/60">Free</div>
+      <div class="text-xl font-bold text-accent">{@free_count}</div>
+    </div>
+  </div>
+
+  <%= if @courses_empty? do %>
+    <p class="text-center py-12 text-base-content/60">No courses yet</p>
+  <% else %>
+    <.table id="courses-table" rows={@streams.courses}>
+      <:col :let={{_id, course}} label="Course">
+        <span class="truncate font-medium">{course.title}</span>
+      </:col>
+      <:col :let={{_id, course}} label="Price">
+        <%= if Money.zero?(course.price) do %>
+          <span class="text-success">Free</span>
+        <% else %>
+          {Money.to_string(course.price)}
+        <% end %>
+      </:col>
+      <:col :let={{_id, course}} label="Status">
+        <span class={[
+          "badge badge-sm",
+          if(course.published, do: "badge-success", else: "badge-warning")
+        ]}>
+          {if course.published, do: "Published", else: "Draft"}
+        </span>
+      </:col>
+      <:action :let={{_id, course}}>
+        <.link navigate={~p"/courses/#{course}"} class="link link-primary">View</.link>
+      </:action>
+    </.table>
+  <% end %>
 </Layouts.app>

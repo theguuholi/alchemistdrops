@@ -30,8 +30,15 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     test "lists all posts", %{conn: conn, post: post} do
       {:ok, view, html} = live(conn, ~p"/admin/posts")
 
-      assert html =~ "Listing Posts"
+      assert html =~ "Posts"
       assert has_element?(view, "#posts-#{post.id}")
+    end
+
+    test "displays stats", %{conn: conn} do
+      {:ok, _view, html} = live(conn, ~p"/admin/posts")
+
+      assert html =~ "Total Posts"
+      assert html =~ "Total Views"
     end
 
     test "saves new post", %{conn: conn} do
@@ -87,7 +94,10 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     test "deletes post in listing", %{conn: conn, post: post} do
       {:ok, index_live, _html} = live(conn, ~p"/admin/posts")
 
-      assert index_live |> element("#posts-#{post.id} a", "Delete") |> render_click()
+      assert index_live
+             |> element("#posts-#{post.id} a", "Delete")
+             |> render_click()
+
       refute has_element?(index_live, "#posts-#{post.id}")
     end
   end
