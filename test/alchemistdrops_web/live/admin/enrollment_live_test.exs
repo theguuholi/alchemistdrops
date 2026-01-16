@@ -80,6 +80,23 @@ defmodule AlchemistdropsWeb.Admin.EnrollmentLiveTest do
 
       assert has_element?(view, "#enrollments-#{enrollment.id} .badge-error", "Cancelled")
     end
+
+    test "handles unknown status with ghost badge", %{conn: conn} do
+      user = user_fixture()
+      course = course_fixture()
+      enrollment = enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
+
+      # Directly update the database to set an unknown status (bypassing changeset validation)
+      import Ecto.Query
+
+      from(e in Alchemistdrops.Enrollments.Enrollment, where: e.id == ^enrollment.id)
+      |> Alchemistdrops.Repo.update_all(set: [status: "unknown_status"])
+
+      {:ok, view, _html} = live(conn, ~p"/admin/enrollments")
+
+      # Should render with ghost badge for unknown status
+      assert has_element?(view, "#enrollments-#{enrollment.id} .badge-ghost")
+    end
   end
 
   describe "Authorization" do

@@ -38,3 +38,9 @@ config :phoenix, :plug_init_mode, :runtime
 # Enable helpful, but potentially expensive runtime checks
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
+
+# Stripe test configuration
+config :alchemistdrops, :stripe,
+  secret_key: "sk_test_mock",
+  webhook_secret: "whsec_test_mock",
+  http_client: Alchemistdrops.Payments.MockHttpClient

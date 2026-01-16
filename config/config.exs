@@ -38,6 +38,12 @@ config :alchemistdrops, AlchemistdropsWeb.Endpoint,
 config :money,
   default_currency: :USD
 
+# Stripe configuration (keys set in runtime.exs for prod)
+config :alchemistdrops, :stripe,
+  secret_key: nil,
+  webhook_secret: nil,
+  http_client: Alchemistdrops.Payments.ReqClient
+
 # Configures the mailer
 #
 # By default it uses the "Local" adapter which stores the emails
