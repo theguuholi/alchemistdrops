@@ -243,4 +243,35 @@ defmodule Alchemistdrops.Enrollments do
   def change_enrollment(%Enrollment{} = enrollment, attrs \\ %{}) do
     Enrollment.changeset(enrollment, attrs)
   end
+
+  @doc """
+  Returns the total count of enrollments.
+
+  ## Examples
+
+      iex> count_enrollments()
+      42
+
+  """
+  def count_enrollments do
+    Repo.aggregate(Enrollment, :count)
+  end
+
+  @doc """
+  Returns all enrollments with user and course details preloaded.
+
+  Orders by most recent first.
+
+  ## Examples
+
+      iex> list_enrollments_with_details()
+      [%Enrollment{user: %User{}, course: %Course{}}, ...]
+
+  """
+  def list_enrollments_with_details do
+    Enrollment
+    |> order_by([e], desc: e.inserted_at)
+    |> preload([:user, :course])
+    |> Repo.all()
+  end
 end

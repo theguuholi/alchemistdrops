@@ -313,6 +313,10 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
       assert Lesson.video_embed_info(nil) == nil
     end
 
+    test "given empty string when called then returns nil" do
+      assert Lesson.video_embed_info("") == nil
+    end
+
     test "given youtu.be short URL when called then returns YouTube embed" do
       assert {:youtube, "https://www.youtube.com/embed/NjBUcTEVsJo"} =
                Lesson.video_embed_info("https://youtu.be/NjBUcTEVsJo")
@@ -326,6 +330,12 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
     test "given youtube.com watch URL when called then returns YouTube embed" do
       assert {:youtube, "https://www.youtube.com/embed/abc123"} =
                Lesson.video_embed_info("https://www.youtube.com/watch?v=abc123")
+    end
+
+    test "given youtube.com watch URL without query params when called then returns empty video id" do
+      # Edge case: youtube.com/watch without ?v= parameter
+      assert {:youtube, "https://www.youtube.com/embed/"} =
+               Lesson.video_embed_info("https://www.youtube.com/watch")
     end
 
     test "given youtube.com embed URL when called then returns same URL" do
@@ -377,9 +387,8 @@ defmodule AlchemistdropsWeb.StudentLive.LessonTest do
         |> log_in_user(user)
         |> live(~p"/student/courses/#{course.id}/lessons")
 
-      # Target the desktop sidebar button (aside element)
       view
-      |> element("aside button[phx-value-id='#{lesson2.id}']")
+      |> element("button[phx-value-id='#{lesson2.id}']")
       |> render_click()
 
       assert has_element?(view, "h1", "Lesson 2")

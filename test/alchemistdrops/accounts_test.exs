@@ -398,4 +398,54 @@ defmodule Alchemistdrops.AccountsTest do
       refute inspect(%User{password: "123456"}) =~ "password: \"123456\""
     end
   end
+
+  describe "list_users/0" do
+    test "returns all users" do
+      user1 = user_fixture()
+      user2 = user_fixture()
+
+      users = Accounts.list_users()
+      user_ids = Enum.map(users, & &1.id) |> MapSet.new()
+
+      # Verify we get both users
+      assert MapSet.member?(user_ids, user1.id)
+      assert MapSet.member?(user_ids, user2.id)
+      assert length(users) == 2
+    end
+
+    test "returns empty list when no users exist" do
+      assert Accounts.list_users() == []
+    end
+  end
+
+  describe "count_users/0" do
+    test "returns zero when no users exist" do
+      assert Accounts.count_users() == 0
+    end
+
+    test "returns correct count of users" do
+      user_fixture()
+      user_fixture()
+
+      assert Accounts.count_users() == 2
+    end
+  end
+
+  describe "update_user_role/2" do
+    test "updates user role to admin" do
+      user = user_fixture()
+      assert user.role == :user
+
+      {:ok, updated_user} = Accounts.update_user_role(user, :admin)
+      assert updated_user.role == :admin
+    end
+
+    test "updates user role to user" do
+      admin = user_fixture(%{role: :admin})
+      assert admin.role == :admin
+
+      {:ok, updated_user} = Accounts.update_user_role(admin, :user)
+      assert updated_user.role == :user
+    end
+  end
 end

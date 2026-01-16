@@ -44,6 +44,16 @@ defmodule AlchemistdropsWeb.UserAuthTest do
       new_token = get_session(conn, :user_token)
       assert new_token != token
     end
+
+    test "assigns nil scope when no token", %{conn: conn} do
+      conn =
+        conn
+        |> Phoenix.ConnTest.init_test_session(%{})
+        |> UserAuth.fetch_current_scope_for_user([])
+
+      scope = conn.assigns.current_scope
+      assert scope == nil or scope.user == nil
+    end
   end
 
   describe "log_in_user/3" do

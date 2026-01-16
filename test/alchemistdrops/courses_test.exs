@@ -593,4 +593,29 @@ defmodule Alchemistdrops.CoursesTest do
       assert changeset.changes.title == "Updated"
     end
   end
+
+  describe "count_courses/0" do
+    test "returns zero when no courses exist" do
+      assert Courses.count_courses() == 0
+    end
+
+    test "returns correct count of courses" do
+      course_fixture()
+      course_fixture()
+
+      assert Courses.count_courses() == 2
+    end
+  end
+
+  describe "list_published_courses/0" do
+    test "returns only published courses (alias for list_courses)" do
+      published = course_fixture(%{title: "Published", published: true})
+      _unpublished = course_fixture(%{title: "Unpublished", published: false})
+
+      courses = Courses.list_published_courses()
+
+      assert length(courses) == 1
+      assert hd(courses).id == published.id
+    end
+  end
 end

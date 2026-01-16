@@ -20,7 +20,8 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
        socket
        |> assign(:course, course)
        |> assign(:lessons, lessons)
-       |> assign(:current_user, current_user)}
+       |> assign(:current_user, current_user)
+       |> assign_new(:current_scope, fn -> socket.assigns[:current_scope] end)}
     else
       {:ok,
        socket
@@ -121,20 +122,18 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
     end
   end
 
-  defp format_duration(nil), do: ""
-
   defp format_duration(seconds) when is_integer(seconds) do
     minutes = div(seconds, 60)
     "#{minutes} min"
   end
 
+  defp format_duration(nil), do: ""
+
   @doc """
   Converts a YouTube URL to an embed URL if applicable.
   Returns {:youtube, embed_url} for YouTube videos or {:video, url} for others.
   """
-  def video_embed_info(nil), do: nil
-
-  def video_embed_info(url) when is_binary(url) do
+  def video_embed_info(url) when is_binary(url) and byte_size(url) > 0 do
     cond do
       # youtu.be short URL format
       String.contains?(url, "youtu.be/") ->
@@ -155,6 +154,8 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
         {:video, url}
     end
   end
+
+  def video_embed_info(_), do: nil
 
   defp extract_youtube_video_id(url) do
     uri = URI.parse(url)

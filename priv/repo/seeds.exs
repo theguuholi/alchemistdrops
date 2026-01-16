@@ -14,7 +14,7 @@
 _user =
   %Alchemistdrops.Accounts.User{
     email: "demo@alchemistdrops.com",
-    hashed_password: Bcrypt.hash_pwd_salt("password123"),
+    hashed_password: Bcrypt.hash_pwd_salt("demo@alchemistdrops.com@1"),
     confirmed_at: DateTime.truncate(DateTime.utc_now(), :second),
     role: :admin
   }
@@ -270,7 +270,7 @@ _admin_user =
     nil ->
       %User{
         email: "admin@alchemistdrops.com",
-        hashed_password: Bcrypt.hash_pwd_salt("AdminPassword123!"),
+        hashed_password: Bcrypt.hash_pwd_salt("admin@alchemistdrops.com@1"),
         confirmed_at: DateTime.truncate(DateTime.utc_now(), :second),
         role: :admin
       }
@@ -285,7 +285,7 @@ student_user =
     nil ->
       %User{
         email: "student@alchemistdrops.com",
-        hashed_password: Bcrypt.hash_pwd_salt("StudentPassword123!"),
+        hashed_password: Bcrypt.hash_pwd_salt("tudent@alchemistdrops.com@1"),
         confirmed_at: DateTime.truncate(DateTime.utc_now(), :second),
         role: :student
       }
@@ -300,7 +300,7 @@ regular_user =
     nil ->
       %User{
         email: "user@alchemistdrops.com",
-        hashed_password: Bcrypt.hash_pwd_salt("UserPassword123!"),
+        hashed_password: Bcrypt.hash_pwd_salt("user@alchemistdrops.com@1"),
         confirmed_at: DateTime.truncate(DateTime.utc_now(), :second),
         role: :user
       }
@@ -311,9 +311,9 @@ regular_user =
   end
 
 IO.puts("Created/Found users:")
-IO.puts("  - Admin: admin@alchemistdrops.com (password: AdminPassword123!)")
-IO.puts("  - Student: student@alchemistdrops.com (password: StudentPassword123!)")
-IO.puts("  - User: user@alchemistdrops.com (password: UserPassword123!)")
+IO.puts("  - Admin: admin@alchemistdrops.com (password: admin@alchemistdrops.com@1)")
+IO.puts("  - Student: student@alchemistdrops.com (password: tudent@alchemistdrops.com@1)")
+IO.puts("  - User: user@alchemistdrops.com (password: user@alchemistdrops.com@1)")
 
 # Create courses
 elixir_course =

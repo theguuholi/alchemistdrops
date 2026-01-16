@@ -1,53 +1,26 @@
 defmodule AlchemistdropsWeb.Admin.PostLive.Index do
+  @moduledoc """
+  Admin LiveView for managing blog posts.
+
+  Displays all posts with their view counts.
+  Mobile-first responsive design with proper accessibility.
+  """
   use AlchemistdropsWeb, :live_view
 
   alias Alchemistdrops.Posts
 
   @impl true
-  def render(assigns) do
-    ~H"""
-    <Layouts.app flash={@flash}>
-      <.header>
-        Listing Posts
-        <:actions>
-          <.button variant="primary" navigate={~p"/admin/posts/new"}>
-            <.icon name="hero-plus" /> New Post
-          </.button>
-        </:actions>
-      </.header>
-
-      <.table
-        id="posts"
-        rows={@streams.posts}
-        row_click={fn {_id, post} -> JS.navigate(~p"/admin/posts/#{post}") end}
-      >
-        <:col :let={{_id, post}} label="Title">{post.title}</:col>
-        <:col :let={{_id, post}} label="Views">{post.views}</:col>
-        <:action :let={{_id, post}}>
-          <div class="sr-only">
-            <.link navigate={~p"/admin/posts/#{post}"}>Show</.link>
-          </div>
-          <.link navigate={~p"/admin/posts/#{post}/edit"}>Edit</.link>
-        </:action>
-        <:action :let={{id, post}}>
-          <.link
-            phx-click={JS.push("delete", value: %{id: post.id}) |> hide("##{id}")}
-            data-confirm="Are you sure?"
-          >
-            Delete
-          </.link>
-        </:action>
-      </.table>
-    </Layouts.app>
-    """
-  end
-
-  @impl true
   def mount(_params, _session, socket) do
+    posts = Posts.list_posts()
+    stats = calculate_stats(posts)
+
     {:ok,
      socket
-     |> assign(:page_title, "Listing Posts")
-     |> stream(:posts, list_posts())}
+     |> assign(:page_title, "Posts")
+     |> assign(:posts_empty?, posts == [])
+     |> assign(:total_count, stats.total)
+     |> assign(:total_views, stats.total_views)
+     |> stream(:posts, posts)}
   end
 
   @impl true
@@ -55,10 +28,29 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Index do
     post = Posts.get_post!(id)
     {:ok, _} = Posts.delete_post(post)
 
-    {:noreply, stream_delete(socket, :posts, post)}
+    # Recalculate stats after deletion
+    posts = Posts.list_posts()
+    stats = calculate_stats(posts)
+
+    {:noreply,
+     socket
+     |> assign(:posts_empty?, posts == [])
+     |> assign(:total_count, stats.total)
+     |> assign(:total_views, stats.total_views)
+     |> stream_delete(:posts, post)}
   end
 
-  defp list_posts do
-    Posts.list_posts()
+  defp calculate_stats(posts) do
+    Enum.reduce(posts, %{total: 0, total_views: 0}, fn post, acc ->
+      acc
+      |> Map.update!(:total, &(&1 + 1))
+      |> Map.update!(:total_views, &(&1 + (post.views || 0)))
+    end)
   end
+
+  defp format_views(views) when is_integer(views) and views >= 1000 do
+    "#{Float.round(views / 1000, 1)}k"
+  end
+
+  defp format_views(views), do: "#{views || 0}"
 end

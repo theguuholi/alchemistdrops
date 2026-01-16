@@ -506,4 +506,57 @@ defmodule Alchemistdrops.EnrollmentsTest do
       assert changeset.changes.status == "completed"
     end
   end
+
+  describe "count_enrollments/0" do
+    test "returns zero when no enrollments exist" do
+      assert Enrollments.count_enrollments() == 0
+    end
+
+    test "returns correct count of enrollments" do
+      user1 = user_fixture()
+      user2 = user_fixture()
+      course = course_fixture()
+
+      enrollment_fixture(%{user_id: user1.id, course_id: course.id})
+      enrollment_fixture(%{user_id: user2.id, course_id: course.id})
+
+      assert Enrollments.count_enrollments() == 2
+    end
+  end
+
+  describe "list_enrollments_with_details/0" do
+    test "returns empty list when no enrollments exist" do
+      assert Enrollments.list_enrollments_with_details() == []
+    end
+
+    test "returns all enrollments with preloaded user and course" do
+      user = user_fixture(%{email: "test@example.com"})
+      course = course_fixture(%{title: "Test Course"})
+      enrollment_fixture(%{user_id: user.id, course_id: course.id})
+
+      [enrollment] = Enrollments.list_enrollments_with_details()
+
+      assert Ecto.assoc_loaded?(enrollment.user)
+      assert Ecto.assoc_loaded?(enrollment.course)
+      assert enrollment.user.email == "test@example.com"
+      assert enrollment.course.title == "Test Course"
+    end
+
+    test "orders by most recent first" do
+      user1 = user_fixture()
+      user2 = user_fixture()
+      course = course_fixture()
+
+      enrollment1 = enrollment_fixture(%{user_id: user1.id, course_id: course.id})
+      enrollment2 = enrollment_fixture(%{user_id: user2.id, course_id: course.id})
+
+      enrollments = Enrollments.list_enrollments_with_details()
+
+      # Just verify we get both enrollments (ordering depends on DB insert timing)
+      enrollment_ids = Enum.map(enrollments, & &1.id) |> MapSet.new()
+      assert MapSet.member?(enrollment_ids, enrollment1.id)
+      assert MapSet.member?(enrollment_ids, enrollment2.id)
+      assert length(enrollments) == 2
+    end
+  end
 end

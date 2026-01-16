@@ -294,4 +294,52 @@ defmodule Alchemistdrops.Accounts do
       end
     end)
   end
+
+  ## Admin functions
+
+  @doc """
+  Returns all users ordered by most recent first.
+
+  ## Examples
+
+      iex> list_users()
+      [%User{}, ...]
+
+  """
+  def list_users do
+    User
+    |> order_by([u], desc: u.inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Returns the total count of users.
+
+  ## Examples
+
+      iex> count_users()
+      100
+
+  """
+  def count_users do
+    Repo.aggregate(User, :count)
+  end
+
+  @doc """
+  Updates a user's role.
+
+  ## Examples
+
+      iex> update_user_role(user, :admin)
+      {:ok, %User{}}
+
+      iex> update_user_role(user, :invalid)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_user_role(%User{} = user, role) when role in [:user, :admin] do
+    user
+    |> Ecto.Changeset.change(role: role)
+    |> Repo.update()
+  end
 end

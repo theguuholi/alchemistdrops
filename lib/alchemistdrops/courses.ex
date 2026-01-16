@@ -61,6 +61,19 @@ defmodule Alchemistdrops.Courses do
   end
 
   @doc """
+  Returns the total count of courses.
+
+  ## Examples
+
+      iex> count_courses()
+      10
+
+  """
+  def count_courses do
+    Repo.aggregate(Course, :count)
+  end
+
+  @doc """
   Gets a single course with lessons preloaded.
 
   Raises `Ecto.NoResultsError` if the Course does not exist.
@@ -222,12 +235,11 @@ defmodule Alchemistdrops.Courses do
   end
 
   defp ensure_lesson_order(attrs, course) do
-    if Map.has_key?(attrs, :order) or Map.has_key?(attrs, "order") do
-      attrs
-    else
-      next_order = get_next_lesson_order(course)
-      Map.put(attrs, :order, next_order)
-    end
+    has_order? = Map.has_key?(attrs, :order) or Map.has_key?(attrs, "order")
+
+    if has_order?,
+      do: attrs,
+      else: Map.put(attrs, :order, get_next_lesson_order(course))
   end
 
   defp get_next_lesson_order(course) do

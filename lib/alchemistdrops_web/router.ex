@@ -84,6 +84,9 @@ defmodule AlchemistdropsWeb.Router do
         live "/posts/new", PostLive.Form, :new
         live "/posts/:id", PostLive.Show, :show
         live "/posts/:id/edit", PostLive.Form, :edit
+        live "/courses", CourseLive.Index, :index
+        live "/enrollments", EnrollmentLive.Index, :index
+        live "/users", UserLive.Index, :index
       end
     end
 
