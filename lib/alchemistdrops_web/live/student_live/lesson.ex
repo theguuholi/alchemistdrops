@@ -6,13 +6,10 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
 
   @impl true
   def mount(%{"course_id" => course_id}, _session, socket) do
-    current_user =
-      case socket.assigns do
-        %{current_scope: %{user: user}} -> user
-        _ -> nil
-      end
+    # current_scope is guaranteed by :require_authenticated on_mount
+    current_user = socket.assigns.current_scope.user
 
-    if current_user && Enrollments.user_enrolled?(current_user.id, course_id) do
+    if Enrollments.user_enrolled?(current_user.id, course_id) do
       course = Courses.get_course!(course_id)
       lessons = Courses.list_course_lessons(course_id, only_published: true)
 
@@ -20,8 +17,7 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
        socket
        |> assign(:course, course)
        |> assign(:lessons, lessons)
-       |> assign(:current_user, current_user)
-       |> assign_new(:current_scope, fn -> socket.assigns[:current_scope] end)}
+       |> assign(:current_user, current_user)}
     else
       {:ok,
        socket
@@ -126,8 +122,6 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
     minutes = div(seconds, 60)
     "#{minutes} min"
   end
-
-  defp format_duration(nil), do: ""
 
   @doc """
   Converts a YouTube URL to an embed URL if applicable.

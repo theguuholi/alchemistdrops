@@ -82,6 +82,4 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
     minutes = div(seconds, 60)
     "#{minutes} min"
   end
-
-  defp format_duration(nil), do: ""
 end

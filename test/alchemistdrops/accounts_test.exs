@@ -161,6 +161,14 @@ defmodule Alchemistdrops.AccountsTest do
       assert Repo.get_by(UserToken, user_id: user.id)
     end
 
+    test "does not update email with malformed base64 token", %{user: user} do
+      # Token with invalid base64 characters triggers the :error branch in UserToken
+      assert Accounts.update_user_email(user, "!!!invalid-base64!!!") ==
+               {:error, :transaction_aborted}
+
+      assert Repo.get!(User, user.id).email == user.email
+    end
+
     test "does not update email if user email changed", %{user: user, token: token} do
       assert Accounts.update_user_email(%{user | email: "current@example.com"}, token) ==
                {:error, :transaction_aborted}

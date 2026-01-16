@@ -32,19 +32,19 @@ defmodule AlchemistdropsWeb.Admin.EnrollmentLive.Index do
                                                                                     acc ->
       acc = Map.update!(acc, :total, &(&1 + 1))
 
+      # Status is validated by schema to be one of: active, completed, cancelled
       case enrollment.status do
         "active" -> Map.update!(acc, :active, &(&1 + 1))
         "completed" -> Map.update!(acc, :completed, &(&1 + 1))
         "cancelled" -> Map.update!(acc, :cancelled, &(&1 + 1))
-        _ -> acc
       end
     end)
   end
 
+  # Status is validated by schema to be one of: active, completed, cancelled
   defp status_badge_class("active"), do: "badge-success"
   defp status_badge_class("completed"), do: "badge-info"
   defp status_badge_class("cancelled"), do: "badge-error"
-  defp status_badge_class(_), do: "badge-ghost"
 
   defp format_date(datetime) do
     Calendar.strftime(datetime, "%b %d, %Y")

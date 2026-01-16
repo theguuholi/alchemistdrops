@@ -101,5 +101,24 @@ defmodule AlchemistdropsWeb.UserLive.ConfirmationTest do
 
       assert html =~ "Magic link is invalid or it has expired"
     end
+
+    test "renders log in button when user is already logged in", %{
+      conn: conn,
+      confirmed_user: user
+    } do
+      token =
+        extract_user_token(fn url ->
+          Accounts.deliver_login_instructions(user, url)
+        end)
+
+      {:ok, _lv, html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/users/log-in/#{token}")
+
+      # When already logged in, shows simple "Log in" button instead of "Keep me logged in"
+      assert html =~ "Log in"
+      refute html =~ "Keep me logged in"
+    end
   end
 end
