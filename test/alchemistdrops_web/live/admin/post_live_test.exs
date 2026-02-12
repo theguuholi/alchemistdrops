@@ -41,6 +41,13 @@ defmodule AlchemistdropsWeb.PostLiveTest do
       assert html =~ "Total Views"
     end
 
+    test "formats views as 'k' when 1000 or more", %{conn: conn} do
+      post_fixture(%{title: "Popular Post", views: 1500})
+      {:ok, _view, html} = live(conn, ~p"/admin/posts")
+
+      assert html =~ "1.5k"
+    end
+
     test "saves new post", %{conn: conn} do
       {:ok, index_live, _html} = live(conn, ~p"/admin/posts")
 
@@ -66,6 +73,18 @@ defmodule AlchemistdropsWeb.PostLiveTest do
       assert html =~ "Post created successfully"
     end
 
+    test "shows errors when creating post with invalid data", %{conn: conn} do
+      {:ok, form_live, _html} = live(conn, ~p"/admin/posts/new")
+
+      # Submit invalid data - should show errors and stay on form
+      html =
+        form_live
+        |> form("#post-form", post: @invalid_attrs)
+        |> render_submit()
+
+      assert html =~ "can&#39;t be blank"
+    end
+
     test "updates post in listing", %{conn: conn, post: post} do
       {:ok, index_live, _html} = live(conn, ~p"/admin/posts")
 
@@ -89,6 +108,18 @@ defmodule AlchemistdropsWeb.PostLiveTest do
 
       html = render(index_live)
       assert html =~ "Post updated successfully"
+    end
+
+    test "shows errors when updating post with invalid data", %{conn: conn, post: post} do
+      {:ok, form_live, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
+
+      # Submit invalid data - should show errors and stay on form
+      html =
+        form_live
+        |> form("#post-form", post: @invalid_attrs)
+        |> render_submit()
+
+      assert html =~ "can&#39;t be blank"
     end
 
     test "deletes post in listing", %{conn: conn, post: post} do

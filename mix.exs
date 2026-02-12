@@ -14,7 +14,7 @@ defmodule Alchemistdrops.MixProject do
       listeners: [Phoenix.CodeReloader],
       dialyzer: dialyzer(),
       test_coverage: [
-        summary: [threshold: 97.00],
+        summary: [threshold: 99.89],
         ignore_modules: ignore_coverage_modules()
       ]
     ]

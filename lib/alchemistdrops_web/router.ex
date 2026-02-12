@@ -13,9 +13,10 @@ defmodule AlchemistdropsWeb.Router do
     plug :fetch_current_scope_for_user
   end
 
-  # pipeline :api do
-  #   plug :accepts, ["json"]
-  # end
+  pipeline :stripe_webhook do
+    plug :accepts, ["json"]
+    plug AlchemistdropsWeb.Plugs.RawBody
+  end
 
   scope "/", AlchemistdropsWeb do
     pipe_through :browser
@@ -23,10 +24,12 @@ defmodule AlchemistdropsWeb.Router do
     live "/", HomeLive.Index, :index
   end
 
-  # Other scopes may use custom stacks.
-  # scope "/api", AlchemistdropsWeb do
-  #   pipe_through :api
-  # end
+  # Stripe webhook endpoint
+  scope "/webhooks", AlchemistdropsWeb do
+    pipe_through :stripe_webhook
+
+    post "/stripe", StripeWebhookController, :webhook
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:alchemistdrops, :dev_routes) do
@@ -84,7 +87,14 @@ defmodule AlchemistdropsWeb.Router do
         live "/posts/new", PostLive.Form, :new
         live "/posts/:id", PostLive.Show, :show
         live "/posts/:id/edit", PostLive.Form, :edit
+
         live "/courses", CourseLive.Index, :index
+        live "/courses/new", CourseLive.Form, :new
+        live "/courses/:id", CourseLive.Show, :show
+        live "/courses/:id/edit", CourseLive.Form, :edit
+        live "/courses/:course_id/lessons/new", LessonLive.Form, :new
+        live "/courses/:course_id/lessons/:id/edit", LessonLive.Form, :edit
+
         live "/enrollments", EnrollmentLive.Index, :index
         live "/users", UserLive.Index, :index
       end

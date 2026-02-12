@@ -1,0 +1,48 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <.header>
+    {@page_title}
+    <:subtitle>Manage course information and settings</:subtitle>
+  </.header>
+
+  <.form for={@form} id="course-form" phx-change="validate" phx-submit="save" class="space-y-4">
+    <.input field={@form[:title]} type="text" label="Title" placeholder="Enter course title" />
+
+    <.input
+      field={@form[:description]}
+      type="textarea"
+      label="Description"
+      placeholder="Brief description of the course"
+    />
+
+    <.input
+      field={@form[:body]}
+      type="textarea"
+      label="Body"
+      placeholder="Full course content (supports markdown)"
+    />
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <.input
+        field={@form[:price]}
+        type="number"
+        label="Price (cents)"
+        placeholder="0 for free"
+        min="0"
+      />
+
+      <.input
+        field={@form[:thumbnail_url]}
+        type="text"
+        label="Thumbnail URL"
+        placeholder="https://..."
+      />
+    </div>
+
+    <.input field={@form[:published]} type="checkbox" label="Published" />
+
+    <footer class="flex flex-col sm:flex-row gap-2 pt-4">
+      <.button phx-disable-with="Saving..." variant="primary">Save Course</.button>
+      <.button type="button" navigate={return_path(@return_to, @course)}>Cancel</.button>
+    </footer>
+  </.form>
+</Layouts.app>

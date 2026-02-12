@@ -123,4 +123,20 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
       assert Alchemistdrops.Repo.all(Alchemistdrops.Accounts.UserToken) == []
     end
   end
+
+  describe "local mail adapter info box" do
+    test "shows mailbox link when using local adapter", %{conn: conn} do
+      # Temporarily set the local adapter
+      original_config = Application.get_env(:alchemistdrops, Alchemistdrops.Mailer)
+      Application.put_env(:alchemistdrops, Alchemistdrops.Mailer, adapter: Swoosh.Adapters.Local)
+
+      try do
+        {:ok, _lv, html} = live(conn, ~p"/users/log-in")
+        assert html =~ "local mail adapter"
+        assert html =~ "/dev/mailbox"
+      after
+        Application.put_env(:alchemistdrops, Alchemistdrops.Mailer, original_config)
+      end
+    end
+  end
 end

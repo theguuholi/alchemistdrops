@@ -226,20 +226,28 @@ defmodule Alchemistdrops.Courses do
   def create_lesson(%Course{} = course, attrs \\ %{}) do
     attrs =
       attrs
+      |> stringify_keys()
       |> ensure_lesson_order(course)
-      |> Map.put(:course_id, course.id)
+      |> Map.put("course_id", course.id)
 
     %Lesson{}
     |> Lesson.changeset(attrs)
     |> Repo.insert()
   end
 
+  defp stringify_keys(attrs) do
+    Map.new(attrs, fn
+      {k, v} when is_atom(k) -> {Atom.to_string(k), v}
+      {k, v} -> {k, v}
+    end)
+  end
+
   defp ensure_lesson_order(attrs, course) do
-    has_order? = Map.has_key?(attrs, :order) or Map.has_key?(attrs, "order")
+    has_order? = Map.has_key?(attrs, "order")
 
     if has_order?,
       do: attrs,
-      else: Map.put(attrs, :order, get_next_lesson_order(course))
+      else: Map.put(attrs, "order", get_next_lesson_order(course))
   end
 
   defp get_next_lesson_order(course) do

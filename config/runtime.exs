@@ -115,6 +115,16 @@ if config_env() == :prod do
 
   config :swoosh, :api_client, Swoosh.ApiClient.Finch
 
+  # Stripe configuration
+  config :alchemistdrops, :stripe,
+    secret_key:
+      System.get_env("STRIPE_SECRET_KEY") ||
+        raise("environment variable STRIPE_SECRET_KEY is missing"),
+    webhook_secret:
+      System.get_env("STRIPE_WEBHOOK_SECRET") ||
+        raise("environment variable STRIPE_WEBHOOK_SECRET is missing"),
+    http_client: Alchemistdrops.Payments.ReqClient
+
   #
   # Most non-SMTP adapters require an API client. Swoosh supports Req, Hackney,
   # and Finch out-of-the-box. This configuration is typically done at

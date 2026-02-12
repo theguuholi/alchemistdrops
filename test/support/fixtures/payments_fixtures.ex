@@ -1,63 +1,73 @@
 defmodule Alchemistdrops.PaymentsFixtures do
   @moduledoc """
-  This module defines test fixtures for the Payments context.
+  This module defines test helpers for creating
+  entities via the `Alchemistdrops.Payments` context.
   """
 
-  alias Alchemistdrops.AccountsFixtures
-  alias Alchemistdrops.CoursesFixtures
-  alias Alchemistdrops.Payments.Payment
-  alias Alchemistdrops.Repo
+  import Alchemistdrops.AccountsFixtures
+  import Alchemistdrops.CoursesFixtures
 
   @doc """
-  Generate a payment with default or custom attributes.
+  Generate a payment.
   """
   def payment_fixture(attrs \\ %{}) do
-    user = Map.get(attrs, :user) || AccountsFixtures.user_fixture()
-    course = Map.get(attrs, :course) || CoursesFixtures.course_fixture()
+    user = attrs[:user] || user_fixture()
+    course = attrs[:course] || course_fixture(%{price: Money.new(1000, :USD)})
 
-    attrs =
-      attrs
+    {:ok, payment} =
+      %{
+        amount: course.price,
+        status: "pending"
+      }
+      |> Map.merge(Map.new(attrs))
       |> Map.put(:user_id, user.id)
       |> Map.put(:course_id, course.id)
-      |> Enum.into(%{
-        amount: Money.new(9999, :USD),
-        status: "pending"
-      })
+      |> Alchemistdrops.Payments.create_payment()
 
-    %Payment{}
-    |> Payment.changeset(attrs)
-    |> Repo.insert!()
+    payment
   end
 
   @doc """
   Generate a completed payment.
   """
   def completed_payment_fixture(attrs \\ %{}) do
-    attrs =
-      attrs
-      |> Map.put(:status, "completed")
-      |> Map.put(:stripe_payment_intent_id, "pi_#{System.unique_integer([:positive])}")
+    payment = payment_fixture(attrs)
 
-    payment_fixture(attrs)
+    {:ok, payment} =
+      Alchemistdrops.Payments.update_payment(payment, %{
+        status: "completed",
+        stripe_checkout_session_id: "cs_test_#{Ecto.UUID.generate()}",
+        stripe_payment_intent_id: "pi_test_#{Ecto.UUID.generate()}"
+      })
+
+    payment
   end
 
   @doc """
-  Generate a failed payment.
+  Generate a valid Stripe webhook signature.
   """
-  def failed_payment_fixture(attrs \\ %{}) do
-    attrs = Map.put(attrs, :status, "failed")
-    payment_fixture(attrs)
+  def generate_webhook_signature(payload, secret, timestamp \\ nil) do
+    timestamp = timestamp || System.system_time(:second)
+    signed_payload = "#{timestamp}.#{payload}"
+    signature = :crypto.mac(:hmac, :sha256, secret, signed_payload) |> Base.encode16(case: :lower)
+    "t=#{timestamp},v1=#{signature}"
   end
 
   @doc """
-  Generate a refunded payment.
+  Generate a mock checkout.session.completed event payload.
   """
-  def refunded_payment_fixture(attrs \\ %{}) do
-    attrs =
-      attrs
-      |> Map.put(:status, "refunded")
-      |> Map.put(:stripe_payment_intent_id, "pi_#{System.unique_integer([:positive])}")
-
-    payment_fixture(attrs)
+  def checkout_completed_event(payment) do
+    Jason.encode!(%{
+      "type" => "checkout.session.completed",
+      "data" => %{
+        "object" => %{
+          "id" => payment.stripe_checkout_session_id || "cs_test_mock",
+          "payment_intent" => "pi_test_completed",
+          "amount_total" => 1000,
+          "currency" => "usd",
+          "payment_status" => "paid"
+        }
+      }
+    })
   end
 end

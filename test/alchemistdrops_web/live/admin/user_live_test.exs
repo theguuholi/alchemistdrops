@@ -52,6 +52,14 @@ defmodule AlchemistdropsWeb.Admin.UserLiveTest do
       assert has_element?(view, "#users-#{regular_user.id} .badge-ghost", "User")
     end
 
+    test "displays student role badge for student users", %{conn: conn} do
+      student_user = user_fixture(%{role: :student})
+
+      {:ok, view, _html} = live(conn, ~p"/admin/users")
+
+      assert has_element?(view, "#users-#{student_user.id} .badge-info", "Student")
+    end
+
     test "displays confirmed status badge for confirmed users", %{conn: conn, user: admin_user} do
       {:ok, view, _html} = live(conn, ~p"/admin/users")
 

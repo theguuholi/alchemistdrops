@@ -618,4 +618,46 @@ defmodule Alchemistdrops.CoursesTest do
       assert hd(courses).id == published.id
     end
   end
+
+  describe "list_course_lessons/2" do
+    test "returns all lessons when only_published is false (default)" do
+      course = course_fixture()
+      published = lesson_fixture(%{course_id: course.id, published: true, order: 0})
+      unpublished = lesson_fixture(%{course_id: course.id, published: false, order: 1})
+
+      # Default behavior - all lessons
+      lessons = Courses.list_course_lessons(course.id)
+
+      assert length(lessons) == 2
+      lesson_ids = Enum.map(lessons, & &1.id)
+      assert published.id in lesson_ids
+      assert unpublished.id in lesson_ids
+    end
+
+    test "returns only published lessons when only_published is true" do
+      course = course_fixture()
+      published = lesson_fixture(%{course_id: course.id, published: true})
+      _unpublished = lesson_fixture(%{course_id: course.id, published: false})
+
+      lessons = Courses.list_course_lessons(course.id, only_published: true)
+
+      assert length(lessons) == 1
+      assert hd(lessons).id == published.id
+    end
+  end
+
+  describe "create_course/0 and create_lesson/1 default args" do
+    test "create_course with no arguments fails with changeset error" do
+      # Test default empty map argument
+      {:error, changeset} = Courses.create_course()
+      assert "can't be blank" in errors_on(changeset).title
+    end
+
+    test "create_lesson with no attrs argument uses default empty map" do
+      course = course_fixture()
+      # Test default empty map argument for attrs
+      {:error, changeset} = Courses.create_lesson(course)
+      assert "can't be blank" in errors_on(changeset).title
+    end
+  end
 end
