@@ -5,6 +5,7 @@
   AlchemistdropsWeb.Telemetry,
   Mix.Tasks.Coverage.Index,
   AlchemistdropsWeb.ErrorHTML,
+  Alchemistdrops.Payments.MockHttpClient,
   # Ignore all modules in test/support/fixtures
   ~r/^Alchemistdrops\.[A-Za-z]+Fixtures$/,
   ~r/^Elixir\.Alchemistdrops\.[A-Za-z]+Fixtures$/,

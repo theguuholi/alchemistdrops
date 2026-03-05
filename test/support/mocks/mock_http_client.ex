@@ -2,8 +2,14 @@ defmodule Alchemistdrops.Payments.MockHttpClient do
   @moduledoc """
   Mock HTTP client for testing Stripe API interactions.
 
-  Uses the process dictionary to store expectations for test isolation.
+  In test, uses a shared ETS table so expectations set in the test process
+  are visible to other processes (e.g. LiveView). Falls back to process
+  dictionary when ETS is not available.
   """
+
+  defp ets_table? do
+    :ets.whereis(:mock_http_ets) != :undefined
+  end
 
   @doc """
   Sets up a mock response for the next request.
@@ -14,7 +20,11 @@ defmodule Alchemistdrops.Payments.MockHttpClient do
 
   """
   def expect_response(response) do
-    Process.put(:mock_http_response, response)
+    if ets_table?() do
+      :ets.insert(:mock_http_ets, {:mock_http_response, response})
+    else
+      Process.put(:mock_http_response, response)
+    end
   end
 
   @doc """
@@ -26,7 +36,11 @@ defmodule Alchemistdrops.Payments.MockHttpClient do
 
   """
   def expect_error(error) do
-    Process.put(:mock_http_error, error)
+    if ets_table?() do
+      :ets.insert(:mock_http_ets, {:mock_http_error, error})
+    else
+      Process.put(:mock_http_error, error)
+    end
   end
 
   @doc """
@@ -39,7 +53,14 @@ defmodule Alchemistdrops.Payments.MockHttpClient do
 
   """
   def last_request do
-    Process.get(:mock_http_last_request)
+    if ets_table?() do
+      case :ets.lookup(:mock_http_ets, :mock_http_last_request) do
+        [{:mock_http_last_request, opts}] -> opts
+        [] -> nil
+      end
+    else
+      Process.get(:mock_http_last_request)
+    end
   end
 
   @doc """
@@ -48,7 +69,32 @@ defmodule Alchemistdrops.Payments.MockHttpClient do
   Returns the expected response or error set via `expect_response/1` or `expect_error/1`.
   """
   def request(opts) do
-    # Store the request for assertions
+    if ets_table?() do
+      request_via_ets(opts)
+    else
+      request_via_process(opts)
+    end
+  end
+
+  defp request_via_ets(opts) do
+    :ets.insert(:mock_http_ets, {:mock_http_last_request, opts})
+
+    case :ets.take(:mock_http_ets, :mock_http_error) do
+      [{:mock_http_error, error}] ->
+        {:error, error}
+
+      [] ->
+        case :ets.take(:mock_http_ets, :mock_http_response) do
+          [{:mock_http_response, response}] ->
+            {:ok, response}
+
+          [] ->
+            default_success_response()
+        end
+    end
+  end
+
+  defp request_via_process(opts) do
     Process.put(:mock_http_last_request, opts)
 
     cond do
@@ -59,17 +105,20 @@ defmodule Alchemistdrops.Payments.MockHttpClient do
         {:ok, response}
 
       true ->
-        # Default response for successful checkout session creation
-        {:ok,
-         %{
-           status: 200,
-           body: %{
-             "id" => "cs_test_#{:crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)}",
-             "url" => "https://checkout.stripe.com/test/session",
-             "payment_intent" =>
-               "pi_test_#{:crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)}"
-           }
-         }}
+        default_success_response()
     end
+  end
+
+  defp default_success_response do
+    {:ok,
+     %{
+       status: 200,
+       body: %{
+         "id" => "cs_test_#{:crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)}",
+         "url" => "https://checkout.stripe.com/test/session",
+         "payment_intent" =>
+           "pi_test_#{:crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)}"
+       }
+     }}
   end
 end

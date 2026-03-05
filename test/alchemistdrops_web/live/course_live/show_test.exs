@@ -6,6 +6,9 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
   import Alchemistdrops.CoursesFixtures
   import Alchemistdrops.EnrollmentsFixtures
 
+  alias Alchemistdrops.Payments.MockHttpClient
+  alias AlchemistdropsWeb.CourseLive.Show
+
   describe "mount/3" do
     test "given a published course when visitor loads the page then they see course details", %{
       conn: conn
@@ -148,6 +151,207 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
 
       # For paid courses, we show a different button
       assert has_element?(view, "button", "Purchase")
+    end
+  end
+
+  describe "handle_event/3 - purchase" do
+    # MockHttpClient uses ETS in test so expectations set here are visible to the LiveView process.
+
+    test "given a paid course with stripe_price_id when user clicks purchase then they are redirected to Stripe checkout",
+         %{conn: conn} do
+      user = user_fixture()
+
+      course =
+        course_fixture(%{
+          price: Money.new(9999, :USD),
+          stripe_price_id: "price_test_123",
+          published: true
+        })
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/courses/#{course}")
+
+      view
+      |> element("button#purchase-button")
+      |> render_click()
+
+      # LiveView uses MockHttpClient (in its process); default mock returns this URL
+      assert_redirect(view, "https://checkout.stripe.com/test/session")
+    end
+
+    test "given a paid course without stripe_price_id when user clicks purchase then they see error flash and stay on page",
+         %{conn: conn} do
+      user = user_fixture()
+
+      course =
+        course_fixture(%{
+          price: Money.new(9999, :USD),
+          stripe_price_id: nil,
+          published: true
+        })
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/courses/#{course}")
+
+      view
+      |> element("button#purchase-button")
+      |> render_click()
+
+      assert has_element?(view, "[role=alert]", "not set up for payment")
+      assert has_element?(view, "h1", course.title)
+    end
+
+    test "given a paid course with stripe_price_id empty string when user clicks purchase then they see error flash",
+         %{conn: conn} do
+      user = user_fixture()
+
+      course =
+        course_fixture(%{
+          price: Money.new(9999, :USD),
+          stripe_price_id: "",
+          published: true
+        })
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/courses/#{course}")
+
+      view
+      |> element("button#purchase-button")
+      |> render_click()
+
+      assert has_element?(view, "[role=alert]", "not set up for payment")
+    end
+
+    test "given Stripe API error when user clicks purchase then they see error flash", %{
+      conn: conn
+    } do
+      user = user_fixture()
+
+      course =
+        course_fixture(%{
+          price: Money.new(9999, :USD),
+          stripe_price_id: "price_123",
+          published: true
+        })
+
+      MockHttpClient.expect_response(%{
+        status: 400,
+        body: %{"error" => %{"message" => "Invalid price ID"}}
+      })
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/courses/#{course}")
+
+      view
+      |> element("button#purchase-button")
+      |> render_click()
+
+      assert has_element?(view, "[role=alert]", "Invalid price ID")
+    end
+
+    test "given Stripe API error without message when user clicks purchase then they see fallback message",
+         %{conn: conn} do
+      user = user_fixture()
+
+      course =
+        course_fixture(%{
+          price: Money.new(9999, :USD),
+          stripe_price_id: "price_123",
+          published: true
+        })
+
+      MockHttpClient.expect_response(%{status: 500, body: %{}})
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/courses/#{course}")
+
+      view
+      |> element("button#purchase-button")
+      |> render_click()
+
+      assert has_element?(view, "[role=alert]", "Stripe could not start checkout")
+    end
+
+    test "given network failure when user clicks purchase then they see error flash", %{
+      conn: conn
+    } do
+      user = user_fixture()
+
+      course =
+        course_fixture(%{
+          price: Money.new(9999, :USD),
+          stripe_price_id: "price_123",
+          published: true
+        })
+
+      MockHttpClient.expect_error(:timeout)
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/courses/#{course}")
+
+      view
+      |> element("button#purchase-button")
+      |> render_click()
+
+      assert has_element?(view, "[role=alert]", "Checkout unavailable")
+    end
+
+    test "given course is free when purchase event is handled then they see course is free message",
+         %{conn: _conn} do
+      # :course_is_free is returned by Payments when course.price is zero; the UI shows
+      # "Enroll Now" for free courses so this branch is not reachable by clicking. We test
+      # it by calling the handler with a socket that has a free course.
+      user = user_fixture()
+
+      course =
+        course_fixture(%{
+          price: Money.new(0, :USD),
+          stripe_price_id: "price_any",
+          published: true
+        })
+
+      socket =
+        %Phoenix.LiveView.Socket{
+          endpoint: AlchemistdropsWeb.Endpoint,
+          assigns: %{
+            __changed__: %{},
+            flash: %{},
+            current_scope: %{user: user},
+            course: course
+          },
+          private: %{assign_new: {%{}, []}, live_temp: %{}}
+        }
+
+      assert {:noreply, updated_socket} = Show.handle_event("purchase", %{}, socket)
+
+      assert updated_socket.assigns.enrolled == false
+      assert Phoenix.Flash.get(updated_socket.assigns.flash, :error) =~ "free"
+    end
+  end
+
+  describe "handle_params/2 - purchase success" do
+    test "given purchase=success in query when user lands on course then they see success flash",
+         %{
+           conn: conn
+         } do
+      course = course_fixture(%{published: true})
+
+      {:ok, view, _html} =
+        live(conn, ~p"/courses/#{course}" <> "?purchase=success")
+
+      assert has_element?(view, "[role=alert]", "Payment successful")
     end
   end
 
