@@ -10,6 +10,7 @@ defmodule Alchemistdrops.Courses do
 
   import Ecto.Query, warn: false
   alias Alchemistdrops.Courses.{Course, Lesson}
+  alias Alchemistdrops.Payments
   alias Alchemistdrops.Repo
 
   ## Course functions
@@ -123,9 +124,24 @@ defmodule Alchemistdrops.Courses do
 
   """
   def create_course(attrs \\ %{}) do
-    %Course{}
-    |> Course.changeset(attrs)
-    |> Repo.insert()
+    attrs = normalize_attrs(attrs)
+    changeset = %Course{} |> Course.changeset(attrs)
+
+    if changeset.valid? do
+      case maybe_assign_stripe_ids(changeset, attrs) do
+        {:ok, attrs_with_stripe} ->
+          merged = merge_stripe_ids_into_attrs(attrs, attrs_with_stripe)
+
+          changeset
+          |> Course.changeset(merged)
+          |> Repo.insert()
+
+        {:error, reason} ->
+          {:error, add_stripe_error(changeset, reason)}
+      end
+    else
+      Repo.insert(changeset)
+    end
   end
 
   @doc """
@@ -141,9 +157,24 @@ defmodule Alchemistdrops.Courses do
 
   """
   def update_course(%Course{} = course, attrs) do
-    course
-    |> Course.changeset(attrs)
-    |> Repo.update()
+    attrs = normalize_attrs(attrs)
+    changeset = course |> Course.changeset(attrs)
+
+    if changeset.valid? do
+      case maybe_assign_stripe_ids(changeset, attrs, course) do
+        {:ok, attrs_with_stripe} ->
+          merged = merge_stripe_ids_into_attrs(attrs, attrs_with_stripe)
+
+          course
+          |> Course.changeset(merged)
+          |> Repo.update()
+
+        {:error, reason} ->
+          {:error, add_stripe_error(changeset, reason)}
+      end
+    else
+      Repo.update(changeset)
+    end
   end
 
   @doc """
@@ -173,6 +204,65 @@ defmodule Alchemistdrops.Courses do
   """
   def change_course(%Course{} = course, attrs \\ %{}) do
     Course.changeset(course, attrs)
+  end
+
+  defp normalize_attrs(attrs) when is_map(attrs), do: attrs
+  defp normalize_attrs(attrs), do: Map.new(attrs || [])
+
+  defp maybe_assign_stripe_ids(changeset, attrs, course \\ nil) do
+    price = price_from_changeset(changeset)
+
+    Payments.ensure_stripe_product_and_price_for_course(
+      name: attr_or_course(attrs, :title, course) || "Course",
+      description: attr_or_course(attrs, :description, course) || "",
+      amount_cents: price_to_cents(price),
+      currency: price_to_currency_string(price),
+      stripe_product_id: attr_or_course(attrs, :stripe_product_id, course),
+      stripe_price_id: attr_or_course(attrs, :stripe_price_id, course)
+    )
+  end
+
+  defp price_from_changeset(changeset) do
+    Ecto.Changeset.get_change(changeset, :price) ||
+      (changeset.data && Map.get(changeset.data, :price))
+  end
+
+  defp attr_or_course(attrs, key, course) when is_atom(key) do
+    get_attr(attrs, key) || get_attr(attrs, to_string(key)) ||
+      (course && Map.get(course, key))
+  end
+
+  defp get_attr(attrs, key) when is_atom(key),
+    do: Map.get(attrs, key) || Map.get(attrs, to_string(key))
+
+  defp get_attr(attrs, key) when is_binary(key),
+    do: Map.get(attrs, key) || Map.get(attrs, String.to_atom(key))
+
+  defp price_to_cents(%Money{amount: amount}), do: amount
+  defp price_to_cents(nil), do: nil
+
+  defp price_to_currency_string(%Money{currency: currency}),
+    do: to_string(currency) |> String.downcase()
+
+  defp price_to_currency_string(_), do: "usd"
+
+  defp merge_stripe_ids_into_attrs(attrs, %{stripe_product_id: pid, stripe_price_id: price_id}) do
+    # Use same key type as attrs so Ecto.Changeset.cast accepts the map (no mixed keys)
+    stripe_map =
+      if Enum.any?(Map.keys(attrs), &is_binary/1) do
+        %{"stripe_product_id" => pid || "", "stripe_price_id" => price_id || ""}
+      else
+        %{stripe_product_id: pid || "", stripe_price_id: price_id || ""}
+      end
+
+    Map.merge(attrs, stripe_map)
+  end
+
+  defp merge_stripe_ids_into_attrs(attrs, %{}), do: attrs
+
+  defp add_stripe_error(changeset, reason) do
+    message = "Could not associate with Stripe: #{inspect(reason)}"
+    Ecto.Changeset.add_error(changeset, :stripe_price_id, message)
   end
 
   ## Lesson functions

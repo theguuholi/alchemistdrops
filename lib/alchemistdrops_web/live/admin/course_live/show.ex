@@ -10,21 +10,30 @@ defmodule AlchemistdropsWeb.Admin.CourseLive.Show do
   @impl true
   def mount(%{"id" => id}, _session, socket) do
     course = Courses.get_course_with_lessons!(id)
+    lessons = course.lessons
 
     {:ok,
      socket
      |> assign(:page_title, course.title)
      |> assign(:course, course)
-     |> stream(:lessons, course.lessons)}
+     |> assign(:lessons_count, length(lessons))
+     |> assign(:lessons_empty?, lessons == [])
+     |> stream(:lessons, lessons)}
   end
 
   @impl true
   def handle_event("delete_lesson", %{"id" => id}, socket) do
-    lesson = Enum.find(socket.assigns.course.lessons, &(&1.id == id))
+    lesson = Enum.find(socket.assigns.course.lessons, &(to_string(&1.id) == to_string(id)))
 
     if lesson do
       {:ok, _} = Courses.delete_lesson(lesson)
-      {:noreply, stream_delete(socket, :lessons, lesson)}
+      new_count = max(0, socket.assigns.lessons_count - 1)
+
+      {:noreply,
+       socket
+       |> assign(:lessons_count, new_count)
+       |> assign(:lessons_empty?, new_count == 0)
+       |> stream_delete(:lessons, lesson)}
     else
       {:noreply, socket}
     end

@@ -39,14 +39,14 @@
   <section class="mt-8" aria-labelledby="lessons-heading">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
       <h2 id="lessons-heading" class="text-lg font-semibold">
-        Lessons ({length(@course.lessons)})
+        Lessons ({@lessons_count})
       </h2>
       <.button variant="primary" navigate={~p"/admin/courses/#{@course}/lessons/new"}>
         <.icon name="hero-plus" class="w-4 h-4" /> Add Lesson
       </.button>
     </div>
 
-    <%= if @course.lessons == [] do %>
+    <%= if @lessons_empty? do %>
       <p id="no-lessons" class="text-center py-8 text-base-content/60 bg-base-200 rounded">
         No lessons yet. Add your first lesson to get started.
       </p>

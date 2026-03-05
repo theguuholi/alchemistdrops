@@ -3,6 +3,7 @@ defmodule Alchemistdrops.CoursesTest do
 
   alias Alchemistdrops.Courses
   alias Alchemistdrops.Courses.{Course, Lesson}
+  alias Alchemistdrops.Payments.MockHttpClient
 
   import Alchemistdrops.CoursesFixtures
 
@@ -220,6 +221,182 @@ defmodule Alchemistdrops.CoursesTest do
       assert course.stripe_price_id == "price_123"
       assert course.published == true
       assert course.thumbnail_url == "https://example.com/thumb.jpg"
+    end
+  end
+
+  describe "Stripe association" do
+    test "Scenario: Creating course with positive price and no Stripe IDs creates Stripe product and price" do
+      # Given valid attributes with positive price and no stripe IDs (test uses MockHttpClient)
+      attrs = %{
+        title: "Paid Course",
+        description: "A paid course",
+        price: Money.new(9900, :USD)
+      }
+
+      # When I create a course
+      {:ok, course} = Courses.create_course(attrs)
+
+      # Then Stripe IDs should be set from API (mock returns ids in body["id"])
+      assert %Course{} = course
+      assert course.title == "Paid Course"
+      assert course.stripe_product_id != nil
+      assert course.stripe_price_id != nil
+
+      assert String.starts_with?(course.stripe_price_id, "cs_test_") or
+               String.starts_with?(course.stripe_price_id, "price_") or
+               String.starts_with?(course.stripe_price_id, "prod_")
+    end
+
+    test "Scenario: Creating course with zero price does not set Stripe IDs" do
+      # Given attributes with zero price
+      attrs = %{
+        title: "Free Course",
+        description: "Free",
+        price: Money.new(0, :USD)
+      }
+
+      # When I create a course
+      {:ok, course} = Courses.create_course(attrs)
+
+      # Then Stripe IDs should remain nil/empty
+      assert course.title == "Free Course"
+      assert course.stripe_product_id in [nil, ""]
+      assert course.stripe_price_id in [nil, ""]
+    end
+
+    test "Scenario: Creating course with existing stripe_price_id keeps IDs without calling Stripe" do
+      # Given attributes with existing Stripe IDs
+      attrs = %{
+        title: "Pre-linked Course",
+        description: "Already in Stripe",
+        price: Money.new(5900, :USD),
+        stripe_product_id: "prod_existing",
+        stripe_price_id: "price_existing"
+      }
+
+      # When I create a course
+      {:ok, course} = Courses.create_course(attrs)
+
+      # Then existing Stripe IDs are kept
+      assert course.stripe_product_id == "prod_existing"
+      assert course.stripe_price_id == "price_existing"
+    end
+
+    test "Scenario: Updating course with positive price and no Stripe IDs assigns Stripe IDs" do
+      # Given a course with no Stripe IDs
+      course =
+        course_fixture(%{
+          title: "Draft",
+          price: Money.new(0, :USD),
+          stripe_product_id: nil,
+          stripe_price_id: nil
+        })
+
+      # When I update with a positive price (and still no Stripe IDs)
+      {:ok, updated} =
+        Courses.update_course(course, %{
+          title: "Draft",
+          description: course.description,
+          price: Money.new(4900, :USD)
+        })
+
+      # Then Stripe IDs should be set
+      assert updated.stripe_product_id != nil
+      assert updated.stripe_price_id != nil
+    end
+
+    test "Scenario: Updating course with existing stripe_price_id keeps IDs" do
+      # Given a course with Stripe IDs
+      course =
+        course_fixture(%{
+          title: "Linked",
+          price: Money.new(7900, :USD),
+          stripe_product_id: "prod_keep",
+          stripe_price_id: "price_keep"
+        })
+
+      # When I update other fields (e.g. title)
+      {:ok, updated} =
+        Courses.update_course(course, %{
+          title: "Linked Updated",
+          description: course.description,
+          price: Money.new(7900, :USD)
+        })
+
+      # Then Stripe IDs are unchanged
+      assert updated.stripe_product_id == "prod_keep"
+      assert updated.stripe_price_id == "price_keep"
+    end
+
+    test "Scenario: Stripe API error returns changeset error" do
+      # Given Stripe will fail (mock returns error)
+      MockHttpClient.expect_error(:timeout)
+
+      attrs = %{
+        title: "Will Fail Stripe",
+        description: "Desc",
+        price: Money.new(1000, :USD)
+      }
+
+      # When I create a course
+      {:error, changeset} = Courses.create_course(attrs)
+
+      # Then we get a changeset with Stripe error
+      assert %Ecto.Changeset{} = changeset
+      assert changeset.valid? == false
+      errors = errors_on(changeset)
+      assert Map.has_key?(errors, :stripe_price_id)
+      assert List.first(errors.stripe_price_id) =~ "Stripe"
+    end
+
+    test "Scenario: Update course when Stripe API fails returns changeset error" do
+      MockHttpClient.expect_error(:timeout)
+
+      course =
+        course_fixture(%{
+          title: "Draft",
+          price: Money.new(0, :USD),
+          stripe_product_id: nil,
+          stripe_price_id: nil
+        })
+
+      {:error, changeset} =
+        Courses.update_course(course, %{
+          title: "Draft",
+          description: course.description,
+          price: Money.new(5000, :USD)
+        })
+
+      assert %Ecto.Changeset{} = changeset
+      assert changeset.valid? == false
+      assert Map.has_key?(errors_on(changeset), :stripe_price_id)
+    end
+
+    test "Scenario: create_course with nil attrs uses normalize_attrs" do
+      # normalize_attrs(nil) returns %{} so we get invalid changeset
+      {:error, changeset} = Courses.create_course(nil)
+      assert %Ecto.Changeset{} = changeset
+      refute changeset.valid?
+    end
+
+    test "Scenario: create_course with list attrs uses normalize_attrs" do
+      # normalize_attrs([]) returns %{}
+      {:error, changeset} = Courses.create_course([])
+      assert %Ecto.Changeset{} = changeset
+      refute changeset.valid?
+    end
+
+    test "Scenario: create_course with string price from form params" do
+      # Form params often send "price" => "9900" (string); price_to_cents may receive string
+      attrs = %{
+        "title" => "String Price Course",
+        "description" => "Desc",
+        "price" => "9900"
+      }
+
+      {:ok, course} = Courses.create_course(attrs)
+      assert course.title == "String Price Course"
+      assert course.price != nil
     end
   end
 

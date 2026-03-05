@@ -292,6 +292,121 @@ defmodule Alchemistdrops.Payments do
     end
   end
 
+  ## Stripe Product & Price (for course association)
+
+  @doc """
+  Ensures a Stripe Product and Price exist for the given course attributes.
+
+  When the course has a positive price and no `stripe_price_id`, creates a Stripe
+  Product (and Price). When `stripe_price_id` is already set, returns existing IDs
+  without calling the API. Free courses (zero price) are skipped.
+
+  ## Options
+
+  - `:name` - Product name (e.g. course title)
+  - `:description` - Product description (optional)
+  - `:amount_cents` - Price in smallest currency unit (e.g. cents)
+  - `:currency` - ISO currency code string (e.g. "usd"), defaults to "usd"
+  - `:stripe_product_id` - Existing Stripe Product ID (skip product creation if set)
+  - `:stripe_price_id` - Existing Stripe Price ID (skip creation if set)
+
+  ## Returns
+
+  - `{:ok, %{stripe_product_id: "...", stripe_price_id: "..."}}` when created or already set
+  - `{:ok, %{}}` when price is zero (no Stripe needed)
+  - `{:error, reason}` on Stripe API failure
+
+  ## Examples
+
+      iex> ensure_stripe_product_and_price_for_course(name: "My Course", amount_cents: 9900)
+      {:ok, %{stripe_product_id: "prod_...", stripe_price_id: "price_..."}}
+
+      iex> ensure_stripe_product_and_price_for_course(name: "Free", amount_cents: 0)
+      {:ok, %{}}
+  """
+  def ensure_stripe_product_and_price_for_course(opts) do
+    amount = Keyword.get(opts, :amount_cents)
+    currency = (Keyword.get(opts, :currency) || "usd") |> String.downcase()
+    existing_product_id = Keyword.get(opts, :stripe_product_id)
+    existing_price_id = Keyword.get(opts, :stripe_price_id)
+
+    cond do
+      is_nil(amount) or amount == 0 ->
+        {:ok, %{}}
+
+      existing_price_id != nil and existing_price_id != "" ->
+        {:ok,
+         %{
+           stripe_product_id: existing_product_id,
+           stripe_price_id: existing_price_id
+         }}
+
+      true ->
+        do_create_stripe_product_and_price(
+          name: Keyword.fetch!(opts, :name),
+          description: Keyword.get(opts, :description) || "",
+          amount_cents: amount,
+          currency: currency,
+          existing_product_id: existing_product_id
+        )
+    end
+  end
+
+  defp do_create_stripe_product_and_price(
+         name: name,
+         description: description,
+         amount_cents: amount_cents,
+         currency: currency,
+         existing_product_id: existing_product_id
+       ) do
+    with {:ok, product_id} <- ensure_stripe_product(name, description, existing_product_id),
+         {:ok, price_id} <- create_stripe_price(product_id, amount_cents, currency) do
+      {:ok, %{stripe_product_id: product_id, stripe_price_id: price_id}}
+    end
+  end
+
+  defp ensure_stripe_product(name, description, nil), do: create_stripe_product(name, description)
+  defp ensure_stripe_product(_name, _description, existing_id), do: {:ok, existing_id}
+
+  defp create_stripe_product(name, description) do
+    body =
+      URI.encode_query(%{
+        "name" => name,
+        "description" => String.slice(description, 0, 500)
+      })
+
+    case stripe_request(:post, "/products", body) do
+      {:ok, %{status: status, body: body}} when status in 200..299 ->
+        {:ok, body["id"]}
+
+      {:ok, %{status: status, body: body}} ->
+        {:error, {:stripe_error, status, body}}
+
+      {:error, reason} ->
+        {:error, {:request_failed, reason}}
+    end
+  end
+
+  defp create_stripe_price(product_id, unit_amount, currency) do
+    body =
+      URI.encode_query(%{
+        "product" => product_id,
+        "unit_amount" => to_string(unit_amount),
+        "currency" => currency
+      })
+
+    case stripe_request(:post, "/prices", body) do
+      {:ok, %{status: status, body: body}} when status in 200..299 ->
+        {:ok, body["id"]}
+
+      {:ok, %{status: status, body: body}} ->
+        {:error, {:stripe_error, status, body}}
+
+      {:error, reason} ->
+        {:error, {:request_failed, reason}}
+    end
+  end
+
   ## HTTP Client (using Req as per workspace guidelines)
 
   defp stripe_request(method, path, body) do
