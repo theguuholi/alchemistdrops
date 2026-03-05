@@ -56,30 +56,36 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
 
     if blank?(course.stripe_price_id) do
       {:noreply,
-       put_flash(socket, :error,
-         "This course is not set up for payment. The administrator must set a Stripe Price ID on the course.")}
+       put_flash(
+         socket,
+         :error,
+         "This course is not set up for payment. The administrator must set a Stripe Price ID on the course."
+       )}
     else
       base = AlchemistdropsWeb.Endpoint.url()
       success_url = base <> ~p"/courses/#{course.id}" <> "?purchase=success"
       cancel_url = base <> ~p"/courses/#{course.id}"
 
       case Payments.create_checkout_session(current_user, course, success_url, cancel_url) do
-      {:ok, %{checkout_url: checkout_url}} ->
-        {:noreply, redirect(socket, external: checkout_url)}
+        {:ok, %{checkout_url: checkout_url}} ->
+          {:noreply, redirect(socket, external: checkout_url)}
 
-      {:error, :course_is_free} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "This course is free. Use Enroll Now instead.")
-         |> assign(:enrolled, false)}
+        {:error, :course_is_free} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "This course is free. Use Enroll Now instead.")
+           |> assign(:enrolled, false)}
 
-      {:error, {:stripe_error, _status, body}} ->
-        message = get_in(body, ["error", "message"]) || "Stripe could not start checkout. Check the course has a Stripe Price ID set."
-        {:noreply, put_flash(socket, :error, message)}
+        {:error, {:stripe_error, _status, body}} ->
+          message =
+            get_in(body, ["error", "message"]) ||
+              "Stripe could not start checkout. Check the course has a Stripe Price ID set."
 
-      {:error, {:request_failed, reason}} ->
-        {:noreply,
-         put_flash(socket, :error, "Checkout unavailable. Please try again. #{inspect(reason)}")}
+          {:noreply, put_flash(socket, :error, message)}
+
+        {:error, {:request_failed, reason}} ->
+          {:noreply,
+           put_flash(socket, :error, "Checkout unavailable. Please try again. #{inspect(reason)}")}
       end
     end
   end
