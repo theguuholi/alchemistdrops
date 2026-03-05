@@ -40,11 +40,11 @@ defmodule Alchemistdrops.Courses.Lesson do
   end
 
   defp validate_duration(changeset) do
-    validate_change(changeset, :duration, fn
-      :duration, nil -> []
-      :duration, n when is_integer(n) and n > 0 -> []
-      :duration, _ -> [duration: "must be greater than 0"]
-    end)
+    case Ecto.Changeset.get_change(changeset, :duration) do
+      nil -> changeset
+      n when is_integer(n) and n > 0 -> changeset
+      _ -> Ecto.Changeset.add_error(changeset, :duration, "must be greater than 0")
+    end
   end
 
   defp trim_field(changeset, field) do

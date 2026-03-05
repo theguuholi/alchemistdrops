@@ -240,16 +240,6 @@ defmodule Alchemistdrops.Courses do
 
   defp price_to_cents(%Money{amount: amount}), do: amount
   defp price_to_cents(nil), do: nil
-  defp price_to_cents(amount) when is_integer(amount), do: amount
-
-  defp price_to_cents(amount) when is_binary(amount) do
-    case Integer.parse(amount) do
-      {n, _} -> n
-      :error -> nil
-    end
-  end
-
-  defp price_to_cents(_), do: nil
 
   defp price_to_currency_string(%Money{currency: currency}),
     do: to_string(currency) |> String.downcase()

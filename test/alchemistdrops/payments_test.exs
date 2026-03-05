@@ -276,4 +276,50 @@ defmodule Alchemistdrops.PaymentsTest do
                Payments.verify_webhook_signature(payload, signature, @webhook_secret)
     end
   end
+
+  describe "ensure_stripe_product_and_price_for_course/1" do
+    test "returns error when Stripe product creation returns non-2xx" do
+      MockHttpClient.expect_response(%{status: 400, body: %{"error" => "Bad request"}})
+
+      assert {:error, {:stripe_error, 400, _}} =
+               Payments.ensure_stripe_product_and_price_for_course(
+                 name: "Course",
+                 description: "Desc",
+                 amount_cents: 1000,
+                 currency: "usd",
+                 stripe_product_id: nil,
+                 stripe_price_id: nil
+               )
+    end
+
+    test "returns error when Stripe price creation returns non-2xx" do
+      # First request (product) is skipped because we pass existing product id
+      # Only price creation is called
+      MockHttpClient.expect_response(%{status: 500, body: %{"error" => "Server error"}})
+
+      assert {:error, {:stripe_error, 500, _}} =
+               Payments.ensure_stripe_product_and_price_for_course(
+                 name: "Course",
+                 description: "Desc",
+                 amount_cents: 1000,
+                 currency: "usd",
+                 stripe_product_id: "prod_existing",
+                 stripe_price_id: nil
+               )
+    end
+
+    test "returns error when Stripe price creation fails with request_failed" do
+      MockHttpClient.expect_error(:econnrefused)
+
+      assert {:error, {:request_failed, :econnrefused}} =
+               Payments.ensure_stripe_product_and_price_for_course(
+                 name: "Course",
+                 description: "Desc",
+                 amount_cents: 1000,
+                 currency: "usd",
+                 stripe_product_id: "prod_existing",
+                 stripe_price_id: nil
+               )
+    end
+  end
 end

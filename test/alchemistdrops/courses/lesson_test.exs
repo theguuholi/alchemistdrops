@@ -150,6 +150,21 @@ defmodule Alchemistdrops.Courses.LessonTest do
       assert changeset.valid?
     end
 
+    test "Scenario: Creating a lesson with explicit nil duration (valid)", %{course: course} do
+      # Given lesson attributes with duration explicitly set to nil
+      attrs = %{
+        course_id: course.id,
+        title: "Test Lesson",
+        duration: nil
+      }
+
+      # When I create a changeset with these attributes
+      changeset = Lesson.changeset(%Lesson{}, attrs)
+
+      # Then the changeset should be valid (nil duration is allowed)
+      assert changeset.valid?
+    end
+
     test "Scenario: Default values are set when not provided", %{course: course} do
       # Given minimal lesson attributes without order or published status
       attrs = %{

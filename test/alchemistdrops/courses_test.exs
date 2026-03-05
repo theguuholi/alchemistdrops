@@ -348,6 +348,56 @@ defmodule Alchemistdrops.CoursesTest do
       assert Map.has_key?(errors, :stripe_price_id)
       assert List.first(errors.stripe_price_id) =~ "Stripe"
     end
+
+    test "Scenario: Update course when Stripe API fails returns changeset error" do
+      MockHttpClient.expect_error(:timeout)
+
+      course =
+        course_fixture(%{
+          title: "Draft",
+          price: Money.new(0, :USD),
+          stripe_product_id: nil,
+          stripe_price_id: nil
+        })
+
+      {:error, changeset} =
+        Courses.update_course(course, %{
+          title: "Draft",
+          description: course.description,
+          price: Money.new(5000, :USD)
+        })
+
+      assert %Ecto.Changeset{} = changeset
+      assert changeset.valid? == false
+      assert Map.has_key?(errors_on(changeset), :stripe_price_id)
+    end
+
+    test "Scenario: create_course with nil attrs uses normalize_attrs" do
+      # normalize_attrs(nil) returns %{} so we get invalid changeset
+      {:error, changeset} = Courses.create_course(nil)
+      assert %Ecto.Changeset{} = changeset
+      refute changeset.valid?
+    end
+
+    test "Scenario: create_course with list attrs uses normalize_attrs" do
+      # normalize_attrs([]) returns %{}
+      {:error, changeset} = Courses.create_course([])
+      assert %Ecto.Changeset{} = changeset
+      refute changeset.valid?
+    end
+
+    test "Scenario: create_course with string price from form params" do
+      # Form params often send "price" => "9900" (string); price_to_cents may receive string
+      attrs = %{
+        "title" => "String Price Course",
+        "description" => "Desc",
+        "price" => "9900"
+      }
+
+      {:ok, course} = Courses.create_course(attrs)
+      assert course.title == "String Price Course"
+      assert course.price != nil
+    end
   end
 
   describe "update_course/2" do
