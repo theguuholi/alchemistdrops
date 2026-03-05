@@ -91,6 +91,8 @@
               <% !@enrolled && Map.has_key?(@current_scope || %{}, :user) && !Money.zero?(@course.price) -> %>
                 <button
                   id="purchase-button"
+                  phx-click="purchase"
+                  phx-disable-with="Redirecting to checkout..."
                   class="btn btn-primary w-full gap-2"
                 >
                   <.icon name="hero-shopping-cart" class="w-6 h-6" /> Purchase Course

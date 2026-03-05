@@ -151,6 +151,71 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
     end
   end
 
+  describe "handle_event/3 - purchase" do
+    # Note: Stripe API and network error paths are covered in Alchemistdrops.PaymentsTest.
+    # The LiveView runs in a separate process, so MockHttpClient expectations set in the test
+    # process are not visible to the LiveView; the mock's default 200 response is used on success.
+
+    test "given a paid course with stripe_price_id when user clicks purchase then they are redirected to Stripe checkout",
+         %{conn: conn} do
+      user = user_fixture()
+      course =
+        course_fixture(%{
+          price: Money.new(9999, :USD),
+          stripe_price_id: "price_test_123",
+          published: true
+        })
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/courses/#{course}")
+
+      view
+      |> element("button#purchase-button")
+      |> render_click()
+
+      # LiveView uses MockHttpClient (in its process); default mock returns this URL
+      assert_redirect(view, "https://checkout.stripe.com/test/session")
+    end
+
+    test "given a paid course without stripe_price_id when user clicks purchase then they see error flash and stay on page",
+         %{conn: conn} do
+      user = user_fixture()
+      course =
+        course_fixture(%{
+          price: Money.new(9999, :USD),
+          stripe_price_id: nil,
+          published: true
+        })
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/courses/#{course}")
+
+      view
+      |> element("button#purchase-button")
+      |> render_click()
+
+      assert has_element?(view, "[role=alert]", "not set up for payment")
+      assert has_element?(view, "h1", course.title)
+    end
+  end
+
+  describe "handle_params/2 - purchase success" do
+    test "given purchase=success in query when user lands on course then they see success flash", %{
+      conn: conn
+    } do
+      course = course_fixture(%{published: true})
+
+      {:ok, view, _html} =
+        live(conn, ~p"/courses/#{course}" <> "?purchase=success")
+
+      assert has_element?(view, "[role=alert]", "Payment successful")
+    end
+  end
+
   describe "course curriculum display" do
     test "given published and unpublished lessons when visitor views course then they see only published",
          %{conn: conn} do

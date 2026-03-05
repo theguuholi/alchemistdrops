@@ -3,6 +3,7 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
 
   alias Alchemistdrops.Courses
   alias Alchemistdrops.Enrollments
+  alias Alchemistdrops.Payments
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -20,9 +21,20 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
   end
 
   @impl true
-  def handle_params(_params, _url, socket) do
-    {:noreply, assign(socket, :page_title, socket.assigns.course.title)}
+  def handle_params(params, _url, socket) do
+    socket =
+      socket
+      |> assign(:page_title, socket.assigns.course.title)
+      |> maybe_put_purchase_success_flash(params)
+
+    {:noreply, socket}
   end
+
+  defp maybe_put_purchase_success_flash(socket, %{"purchase" => "success"}) do
+    put_flash(socket, :info, "Payment successful! You're now enrolled in this course.")
+  end
+
+  defp maybe_put_purchase_success_flash(socket, _params), do: socket
 
   @impl true
   def handle_event("enroll_free", _params, socket) do
@@ -36,6 +48,46 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
      |> put_flash(:info, "Successfully enrolled!")
      |> assign(:enrolled, true)}
   end
+
+  @impl true
+  def handle_event("purchase", _params, socket) do
+    current_user = socket.assigns.current_scope.user
+    course = socket.assigns.course
+
+    if blank?(course.stripe_price_id) do
+      {:noreply,
+       put_flash(socket, :error,
+         "This course is not set up for payment. The administrator must set a Stripe Price ID on the course.")}
+    else
+      base = AlchemistdropsWeb.Endpoint.url()
+      success_url = base <> ~p"/courses/#{course.id}" <> "?purchase=success"
+      cancel_url = base <> ~p"/courses/#{course.id}"
+
+      case Payments.create_checkout_session(current_user, course, success_url, cancel_url) do
+      {:ok, %{checkout_url: checkout_url}} ->
+        {:noreply, redirect(socket, external: checkout_url)}
+
+      {:error, :course_is_free} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "This course is free. Use Enroll Now instead.")
+         |> assign(:enrolled, false)}
+
+      {:error, {:stripe_error, _status, body}} ->
+        message = get_in(body, ["error", "message"]) || "Stripe could not start checkout. Check the course has a Stripe Price ID set."
+        {:noreply, put_flash(socket, :error, message)}
+
+      {:error, {:request_failed, reason}} ->
+        {:noreply,
+         put_flash(socket, :error, "Checkout unavailable. Please try again. #{inspect(reason)}")}
+      end
+    end
+  end
+
+  defp blank?(nil), do: true
+  defp blank?(""), do: true
+  defp blank?(s) when is_binary(s), do: String.trim(s) == ""
+  defp blank?(_), do: false
 
   defp assign_enrollment_status(socket) do
     current_user =
