@@ -35,8 +35,16 @@ defmodule Alchemistdrops.Courses.Lesson do
     |> validate_length(:title, max: 255)
     |> trim_field(:title)
     |> validate_number(:order, greater_than_or_equal_to: 0)
-    |> validate_number(:duration, greater_than: 0)
+    |> validate_duration()
     |> foreign_key_constraint(:course_id)
+  end
+
+  defp validate_duration(changeset) do
+    validate_change(changeset, :duration, fn
+      :duration, nil -> []
+      :duration, n when is_integer(n) and n > 0 -> []
+      :duration, _ -> [duration: "must be greater than 0"]
+    end)
   end
 
   defp trim_field(changeset, field) do

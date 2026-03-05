@@ -38,6 +38,38 @@
       />
     </div>
 
+    <section
+      class="rounded-lg border border-base-300 bg-base-200/50 p-4"
+      aria-labelledby="stripe-heading"
+    >
+      <h3 id="stripe-heading" class="text-sm font-semibold text-base-content/80 mb-2">
+        Stripe (for paid courses)
+      </h3>
+      <p class="text-sm text-base-content/60 mb-3">
+        Create a Product and Price in the <a
+          href="https://dashboard.stripe.com/products"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="link link-primary"
+        >Stripe Dashboard</a>,
+        then paste the IDs below. Leave blank for free courses.
+      </p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <.input
+          field={@form[:stripe_product_id]}
+          type="text"
+          label="Stripe Product ID"
+          placeholder="prod_..."
+        />
+        <.input
+          field={@form[:stripe_price_id]}
+          type="text"
+          label="Stripe Price ID"
+          placeholder="price_..."
+        />
+      </div>
+    </section>
+
     <.input field={@form[:published]} type="checkbox" label="Published" />
 
     <footer class="flex flex-col sm:flex-row gap-2 pt-4">
