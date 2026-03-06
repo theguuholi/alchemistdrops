@@ -343,6 +343,7 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
     test "given stripe_price_id empty string when purchase is handled then blank?(\"\") is used and error flash is set",
          %{conn: _conn} do
       user = user_fixture()
+
       course =
         course_fixture(%{
           price: Money.new(9999, :USD),
@@ -369,6 +370,7 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
     test "given stripe_price_id non-string when purchase is handled then blank?(_) returns false and checkout is created",
          %{conn: _conn} do
       user = user_fixture()
+
       course =
         course_fixture(%{
           price: Money.new(9999, :USD),
@@ -401,7 +403,9 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
         }
 
       assert {:noreply, updated_socket} = Show.handle_event("purchase", %{}, socket)
-      assert updated_socket.redirected == {:redirect, %{external: "https://checkout.stripe.com/cover", status: 302}}
+
+      assert updated_socket.redirected ==
+               {:redirect, %{external: "https://checkout.stripe.com/cover", status: 302}}
     end
   end
 
