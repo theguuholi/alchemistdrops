@@ -89,14 +89,19 @@
 
                 <%!-- Logged in, not enrolled, paid course --%>
               <% !@enrolled && Map.has_key?(@current_scope || %{}, :user) && !Money.zero?(@course.price) -> %>
-                <button
-                  id="purchase-button"
-                  phx-click="purchase"
-                  phx-disable-with="Redirecting to checkout..."
-                  class="btn btn-primary w-full gap-2"
-                >
-                  <.icon name="hero-shopping-cart" class="w-6 h-6" /> Purchase Course
-                </button>
+                <div class="space-y-2">
+                  <button
+                    id="purchase-button"
+                    phx-click="purchase"
+                    phx-disable-with="Redirecting to secure checkout…"
+                    class="btn btn-primary w-full gap-2 min-h-12"
+                  >
+                    <.icon name="hero-shopping-cart" class="w-6 h-6" /> Purchase Course
+                  </button>
+                  <p class="text-xs text-base-content/50 text-center">
+                    You'll be redirected to Stripe to complete payment securely.
+                  </p>
+                </div>
 
                 <%!-- Not logged in --%>
               <% true -> %>

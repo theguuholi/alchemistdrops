@@ -25,16 +25,22 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
     socket =
       socket
       |> assign(:page_title, socket.assigns.course.title)
-      |> maybe_put_purchase_success_flash(params)
+      |> maybe_handle_purchase_return(params)
 
     {:noreply, socket}
   end
 
-  defp maybe_put_purchase_success_flash(socket, %{"purchase" => "success"}) do
-    put_flash(socket, :info, "Payment successful! You're now enrolled in this course.")
+  defp maybe_handle_purchase_return(socket, %{"purchase" => "success"}) do
+    socket
+    |> assign_enrollment_status()
+    |> put_flash(:info, "Payment successful! You're now enrolled in this course.")
   end
 
-  defp maybe_put_purchase_success_flash(socket, _params), do: socket
+  defp maybe_handle_purchase_return(socket, %{"purchase" => "cancelled"}) do
+    put_flash(socket, :info, "Checkout cancelled. You can purchase when you're ready.")
+  end
+
+  defp maybe_handle_purchase_return(socket, _params), do: socket
 
   @impl true
   def handle_event("enroll_free", _params, socket) do
@@ -64,7 +70,7 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
     else
       base = AlchemistdropsWeb.Endpoint.url()
       success_url = base <> ~p"/courses/#{course.id}" <> "?purchase=success"
-      cancel_url = base <> ~p"/courses/#{course.id}"
+      cancel_url = base <> ~p"/courses/#{course.id}" <> "?purchase=cancelled"
 
       case Payments.create_checkout_session(current_user, course, success_url, cancel_url) do
         {:ok, %{checkout_url: checkout_url}} ->
@@ -91,7 +97,6 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
   end
 
   defp blank?(nil), do: true
-  defp blank?(""), do: true
   defp blank?(s) when is_binary(s), do: String.trim(s) == ""
   defp blank?(_), do: false
 

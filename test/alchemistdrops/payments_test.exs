@@ -147,6 +147,41 @@ defmodule Alchemistdrops.PaymentsTest do
       assert request[:body] =~ URI.encode_www_form(user.email)
     end
 
+    test "sends mode=subscription when course has price_recurring" do
+      user = user_fixture()
+
+      course =
+        course_fixture(%{
+          price: Money.new(4999, :USD),
+          stripe_price_id: "price_sub_123",
+          price_recurring: true
+        })
+
+      MockHttpClient.expect_response(%{
+        status: 200,
+        body: %{
+          "id" => "cs_sub_session",
+          "url" => "https://checkout.stripe.com/sub",
+          "subscription" => "sub_123"
+        }
+      })
+
+      assert {:ok, result} =
+               Payments.create_checkout_session(
+                 user,
+                 course,
+                 "https://example.com/success",
+                 "https://example.com/cancel"
+               )
+
+      assert result.checkout_url == "https://checkout.stripe.com/sub"
+      assert result.payment.stripe_checkout_session_id == "cs_sub_session"
+      assert result.payment.stripe_payment_intent_id == "sub_123"
+
+      request = MockHttpClient.last_request()
+      assert request[:body] =~ "mode=subscription"
+    end
+
     test "returns error for free course" do
       user = user_fixture()
       course = course_fixture(%{price: Money.new(0, :USD)})
@@ -202,6 +237,34 @@ defmodule Alchemistdrops.PaymentsTest do
       assert %{payment: updated_payment, enrollment: enrollment} = result
       assert updated_payment.status == "completed"
       assert updated_payment.stripe_payment_intent_id == "pi_completed"
+      assert enrollment.user_id == user.id
+      assert enrollment.course_id == course.id
+      assert Enrollments.user_enrolled?(user.id, course.id)
+    end
+
+    test "checkout.session.completed with subscription id enrolls user and completes payment" do
+      user = user_fixture()
+      course = course_fixture(%{price: Money.new(1000, :USD)})
+      payment = payment_fixture(%{user: user, course: course})
+
+      {:ok, _payment} =
+        Payments.update_payment(payment, %{stripe_checkout_session_id: "cs_sub_webhook"})
+
+      # Subscription checkout has "subscription" not "payment_intent"
+      event_data = %{
+        "id" => "cs_sub_webhook",
+        "subscription" => "sub_completed_123",
+        "amount_total" => 1000,
+        "currency" => "usd",
+        "payment_status" => "paid"
+      }
+
+      assert {:ok, result} =
+               Payments.process_webhook_event("checkout.session.completed", event_data)
+
+      assert %{payment: updated_payment, enrollment: enrollment} = result
+      assert updated_payment.status == "completed"
+      assert updated_payment.stripe_payment_intent_id == "sub_completed_123"
       assert enrollment.user_id == user.id
       assert enrollment.course_id == course.id
       assert Enrollments.user_enrolled?(user.id, course.id)

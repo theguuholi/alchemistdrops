@@ -147,9 +147,11 @@ defmodule Alchemistdrops.Payments do
   end
 
   defp create_stripe_session(course, user, payment, success_url, cancel_url) do
+    mode = if Map.get(course, :price_recurring), do: "subscription", else: "payment"
+
     body =
       URI.encode_query(%{
-        "mode" => "payment",
+        "mode" => mode,
         "success_url" => success_url,
         "cancel_url" => cancel_url,
         "client_reference_id" => payment.id,
@@ -174,9 +176,12 @@ defmodule Alchemistdrops.Payments do
   end
 
   defp update_payment_with_session(payment, session) do
+    # One-time payments have payment_intent; subscriptions have subscription id
+    intent_or_subscription = session["payment_intent"] || session["subscription"]
+
     update_payment(payment, %{
       stripe_checkout_session_id: session["id"],
-      stripe_payment_intent_id: session["payment_intent"]
+      stripe_payment_intent_id: intent_or_subscription
     })
   end
 
@@ -210,11 +215,13 @@ defmodule Alchemistdrops.Payments do
   def process_webhook_event(_event_type, _data), do: {:ok, :ignored}
 
   defp complete_payment_and_enroll(payment, session_data) do
+    intent_or_subscription = session_data["payment_intent"] || session_data["subscription"]
+
     Repo.transaction(fn ->
       with {:ok, updated_payment} <-
              update_payment(payment, %{
                status: "completed",
-               stripe_payment_intent_id: session_data["payment_intent"],
+               stripe_payment_intent_id: intent_or_subscription,
                metadata: %{
                  "amount_total" => session_data["amount_total"],
                  "currency" => session_data["currency"],

@@ -339,19 +339,107 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
       assert updated_socket.assigns.enrolled == false
       assert Phoenix.Flash.get(updated_socket.assigns.flash, :error) =~ "free"
     end
+
+    test "given stripe_price_id empty string when purchase is handled then blank?(\"\") is used and error flash is set",
+         %{conn: _conn} do
+      user = user_fixture()
+      course =
+        course_fixture(%{
+          price: Money.new(9999, :USD),
+          stripe_price_id: "",
+          published: true
+        })
+
+      socket =
+        %Phoenix.LiveView.Socket{
+          endpoint: AlchemistdropsWeb.Endpoint,
+          assigns: %{
+            __changed__: %{},
+            flash: %{},
+            current_scope: %{user: user},
+            course: course
+          },
+          private: %{assign_new: {%{}, []}, live_temp: %{}}
+        }
+
+      assert {:noreply, updated_socket} = Show.handle_event("purchase", %{}, socket)
+      assert Phoenix.Flash.get(updated_socket.assigns.flash, :error) =~ "not set up for payment"
+    end
+
+    test "given stripe_price_id non-string when purchase is handled then blank?(_) returns false and checkout is created",
+         %{conn: _conn} do
+      user = user_fixture()
+      course =
+        course_fixture(%{
+          price: Money.new(9999, :USD),
+          stripe_price_id: "price_123",
+          published: true
+        })
+
+      # Use a course with non-string stripe_price_id to cover blank?(_) clause
+      course_with_atom_id = %{course | stripe_price_id: :non_string_value}
+
+      MockHttpClient.expect_response(%{
+        status: 200,
+        body: %{
+          "id" => "cs_cover",
+          "url" => "https://checkout.stripe.com/cover",
+          "payment_intent" => "pi_cover"
+        }
+      })
+
+      socket =
+        %Phoenix.LiveView.Socket{
+          endpoint: AlchemistdropsWeb.Endpoint,
+          assigns: %{
+            __changed__: %{},
+            flash: %{},
+            current_scope: %{user: user},
+            course: course_with_atom_id
+          },
+          private: %{assign_new: {%{}, []}, live_temp: %{}}
+        }
+
+      assert {:noreply, updated_socket} = Show.handle_event("purchase", %{}, socket)
+      assert updated_socket.redirected == {:redirect, %{external: "https://checkout.stripe.com/cover", status: 302}}
+    end
   end
 
-  describe "handle_params/2 - purchase success" do
+  describe "handle_params/2 - purchase return" do
     test "given purchase=success in query when user lands on course then they see success flash",
-         %{
-           conn: conn
-         } do
+         %{conn: conn} do
       course = course_fixture(%{published: true})
 
       {:ok, view, _html} =
         live(conn, ~p"/courses/#{course}" <> "?purchase=success")
 
       assert has_element?(view, "[role=alert]", "Payment successful")
+    end
+
+    test "given purchase=success when user is already enrolled then they see Start Learning",
+         %{conn: conn} do
+      user = user_fixture()
+      course = course_fixture(%{published: true})
+      _lesson = lesson_fixture(%{course_id: course.id, published: true})
+      enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
+
+      {:ok, view, _html} =
+        conn
+        |> log_in_user(user)
+        |> live(~p"/courses/#{course}" <> "?purchase=success")
+
+      assert has_element?(view, "[role=alert]", "Payment successful")
+      assert has_element?(view, "a", "Start Learning")
+    end
+
+    test "given purchase=cancelled in query when user lands on course then they see cancelled message",
+         %{conn: conn} do
+      course = course_fixture(%{published: true})
+
+      {:ok, view, _html} =
+        live(conn, ~p"/courses/#{course}" <> "?purchase=cancelled")
+
+      assert has_element?(view, "[role=alert]", "Checkout cancelled")
     end
   end
 

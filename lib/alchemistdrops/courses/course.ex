@@ -11,6 +11,7 @@ defmodule Alchemistdrops.Courses.Course do
     field :price, Money.Ecto.Amount.Type
     field :stripe_product_id, :string
     field :stripe_price_id, :string
+    field :price_recurring, :boolean, default: false
     field :published, :boolean, default: false
     field :thumbnail_url, :string
 
@@ -31,6 +32,7 @@ defmodule Alchemistdrops.Courses.Course do
       :price,
       :stripe_product_id,
       :stripe_price_id,
+      :price_recurring,
       :published,
       :thumbnail_url
     ])

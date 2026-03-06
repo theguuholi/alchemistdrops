@@ -68,6 +68,14 @@
           placeholder="price_..."
         />
       </div>
+      <p class="text-sm text-base-content/60 mt-3">
+        If the price in Stripe is recurring (e.g. every 3 months), enable the option below so checkout uses subscription mode.
+      </p>
+      <.input
+        field={@form[:price_recurring]}
+        type="checkbox"
+        label="Recurring price (subscription)"
+      />
     </section>
 
     <.input field={@form[:published]} type="checkbox" label="Published" />
