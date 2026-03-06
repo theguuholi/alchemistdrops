@@ -14,6 +14,7 @@ defmodule Alchemistdrops.Enrollments do
   alias Alchemistdrops.Courses.{Course, Lesson}
   alias Alchemistdrops.Enrollments.Enrollment
   alias Alchemistdrops.Repo
+  alias Money
 
   ## Enrollment functions
 
@@ -106,13 +107,17 @@ defmodule Alchemistdrops.Enrollments do
   def can_access_course?(%User{role: :admin}, _course), do: true
 
   def can_access_course?(%User{} = user, %Course{price: price} = course) do
-    # Free courses are accessible to all authenticated users
-    if Money.zero?(price) do
+    # Free courses (nil or zero price) are accessible to all authenticated users
+    if price_zero_or_nil?(price) do
       true
     else
       user_enrolled?(user, course)
     end
   end
+
+  defp price_zero_or_nil?(nil), do: true
+  defp price_zero_or_nil?(%Money{amount: 0}), do: true
+  defp price_zero_or_nil?(_), do: false
 
   @doc """
   Checks if a user can access a lesson.

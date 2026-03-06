@@ -19,10 +19,10 @@
   <.list>
     <:item title="Description">{@course.description}</:item>
     <:item title="Price">
-      <%= if Money.zero?(@course.price) do %>
+      <%= if price_free?(@course.price) do %>
         <span class="text-success font-medium">Free</span>
       <% else %>
-        {Money.to_string(@course.price)}
+        {format_price(@course.price)}
       <% end %>
     </:item>
     <:item title="Thumbnail">

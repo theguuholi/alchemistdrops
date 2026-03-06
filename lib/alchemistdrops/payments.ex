@@ -16,6 +16,7 @@ defmodule Alchemistdrops.Payments do
   alias Alchemistdrops.Enrollments
   alias Alchemistdrops.Payments.Payment
   alias Alchemistdrops.Repo
+  alias Money
 
   @stripe_api_base "https://api.stripe.com/v1"
 
@@ -122,7 +123,7 @@ defmodule Alchemistdrops.Payments do
 
   """
   def create_checkout_session(%User{} = user, %Course{} = course, success_url, cancel_url) do
-    if Money.zero?(course.price) do
+    if price_zero_or_nil?(course.price) do
       {:error, :course_is_free}
     else
       do_create_checkout_session(user, course, success_url, cancel_url)
@@ -444,4 +445,8 @@ defmodule Alchemistdrops.Payments do
     Application.get_env(:alchemistdrops, :stripe)[:http_client] ||
       Alchemistdrops.Payments.ReqClient
   end
+
+  defp price_zero_or_nil?(nil), do: true
+  defp price_zero_or_nil?(%Money{amount: 0}), do: true
+  defp price_zero_or_nil?(_), do: false
 end
