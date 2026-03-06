@@ -386,6 +386,21 @@ defmodule Alchemistdrops.CoursesTest do
       refute changeset.valid?
     end
 
+    test "Scenario: Creating course with price_recurring for subscription checkout" do
+      attrs = %{
+        title: "Subscription Course",
+        description: "Recurring price",
+        price: Money.new(4999, :USD),
+        stripe_price_id: "price_sub_123",
+        price_recurring: true
+      }
+
+      {:ok, course} = Courses.create_course(attrs)
+      assert course.title == "Subscription Course"
+      assert course.price_recurring == true
+      assert course.stripe_price_id == "price_sub_123"
+    end
+
     test "Scenario: create_course with string price from form params" do
       # Form params often send "price" => "9900" (string); price_to_cents may receive string
       attrs = %{
@@ -459,6 +474,14 @@ defmodule Alchemistdrops.CoursesTest do
 
       # Then the price should be updated
       assert Money.equals?(updated.price, Money.new(7999, :USD))
+    end
+
+    test "Scenario: Updating course price_recurring for subscription mode" do
+      course = course_fixture(%{price: Money.new(4999, :USD), price_recurring: false})
+
+      {:ok, updated} = Courses.update_course(course, %{price_recurring: true})
+
+      assert updated.price_recurring == true
     end
   end
 
