@@ -1,12 +1,15 @@
 defmodule AlchemistdropsWeb.CourseLive.ShowTest do
   use AlchemistdropsWeb.ConnCase
 
+  import Ecto.Query
   import Phoenix.LiveViewTest
   import Alchemistdrops.AccountsFixtures
   import Alchemistdrops.CoursesFixtures
   import Alchemistdrops.EnrollmentsFixtures
 
+  alias Alchemistdrops.Courses.Course
   alias Alchemistdrops.Payments.MockHttpClient
+  alias Alchemistdrops.Repo
   alias AlchemistdropsWeb.CourseLive.Show
 
   describe "mount/3" do
@@ -75,6 +78,18 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
 
       {:ok, view, _html} = live(conn, ~p"/courses/#{course}")
 
+      assert has_element?(view, "span", "Free")
+    end
+
+    test "given a published course with nil price when visitor loads the page then page renders and shows Free",
+         %{conn: conn} do
+      course = course_fixture(%{title: "Course With Nil Price", published: true})
+
+      Repo.update_all(from(c in Course, where: c.id == ^course.id), set: [price: nil])
+
+      {:ok, view, _html} = live(conn, ~p"/courses/#{course}")
+
+      assert has_element?(view, "h1", "Course With Nil Price")
       assert has_element?(view, "span", "Free")
     end
   end

@@ -26,8 +26,8 @@
           <div class="mb-3 sm:mb-4">
             <span class={[
               "badge badge-md sm:badge-lg gap-1",
-              Money.zero?(@course.price) && "badge-success",
-              !Money.zero?(@course.price) && "badge-info"
+              price_free?(@course.price) && "badge-success",
+              !price_free?(@course.price) && "badge-info"
             ]}>
               {format_price(@course.price)}
             </span>
@@ -78,7 +78,7 @@
                 </div>
 
                 <%!-- Logged in, not enrolled, free course --%>
-              <% !@enrolled && Map.has_key?(@current_scope || %{}, :user) && Money.zero?(@course.price) -> %>
+              <% !@enrolled && Map.has_key?(@current_scope || %{}, :user) && price_free?(@course.price) -> %>
                 <button
                   id="enroll-button"
                   phx-click="enroll_free"
@@ -88,7 +88,7 @@
                 </button>
 
                 <%!-- Logged in, not enrolled, paid course --%>
-              <% !@enrolled && Map.has_key?(@current_scope || %{}, :user) && !Money.zero?(@course.price) -> %>
+              <% !@enrolled && Map.has_key?(@current_scope || %{}, :user) && !price_free?(@course.price) -> %>
                 <div class="space-y-2">
                   <button
                     id="purchase-button"
