@@ -6,6 +6,7 @@ defmodule AlchemistdropsWeb.Admin.CourseLive.Show do
   use AlchemistdropsWeb, :live_view
 
   alias Alchemistdrops.Courses
+  alias Money
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -38,4 +39,12 @@ defmodule AlchemistdropsWeb.Admin.CourseLive.Show do
       {:noreply, socket}
     end
   end
+
+  defp price_free?(nil), do: true
+  defp price_free?(%Money{amount: 0}), do: true
+  defp price_free?(_), do: false
+
+  defp format_price(nil), do: "Free"
+  defp format_price(%Money{amount: 0}), do: "Free"
+  defp format_price(price), do: Money.to_string(price)
 end

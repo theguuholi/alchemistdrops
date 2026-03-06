@@ -16,10 +16,10 @@
         <span class="font-medium">{course.title}</span>
       </:col>
       <:col :let={{_id, course}} label="Price">
-        <%= if Money.zero?(course.price) do %>
+        <%= if price_free?(course.price) do %>
           <span class="text-success">Free</span>
         <% else %>
-          {Money.to_string(course.price)}
+          {format_price(course.price)}
         <% end %>
       </:col>
       <:col :let={{_id, course}} label="Status">
