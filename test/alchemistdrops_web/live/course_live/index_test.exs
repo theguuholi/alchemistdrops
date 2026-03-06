@@ -1,10 +1,14 @@
 defmodule AlchemistdropsWeb.CourseLive.IndexTest do
   use AlchemistdropsWeb.ConnCase
 
+  import Ecto.Query
   import Phoenix.LiveViewTest
   import Alchemistdrops.AccountsFixtures
   import Alchemistdrops.CoursesFixtures
   import Alchemistdrops.EnrollmentsFixtures
+
+  alias Alchemistdrops.Courses.Course
+  alias Alchemistdrops.Repo
 
   describe "mount/3" do
     test "given a visitor when they visit the courses page then they see the page title", %{
@@ -50,6 +54,19 @@ defmodule AlchemistdropsWeb.CourseLive.IndexTest do
 
       assert has_element?(view, "span", "Free")
       assert has_element?(view, "span", "$99.99")
+    end
+
+    test "given a published course with nil price when visitor loads the page then page renders and shows Free",
+         %{conn: conn} do
+      course =
+        course_fixture(%{title: "Course With Nil Price", published: true})
+
+      Repo.update_all(from(c in Course, where: c.id == ^course.id), set: [price: nil])
+
+      {:ok, view, _html} = live(conn, ~p"/courses")
+
+      assert has_element?(view, "h3", "Course With Nil Price")
+      assert has_element?(view, "span", "Free")
     end
 
     test "given courses when visitor loads the page then each course card has proper semantic HTML",

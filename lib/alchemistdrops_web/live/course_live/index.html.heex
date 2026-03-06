@@ -53,8 +53,8 @@
                 <div class="mb-2">
                   <span class={[
                     "badge gap-1",
-                    Money.zero?(course.price) && "badge-success",
-                    !Money.zero?(course.price) && "badge-info"
+                    price_free?(course.price) && "badge-success",
+                    !price_free?(course.price) && "badge-info"
                   ]}>
                     {format_price(course.price)}
                   </span>
