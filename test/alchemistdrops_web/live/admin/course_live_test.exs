@@ -8,14 +8,14 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
     title: "New Course Title",
     description: "A comprehensive course description",
     body: "Full course content",
-    price: "9900",
+    price_cents: "9900",
     published: false
   }
   @update_attrs %{
     title: "Updated Course Title",
     description: "Updated description",
     body: "Updated content",
-    price: "19900",
+    price_cents: "19900",
     published: true
   }
   @invalid_attrs %{title: nil, description: nil}
