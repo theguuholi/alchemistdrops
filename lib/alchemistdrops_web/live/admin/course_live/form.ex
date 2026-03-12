@@ -7,7 +7,6 @@ defmodule AlchemistdropsWeb.Admin.CourseLive.Form do
 
   alias Alchemistdrops.Courses
   alias Alchemistdrops.Courses.Course
-  alias Money
 
   @impl true
   def mount(params, _session, socket) do
@@ -22,12 +21,11 @@ defmodule AlchemistdropsWeb.Admin.CourseLive.Form do
 
   defp apply_action(socket, :edit, %{"id" => id}) do
     course = Courses.get_course!(id)
-    attrs = %{"price_cents" => price_cents_initial(course.price)}
 
     socket
     |> assign(:page_title, "Edit Course")
     |> assign(:course, course)
-    |> assign(:form, to_form(Courses.change_course(course, attrs)))
+    |> assign(:form, to_form(Courses.change_course(course)))
   end
 
   defp apply_action(socket, :new, _params) do
@@ -77,7 +75,4 @@ defmodule AlchemistdropsWeb.Admin.CourseLive.Form do
 
   defp return_path("index", _course), do: ~p"/admin/courses"
   defp return_path("show", course), do: ~p"/admin/courses/#{course}"
-
-  defp price_cents_initial(nil), do: ""
-  defp price_cents_initial(%Money{amount: amount}), do: to_string(amount)
 end
