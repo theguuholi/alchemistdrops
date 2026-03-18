@@ -42,7 +42,14 @@ defmodule AlchemistdropsWeb.PostLive.Show do
 
   defp render_markdown(content) when is_binary(content) and byte_size(content) > 0 do
     {:ok, html} = MDEx.to_html(content)
+    html = wrap_tables_for_styling(html)
     Phoenix.HTML.raw(html)
+  end
+
+  defp wrap_tables_for_styling(html) do
+    html
+    |> String.replace("<table", "<div class=\"table-wrapper\"><table")
+    |> String.replace("</table>", "</table></div>")
   end
 
   defp render_markdown(_), do: Phoenix.HTML.raw("")
