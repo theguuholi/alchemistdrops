@@ -46,11 +46,11 @@ defmodule AlchemistdropsWeb.PostLive.Show do
     Phoenix.HTML.raw(html)
   end
 
+  defp render_markdown(_), do: Phoenix.HTML.raw("")
+
   defp wrap_tables_for_styling(html) do
     html
     |> String.replace("<table", "<div class=\"table-wrapper\"><table")
     |> String.replace("</table>", "</table></div>")
   end
-
-  defp render_markdown(_), do: Phoenix.HTML.raw("")
 end
