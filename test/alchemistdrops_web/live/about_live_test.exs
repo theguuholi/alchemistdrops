@@ -61,5 +61,13 @@ defmodule AlchemistdropsWeb.AboutLiveTest do
       assert html =~ "LinkedIn"
       assert html =~ "Email"
     end
+
+    test "renders Digital Twin section", %{conn: conn} do
+      {:ok, _lv, html} = live(conn, ~p"/about")
+
+      assert html =~ "Chat with my Digital Twin"
+      # When OPENROUTER_API_KEY is not set, placeholder is shown
+      assert html =~ "OPENROUTER_API_KEY"
+    end
   end
 end

@@ -94,7 +94,64 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
      |> assign(:career, career())
      |> assign(:skills, skills())
      |> assign(:linkedin_url, @linkedin_url)
-     |> assign(:email, @email)}
+     |> assign(:email, @email)
+     |> assign(:chat_messages, [])
+     |> assign(:chat_loading, false)
+     |> assign(:digital_twin_available, digital_twin_available?())}
+  end
+
+  @impl true
+  def handle_event("send_message", %{"message" => text}, socket) do
+    text = String.trim(text)
+
+    if text == "" do
+      {:noreply, socket}
+    else
+      user_msg = %{role: "user", content: text}
+      messages_after_user = socket.assigns.chat_messages ++ [user_msg]
+
+      socket =
+        socket
+        |> assign(:chat_messages, messages_after_user)
+        |> assign(:chat_loading, true)
+
+      send(self(), :run_digital_twin)
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("send_message", _, socket), do: {:noreply, socket}
+
+  @impl true
+  def handle_info(:run_digital_twin, socket) do
+    messages = socket.assigns.chat_messages
+    profile = socket.assigns.profile
+    career = socket.assigns.career
+
+    result = Alchemistdrops.DigitalTwin.chat(profile, career, messages)
+
+    socket =
+      case result do
+        {:ok, content} ->
+          assistant_msg = %{role: "assistant", content: content}
+          assign(socket, :chat_messages, messages ++ [assistant_msg])
+
+        {:error, reason} ->
+          error_content = "Sorry, I couldn't get a response. (#{inspect(reason)})"
+
+          assign(
+            socket,
+            :chat_messages,
+            messages ++ [%{role: "assistant", content: error_content}]
+          )
+      end
+
+    {:noreply, assign(socket, :chat_loading, false)}
+  end
+
+  defp digital_twin_available? do
+    key = Application.get_env(:alchemistdrops, :openrouter_api_key)
+    is_binary(key) and key != ""
   end
 
   defp meta_description do
