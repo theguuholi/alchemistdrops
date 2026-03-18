@@ -71,6 +71,11 @@
               Blog
             </.link>
           </li>
+          <li>
+            <.link href={~p"/about"} class="hover:text-primary transition-colors">
+              About
+            </.link>
+          </li>
 
           <%= if @current_scope do %>
             <%= if @current_scope.user.role == :admin do %>
