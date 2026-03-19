@@ -92,7 +92,6 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
      |> assign(:meta_description, meta_description())
      |> assign(:profile, profile())
      |> assign(:career, career())
-     |> assign(:skills, skills())
      |> assign(:linkedin_url, @linkedin_url)
      |> assign(:email, @email)
      |> assign(:chat_messages, [])
@@ -127,8 +126,10 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
     messages = socket.assigns.chat_messages
     profile = socket.assigns.profile
     career = socket.assigns.career
+    extra_context = read_prompt_markdown()
 
-    result = Alchemistdrops.DigitalTwin.chat(profile, career, messages)
+    result =
+      Alchemistdrops.DigitalTwin.chat(profile, career, messages, extra_context: extra_context)
 
     socket =
       case result do
@@ -154,6 +155,24 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
     is_binary(key) and key != ""
   end
 
+  # Reads docs/prompts/gustavo-career-and-impact.md when present (for richer Digital Twin context).
+  defp read_prompt_markdown do
+    base =
+      Application.get_env(:alchemistdrops, :prompt_markdown_path) ||
+        "docs/prompts/gustavo-career-and-impact.md"
+
+    path = Path.expand(base, File.cwd!())
+
+    if File.exists?(path) do
+      case File.read(path) do
+        {:ok, content} -> content
+        _ -> nil
+      end
+    else
+      nil
+    end
+  end
+
   defp meta_description do
     "Gustavo Oliveira — Senior Software Engineer. Elixir, Phoenix, LiveView, Java. " <>
       "Passionate about Agile, evolutive engineering, and building scalable systems."
@@ -162,32 +181,17 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
   defp profile do
     %{
       name: "Gustavo Oliveira",
-      title: "Software Engineer · Backend · Elixir · Phoenix · React · Java",
+      title: "Software Engineer",
       location: "São Paulo, Brazil",
       tagline:
         "Passionate developer who believes that Agile Methodologies, Product Design and Evolutive Engineering can leverage any business to a higher level of competitivity.",
       bio: [
-        "Driven by communication, data, and results. Proactive, responsible Full Stack engineer focused on web systems—known for strong technical depth and delivering solid systems with Agile, W3C patterns, and modern tech.",
+        "Driven by communication, data, and results. Proactive, responsible engineer focused on outcomes—scale, time and cost savings, and better product and team performance.",
         "Active in open source communities (GUJ, Viva o Linux, GitHub, StackOverflow). Successfully led teams with Scrum, fast delivery, and high-quality commitment."
       ],
       education: "Bachelor's Degree, Internet Systems · Fatec Carapicuiba (2012–2014)",
       honors: "Week Technology — AngularJs"
     }
-  end
-
-  defp skills do
-    [
-      "Elixir & Phoenix",
-      "LiveView",
-      "Java & Spring",
-      "React",
-      "Tailwind CSS",
-      "Kotlin",
-      "Kubernetes & Docker",
-      "CI/CD (GitHub Actions, EKS)",
-      "Stripe & payment systems",
-      "TDD & Agile"
-    ]
   end
 
   defp career do
@@ -197,11 +201,11 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
         role: "Senior Software Engineer",
         period: "May 2025 — Present",
         location: "United States",
-        highlights: [
-          "Architected the application with Elixir, Phoenix, and LiveView for scalability and responsiveness",
-          "Built highly scalable payment processing with Elixir and Stripe",
-          "Trained the team in TDD and clean Elixir practices; led adoption of LiveView workflows",
-          "Designed OBAN jobs for large-volume email processing with SendGrid"
+        impact: [
+          "Scaled the platform to handle 500,000+ orders per day",
+          "Co-created freight-order flows and shipping features, including A/B testing to optimize conversion and cost",
+          "Built international orders with tax ID support and integration with Logiwa and other complex systems",
+          "Architected scalable payment processing and high-volume email; trained the team for faster, higher-quality delivery"
         ]
       },
       %{
@@ -209,10 +213,10 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
         role: "Senior Software Engineer",
         period: "Aug 2023 — May 2025",
         location: "United States",
-        highlights: [
-          "Elixir, Phoenix, LiveView architecture",
-          "Scalable payment systems and Stripe integration",
-          "Team mentorship in TDD and Elixir best practices"
+        impact: [
+          "Designed the software architecture that enabled faster releases, easier onboarding, and fewer bugs—helping the company scale faster",
+          "Built high-throughput email (thousands per hour) and the billing application that processes payments reliably at scale",
+          "Mentored the team for better quality and delivery"
         ]
       },
       %{
@@ -220,10 +224,9 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
         role: "Senior Software Engineer",
         period: "May 2021 — May 2023",
         location: "Columbus, Ohio",
-        highlights: [
-          "Real-time PDF (W2) import with S3 and REST APIs",
-          "CI/CD with GitHub Actions and EKS; TDD practices",
-          "Clear communication via commits and PRs"
+        impact: [
+          "Processed thousands of W2 forms so customers could save time and money preparing tax documents",
+          "Contributed to architecture and product quality, helping the company build a strong, maintainable foundation"
         ]
       },
       %{
@@ -231,9 +234,10 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
         role: "Senior Software Engineer",
         period: "Jul 2020 — Jul 2021",
         location: "United States",
-        highlights: [
-          "Optimized API to handle ~1M records in under 10 minutes",
-          "Message brokers, GraphQL, Kubernetes; mentored developers in TDD"
+        impact: [
+          "Cost savings and faster operations: ops team moved from weeks or days of work to a few hours per day",
+          "Optimized API to handle ~1M records in under 10 minutes so Zubaleros could see pickings and fulfill orders much faster",
+          "Mentored developers for better quality and velocity"
         ]
       },
       %{
@@ -241,9 +245,9 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
         role: "Lead Software Engineer",
         period: "Jul 2019 — Jul 2020",
         location: "São Paulo, Brazil",
-        highlights: [
-          "RESTful APIs (Richardson Level 2) for digital modernization",
-          "Open Insurance API; Java, Spring Boot, MongoDB, Postgres, K8s"
+        impact: [
+          "Made it easier for customers to integrate with HDI, improving adoption and time-to-value",
+          "Open Insurance API and digital modernization helped attract and onboard more customers"
         ]
       },
       %{
@@ -251,8 +255,9 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
         role: "Senior Software Development Engineer",
         period: "Oct 2018 — Jun 2019",
         location: "São Paulo, Brazil",
-        highlights: [
-          "Led migration from monolith to microservices; digital innovation and scalability"
+        impact: [
+          "Led migration from monolith to microservices, increasing deploy frequency and enabling faster innovation",
+          "Simplified the system so it was easier to understand, maintain, and extend—improving team velocity and reliability"
         ]
       },
       %{
@@ -260,8 +265,9 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
         role: "Senior Software Engineer",
         period: "Jan 2016 — Oct 2018",
         location: "São Paulo, Brazil",
-        highlights: [
-          "Lean, UX, Agile; REST APIs with Java, Spring Boot, Hibernate; BDD/Cucumber for mobile"
+        impact: [
+          "Lean, UX, and Agile delivery; BDD and quality practices for mobile and APIs",
+          "REST APIs and alignment with product for faster, predictable releases"
         ]
       },
       %{
@@ -269,8 +275,8 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
         role: "Software Engineer",
         period: "Jan 2015 — Dec 2015",
         location: "São Paulo, Brazil",
-        highlights: [
-          "Scrum, Java, REST, JMS; back-end and front-end with Hibernate, Spring, Angular"
+        impact: [
+          "Scrum delivery; full-stack work enabling faster iteration and collaboration"
         ]
       },
       %{
@@ -278,8 +284,8 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
         role: "Software Engineer Intern",
         period: "Jan 2013 — Dec 2014",
         location: "São Paulo, Brazil",
-        highlights: [
-          "CI pipelines with Jenkins; inventory management with Java and JSF"
+        impact: [
+          "CI pipelines for automation and quality; inventory management for operations"
         ]
       }
     ]

@@ -8,15 +8,19 @@ defmodule Alchemistdrops.DigitalTwin do
   @doc """
   Sends the conversation (with system context) to OpenRouter and returns the assistant reply.
 
+  Options:
+  - `:extra_context` — optional string (e.g. from docs/prompts/gustavo-career-and-impact.md) added to the system prompt.
+
   Returns `{:ok, content}` or `{:error, reason}`.
   """
-  def chat(profile, career, messages) do
+  def chat(profile, career, messages, opts \\ []) do
     api_key = Application.get_env(:alchemistdrops, :openrouter_api_key)
 
     if is_nil(api_key) or api_key == "" do
       {:error, :api_key_not_configured}
     else
-      system_content = build_system_prompt(profile, career)
+      extra = opts[:extra_context]
+      system_content = build_system_prompt(profile, career, extra)
 
       openrouter_messages =
         [%{role: "system", content: system_content} | to_openrouter_messages(messages)]
@@ -48,17 +52,21 @@ defmodule Alchemistdrops.DigitalTwin do
     end
   end
 
-  defp build_system_prompt(profile, career) do
+  defp build_system_prompt(profile, career, extra_context) do
     career_text =
       Enum.map_join(career, "\n", fn entry ->
+        impact =
+          (entry[:highlights] || entry[:impact] || [])
+          |> List.wrap()
+          |> Enum.join(". ")
+
         "- #{entry.role} at #{entry.company} (#{entry.period}, #{entry.location}). " <>
-          "Highlights: #{Enum.join(entry.highlights, " ")}
-"
+          "Impact: #{impact}\n"
       end)
 
-    """
+    base = """
     You are a "Digital Twin" of Gustavo Oliveira —
-    a friendly, professional voice that answers questions about his career and experience based only on the following facts. Be concise and accurate. If asked something not covered below, say you don't have that information and suggest the user reach out to Gustavo directly.
+    a friendly, professional voice that answers questions about his career, impact, and experience based only on the following facts. Be concise and accurate. When relevant, mention concrete outcomes or impact (e.g. scale, team practices, delivery). If asked something not covered below, say you don't have that information and suggest the user reach out to Gustavo directly.
 
     ## Profile
     - Name: #{profile.name}
@@ -72,6 +80,15 @@ defmodule Alchemistdrops.DigitalTwin do
     ## Career (most recent first)
     #{career_text}
     """
+
+    extra_section =
+      if is_binary(extra_context) and String.trim(extra_context) != "" do
+        "\n\n## Additional context (career narrative, impact details)\n\n#{String.trim(extra_context)}"
+      else
+        ""
+      end
+
+    (base <> extra_section)
     |> String.replace("\n\n\n", "\n\n")
     |> String.trim()
   end
