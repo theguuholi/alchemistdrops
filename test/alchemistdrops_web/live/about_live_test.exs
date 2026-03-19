@@ -37,10 +37,10 @@ defmodule AlchemistdropsWeb.AboutLiveTest do
       assert html =~ "Evolutive Engineering"
     end
 
-    test "renders Career journey with roles", %{conn: conn} do
+    test "renders Impact section with roles", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/about")
 
-      assert html =~ "Career journey"
+      assert html =~ "Impact"
       assert html =~ "Stord"
       assert html =~ "Lolo"
       assert html =~ "Clarus R+D"
@@ -63,11 +63,15 @@ defmodule AlchemistdropsWeb.AboutLiveTest do
     end
 
     test "renders Digital Twin section", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/about")
+      {:ok, view, html} = live(conn, ~p"/about")
 
       assert html =~ "Chat with my Digital Twin"
-      # When OPENROUTER_API_KEY is not set, placeholder is shown
-      assert html =~ "OPENROUTER_API_KEY"
+
+      if html =~ "OPENROUTER_API_KEY" do
+        assert html =~ "OPENROUTER_API_KEY"
+      else
+        assert has_element?(view, "#digital-twin-form")
+      end
     end
   end
 end

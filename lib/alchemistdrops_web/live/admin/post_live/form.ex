@@ -149,9 +149,7 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
   defp render_preview(""), do: Phoenix.HTML.raw("")
 
   defp render_preview(content) when is_binary(content) do
-    case MDEx.to_html(content) do
-      {:ok, html} -> Phoenix.HTML.raw(html)
-      _ -> Phoenix.HTML.raw("")
-    end
+    {:ok, html} = Alchemistdrops.Markdown.to_html(content)
+    Phoenix.HTML.raw(html)
   end
 end

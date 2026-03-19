@@ -1,7 +1,7 @@
 defmodule AlchemistdropsWeb.PostLive.Show do
   use AlchemistdropsWeb, :live_view
 
-  alias Alchemistdrops.Posts
+  alias Alchemistdrops.{Markdown, Posts}
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
@@ -41,16 +41,9 @@ defmodule AlchemistdropsWeb.PostLive.Show do
   end
 
   defp render_markdown(content) when is_binary(content) and byte_size(content) > 0 do
-    {:ok, html} = MDEx.to_html(content)
-    html = wrap_tables_for_styling(html)
+    {:ok, html} = Markdown.to_html(content)
     Phoenix.HTML.raw(html)
   end
 
   defp render_markdown(_), do: Phoenix.HTML.raw("")
-
-  defp wrap_tables_for_styling(html) do
-    html
-    |> String.replace("<table", "<div class=\"table-wrapper\"><table")
-    |> String.replace("</table>", "</table></div>")
-  end
 end

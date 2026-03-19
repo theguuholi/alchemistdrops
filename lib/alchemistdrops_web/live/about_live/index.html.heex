@@ -148,7 +148,8 @@
                     "max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
                     if(msg.role == "user",
                       do: "bg-primary text-primary-content rounded-br-md",
-                      else: "bg-base-200/90 text-base-content border border-base-300/50 rounded-bl-md"
+                      else:
+                        "bg-base-200/90 text-base-content border border-base-300/50 rounded-bl-md"
                     )
                   ]}>
                     <p class="whitespace-pre-wrap">{msg.content}</p>
@@ -160,7 +161,8 @@
               <div class="flex justify-start">
                 <div class="rounded-2xl rounded-bl-md px-4 py-3 bg-base-200/90 text-base-content/70 text-sm border border-base-300/50 shadow-sm">
                   <span class="inline-flex items-center gap-2">
-                    <span class="w-4 h-4 rounded-full border-2 border-primary/30 border-t-primary animate-spin"></span>
+                    <span class="w-4 h-4 rounded-full border-2 border-primary/30 border-t-primary animate-spin">
+                    </span>
                     Thinking...
                   </span>
                 </div>
@@ -194,7 +196,10 @@
       <% else %>
         <div class="rounded-2xl border-2 border-dashed border-base-300 bg-base-200/50 p-8 text-center">
           <p class="text-base-content/70">
-            Set <code class="px-1.5 py-0.5 rounded-md bg-base-300 text-sm font-mono">OPENROUTER_API_KEY</code>
+            Set
+            <code class="px-1.5 py-0.5 rounded-md bg-base-300 text-sm font-mono">
+              OPENROUTER_API_KEY
+            </code>
             in your environment (e.g. from <code class="px-1.5 py-0.5 rounded-md bg-base-300 text-sm font-mono">.env</code>) to enable the Digital Twin chat.
           </p>
         </div>
