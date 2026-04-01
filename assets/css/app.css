@@ -382,6 +382,14 @@ article.prose pre code {
   color: inherit;
 }
 
+/* Mermaid diagrams - override code block styles */
+article.prose pre.mermaid {
+  background-color: transparent;
+  box-shadow: none;
+  padding: 0;
+  overflow-x: auto;
+}
+
 /* Horizontal rules */
 article.prose hr {
   border: none;

@@ -555,4 +555,76 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       assert has_element?(view, ".post-body", "No login required")
     end
   end
+
+  describe "mermaid diagrams and anchor links" do
+    # Given: a post with a mermaid diagram
+    # When: the user views the post detail page
+    # Then: the mermaid block should be rendered as pre.mermaid for client-side rendering
+    test "renders mermaid code blocks as pre.mermaid elements", %{conn: conn} do
+      # Given: a post with a mermaid diagram in the body
+      post =
+        post_fixture(%{
+          title: "Architecture Overview",
+          body: "## Diagram\n\n```mermaid\ngraph TD\n  A --> B\n```\n"
+        })
+
+      # When: the user visits the post detail page
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+
+      # Then: the mermaid block should be rendered as pre.mermaid (not a syntax-highlighted code block)
+      assert has_element?(view, "pre.mermaid")
+    end
+
+    # Given: a post with markdown headings
+    # When: the user views the post detail page
+    # Then: headings should have id attributes for anchor navigation
+    test "adds id attributes to headings for anchor links", %{conn: conn} do
+      # Given: a post with headings
+      post =
+        post_fixture(%{
+          title: "Guide",
+          body: "## Installation\n\nSome content.\n\n## Skills\n\nMore content.\n"
+        })
+
+      # When: the user visits the post detail page
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+
+      # Then: headings should have id attributes on their anchor elements
+      assert has_element?(view, "h2 a#installation")
+      assert has_element?(view, "h2 a#skills")
+    end
+
+    # Given: a post with anchor links in the table of contents
+    # When: the user views the post detail page
+    # Then: the anchor links should reference valid heading ids
+    test "anchor links in table of contents point to heading ids", %{conn: conn} do
+      # Given: a post with a table of contents and headings
+      post =
+        post_fixture(%{
+          title: "Reference",
+          body: "1. [Skills](#skills)\n\n## Skills\n\nContent here.\n"
+        })
+
+      # When: the user visits the post detail page
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+
+      # Then: the anchor link and heading id should both be present
+      assert has_element?(view, ~s(a[href="#skills"]))
+      assert has_element?(view, "h2 a#skills")
+    end
+
+    # Given: a post article rendered on the detail page
+    # When: the user views the post
+    # Then: the article container should have the Mermaid phx-hook attached
+    test "article container has Mermaid hook for client-side rendering", %{conn: conn} do
+      # Given: a post exists
+      post = post_fixture(%{title: "Hook Test", body: "# Hello"})
+
+      # When: the user visits the post detail page
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+
+      # Then: the article element with id post-article should exist with the hook attribute
+      assert has_element?(view, "article#post-article[phx-hook='Mermaid']")
+    end
+  end
 end

@@ -30,5 +30,49 @@ defmodule Alchemistdrops.MarkdownTest do
     test "returns empty string for empty input" do
       assert {:ok, ""} = Markdown.to_html("")
     end
+
+    test "adds id attributes to heading anchors for navigation" do
+      md = "## Skills\n\n### Sub Section\n\n## Another Heading\n"
+
+      assert {:ok, html} = Markdown.to_html(md)
+      # MDEx generates <h2><a id="skills" ...></a>Skills</h2>
+      assert html =~ ~s(<a href="#skills" aria-hidden="true" class="anchor" id="skills">)
+      assert html =~ ~s(id="sub-section")
+      assert html =~ ~s(id="another-heading")
+    end
+
+    test "anchor links pointing to heading ids resolve correctly" do
+      md = "## My Section\n\n[Jump to section](#my-section)\n"
+
+      assert {:ok, html} = Markdown.to_html(md)
+      assert html =~ ~s(id="my-section")
+      assert html =~ ~s(href="#my-section")
+    end
+
+    test "renders mermaid code blocks as pre.mermaid elements" do
+      md = "```mermaid\ngraph TD\n  A --> B\n```\n"
+
+      assert {:ok, html} = Markdown.to_html(md)
+      assert html =~ ~s(<pre class="mermaid">)
+      assert html =~ "graph TD"
+      refute html =~ ~s(class="language-mermaid")
+    end
+
+    test "mermaid block preserves diagram source" do
+      md = "```mermaid\nsequenceDiagram\n  Alice ->> Bob: Hello\n```\n"
+
+      assert {:ok, html} = Markdown.to_html(md)
+      assert html =~ ~s(<pre class="mermaid">)
+      assert html =~ "sequenceDiagram"
+      assert html =~ "Alice ->> Bob: Hello"
+    end
+
+    test "non-mermaid code blocks are not affected" do
+      md = "```elixir\ndef hello, do: :world\n```\n"
+
+      assert {:ok, html} = Markdown.to_html(md)
+      refute html =~ ~s(<pre class="mermaid">)
+      assert html =~ "hello"
+    end
   end
 end

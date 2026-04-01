@@ -40,7 +40,7 @@
     </header>
     <%!-- Article Content --%>
     <section class="post-body px-6 sm:px-8 lg:px-12 xl:px-16 py-12 sm:py-16 lg:py-20">
-      <article class="max-w-3xl prose">
+      <article id="post-article" class="max-w-3xl prose" phx-hook="Mermaid" phx-update="ignore">
         {@rendered_body}
       </article>
     </section>

@@ -58,7 +58,7 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
           >
             <%!-- Same layout as post show: post-body section + article.prose max-w-3xl; bg-base-100 respects current theme --%>
             <section class="px-6 sm:px-8 py-8 sm:py-10">
-              <article class="max-w-3xl prose">
+              <article id="preview-article" class="max-w-3xl prose" phx-hook="Mermaid">
                 {@preview_html}
               </article>
             </section>
