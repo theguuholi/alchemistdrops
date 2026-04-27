@@ -174,20 +174,20 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
   end
 
   defp meta_description do
-    "Gustavo Oliveira — Senior Software Engineer. Elixir, Phoenix, LiveView, Java. " <>
-      "Passionate about Agile, evolutive engineering, and building scalable systems."
+    "Gustavo Oliveira — Senior Elixir Engineer. Phoenix, LiveView, OTP, Distributed Systems, AI-assisted development. " <>
+      "11+ years building fault-tolerant, high-throughput systems across logistics, fintech, and SaaS."
   end
 
   defp profile do
     %{
       name: "Gustavo Oliveira",
-      title: "Software Engineer",
-      location: "São Paulo, Brazil",
+      title: "Senior Elixir Engineer | Phoenix · OTP · Distributed Systems · AI-Assisted Development",
+      location: "São Paulo, Brazil (Remote — Americas / Europe)",
       tagline:
-        "Passionate developer who believes that Agile Methodologies, Product Design and Evolutive Engineering can leverage any business to a higher level of competitivity.",
+        "Senior Elixir Engineer with 11+ years of experience building fault-tolerant, high-throughput distributed systems across logistics, fintech, and SaaS. Deep expertise in Elixir/OTP, Phoenix, LiveView, and real-time asynchronous architectures. Proven track record shipping systems that process millions of records and hundreds of thousands of transactions under real production load.",
       bio: [
-        "Driven by communication, data, and results. Proactive, responsible engineer focused on outcomes—scale, time and cost savings, and better product and team performance.",
-        "Active in open source communities (GUJ, Viva o Linux, GitHub, StackOverflow). Successfully led teams with Scrum, fast delivery, and high-quality commitment."
+        "Passionate about AI-assisted engineering: published author on LLM-powered development workflows, and hands-on practitioner integrating AI tooling (Claude, Cursor, MCP servers) into team development cycles to multiply engineering output.",
+        "Selected impact: reduced data ingestion from ~5 hours to under 10 minutes processing ~1M records per run · built Stripe payment system handling 200,000+ transactions/month · architected distributed systems powering ~100,000 deliveries/day across Brazil, Mexico, and Colombia · implemented Tax ID compliance across 10+ international markets enabling global merchant onboarding."
       ],
       education: "Bachelor's Degree, Internet Systems · Fatec Carapicuiba (2012–2014)",
       honors: "Week Technology — AngularJs"
@@ -199,94 +199,109 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
       %{
         company: "Stord",
         role: "Senior Software Engineer",
-        period: "May 2025 — Present",
+        period: "Apr 2025 — Present",
         location: "United States",
-        impact: [
-          "Scaled the platform to handle 500,000+ orders per day",
-          "Co-created freight-order flows and shipping features, including A/B testing to optimize conversion and cost",
-          "Built international orders with tax ID support and integration with Logiwa and other complex systems",
-          "Architected scalable payment processing and high-volume email; trained the team for faster, higher-quality delivery"
-        ]
+        highlights: [
+          "Built an AI-powered on-call assistant integrating the live codebase with MCP servers for Freshdesk, Atlassian, Datadog, and Kafka — enabling engineers to resolve incidents in seconds without context switching",
+          "Coached the team on Claude plan mode, structured prompting, and AI plugin workflows — accelerating feature design cycles",
+          "Engineered combine/separate shipment logic handling ~100,000 daily orders, preventing incorrect fulfilled statuses at scale",
+          "Implemented Tax ID support across 10+ markets (CPF, CNPJ, EORI, VAT, RUT, RFC, CUIT) — enabling international merchant onboarding",
+          "Built shipping A/B testing framework comparing price vs. delivery speed to drive data-driven decisions at scale",
+          "Reduced support tickets ~80/incident cycle via real-time freight pallet visualization feature"
+        ],
+        technologies: ["Elixir", "Phoenix", "Go", "React", "Oban", "PostgreSQL", "Kafka", "AWS", "GCP", "Datadog", "Claude Code", "Cursor", "MCP"]
       },
       %{
         company: "Lolo",
-        role: "Senior Software Engineer",
+        role: "Senior / Lead Software Engineer",
         period: "Aug 2023 — May 2025",
         location: "United States",
-        impact: [
-          "Designed the software architecture that enabled faster releases, easier onboarding, and fewer bugs—helping the company scale faster",
-          "Built high-throughput email (thousands per hour) and the billing application that processes payments reliably at scale",
-          "Mentored the team for better quality and delivery"
-        ]
+        highlights: [
+          "Architected the full backend from scratch with Elixir, Phoenix, and LiveView — supporting ~800 senders and 50+ partners",
+          "Built Stripe payment system handling 200,000+ transactions/month with subscription billing, automated retries, and failure recovery",
+          "Designed Oban-based pipelines delivering 400,000+ emails and SMS per week, fully decoupled and resilient to third-party downtime",
+          "Led team of 5 in adopting TDD, clean architecture, and LiveView patterns — reducing onboarding from 1 week to 1 hour",
+          "Introduced GitHub Copilot and AI content generation across the engineering team to accelerate delivery velocity"
+        ],
+        technologies: ["Elixir", "Phoenix", "LiveView", "Oban", "Stripe", "SendGrid", "PostgreSQL", "GitHub Copilot"]
       },
       %{
         company: "Clarus R+D",
         role: "Senior Software Engineer",
         period: "May 2021 — May 2023",
         location: "Columbus, Ohio",
-        impact: [
-          "Processed thousands of W2 forms so customers could save time and money preparing tax documents",
-          "Contributed to architecture and product quality, helping the company build a strong, maintainable foundation"
-        ]
+        highlights: [
+          "Built real-time W2 PDF ingestion pipeline (S3 + parsing API + PostgreSQL) — cutting per-client processing from days to seconds, handling ~1,000 W2s per client per cycle",
+          "Contributed to a platform enabling clients to claim over $100M in R&D tax credits annually",
+          "Eliminated manual deployments with CI/CD pipeline via GitHub Actions and AWS EKS"
+        ],
+        technologies: ["Elixir", "React", "LiveView", "GitHub Actions", "AWS EKS", "S3", "PostgreSQL"]
       },
       %{
         company: "Zubale",
         role: "Senior Software Engineer",
         period: "Jul 2020 — Jul 2021",
         location: "United States",
-        impact: [
-          "Cost savings and faster operations: ops team moved from weeks or days of work to a few hours per day",
-          "Optimized API to handle ~1M records in under 10 minutes so Zubaleros could see pickings and fulfill orders much faster",
-          "Mentored developers for better quality and velocity"
-        ]
+        highlights: [
+          "Optimized Elixir data ingestion API to process ~1M records in under 10 minutes — down from ~5 hours — eliminating daily bottlenecks and weekend overtime",
+          "Architected distributed systems with Kafka and GraphQL powering ~100,000 deliveries/day across Brazil, Mexico, and Colombia",
+          "Built geolocation-enabled mobile backend for contractor order fulfillment across 3 countries"
+        ],
+        technologies: ["Elixir", "GraphQL", "Kafka", "React", "React Native", "MongoDB", "PostgreSQL", "Kubernetes"]
       },
       %{
         company: "HDI Seguros",
         role: "Lead Software Engineer",
         period: "Jul 2019 — Jul 2020",
         location: "São Paulo, Brazil",
-        impact: [
-          "Made it easier for customers to integrate with HDI, improving adoption and time-to-value",
-          "Open Insurance API and digital modernization helped attract and onboard more customers"
-        ]
+        highlights: [
+          "Developed production-grade RESTful APIs (Richardson Level 2) as part of company-wide Digital Modernization Strategy",
+          "Engineered the Open Insurance API in compliance with SUSEP's framework — among the first insurers in Brazil to meet requirements",
+          "Replaced legacy Progress Database with PostgreSQL and MongoDB; containerized services with Docker and Kubernetes"
+        ],
+        technologies: ["Java 8", "Spring Boot", "Go", "PostgreSQL", "MongoDB", "Docker", "Kubernetes"]
       },
       %{
         company: "TOTVS",
         role: "Senior Software Development Engineer",
         period: "Oct 2018 — Jun 2019",
         location: "São Paulo, Brazil",
-        impact: [
-          "Led migration from monolith to microservices, increasing deploy frequency and enabling faster innovation",
-          "Simplified the system so it was easier to understand, maintain, and extend—improving team velocity and reliability"
-        ]
+        highlights: [
+          "Led migration from monolithic architecture to microservices, increasing deploy frequency and enabling faster innovation"
+        ],
+        technologies: ["Java", "Spring Boot", "Microservices", "Docker"]
       },
       %{
         company: "Concrete Solutions",
         role: "Senior Software Engineer",
         period: "Jan 2016 — Oct 2018",
         location: "São Paulo, Brazil",
-        impact: [
-          "Lean, UX, and Agile delivery; BDD and quality practices for mobile and APIs",
-          "REST APIs and alignment with product for faster, predictable releases"
-        ]
+        highlights: [
+          "Built REST APIs and business tools for enterprise clients using Java 8 and Spring Boot",
+          "Delivered BDD/Cucumber automated test suites for mobile applications",
+          "Worked across multiple client projects delivering microservices architectures with Spring Cloud"
+        ],
+        technologies: ["Java 8", "Spring Boot", "Spring Cloud", "React", "Angular", "Oracle", "Hibernate", "BDD/Cucumber", "AWS"]
       },
       %{
         company: "CWI Software",
         role: "Software Engineer",
         period: "Jan 2015 — Dec 2015",
         location: "São Paulo, Brazil",
-        impact: [
-          "Scrum delivery; full-stack work enabling faster iteration and collaboration"
-        ]
+        highlights: [
+          "Integrated enterprise systems via JMS and REST web services; full-stack development with Spring, Hibernate, Angular"
+        ],
+        technologies: ["Java", "Spring", "Hibernate", "JMS", "Angular"]
       },
       %{
         company: "Ericsson Inovação",
         role: "Software Engineer Intern",
         period: "Jan 2013 — Dec 2014",
         location: "São Paulo, Brazil",
-        impact: [
-          "CI pipelines for automation and quality; inventory management for operations"
-        ]
+        highlights: [
+          "Built CI pipelines with Jenkins; developed inventory management system with Java and JSF"
+        ],
+        technologies: ["Java", "JSF", "Jenkins", "HTML"]
       }
     ]
   end

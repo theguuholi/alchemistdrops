@@ -329,3 +329,24 @@ end
 - Produce world-class UI: focus on usability, aesthetics, and modern design principles
 - Implement subtle micro-interactions: hover effects, smooth transitions, loading states
 - Clean typography, spacing, and layout balance for a refined, premium look
+
+
+## Codebase Identity [Required]
+
+## Architecture Overview  [Required]
+
+### Contexts Modules
+The module must have a @moduledoc why the module exist 
+The functions must have a documentation how the function work and their typesects
+
+### Schema Modules
+must have a @module doc why the schema exist 
+
+a type why the field exist like
+@type name :: string.t() 
+
+and a @type t for the whole schema 
+
+
+## Coding Conventions [Required]
+## Test Requirements [Required]

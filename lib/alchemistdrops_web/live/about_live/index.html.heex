@@ -21,9 +21,7 @@
         {@profile.tagline}
       </p>
       <div class="space-y-4 text-base-content/80 leading-relaxed max-w-3xl">
-        <%= for paragraph <- @profile.bio do %>
-          <p>{paragraph}</p>
-        <% end %>
+        <p :for={paragraph <- @profile.bio}>{paragraph}</p>
       </div>
       <div class="mt-10 flex flex-wrap gap-4 text-sm">
         <div class="flex items-center gap-2 text-base-content/70">
@@ -37,7 +35,7 @@
       </div>
     </section>
 
-    <%!-- Impact — timeline, outcome-focused --%>
+    <%!-- Experience — timeline with highlights and tech stack --%>
     <section
       class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 border-b border-base-300"
       aria-labelledby="impact-heading"
@@ -46,10 +44,10 @@
         id="impact-heading"
         class="text-sm font-semibold uppercase tracking-widest text-primary mb-4"
       >
-        Impact
+        Experience
       </h2>
       <p class="text-base-content/70 text-sm max-w-2xl mb-12">
-        Outcomes and results I helped drive at each company—scale, time and cost savings, and better product and team performance.
+        Outcomes and results across 11+ years — scale, cost savings, and better product and team performance.
       </p>
       <div class="relative">
         <div
@@ -58,34 +56,34 @@
         >
         </div>
         <ul class="space-y-0">
-          <%= for {entry, idx} <- Enum.with_index(@career) do %>
-            <li class="relative flex gap-8 pb-12 last:pb-0">
-              <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center mt-0.5 z-10">
-                <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+          <li :for={entry <- @career} class="relative flex gap-8 pb-12 last:pb-0">
+            <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center mt-0.5 z-10">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+            </div>
+            <div class="flex-1 min-w-0 pt-0">
+              <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-1">
+                <h3 class="text-lg font-semibold text-base-content">
+                  {entry.role} · {entry.company}
+                </h3>
+                <span class="text-sm text-base-content/60">{entry.period}</span>
               </div>
-              <div class="flex-1 min-w-0 pt-0">
-                <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 mb-2">
-                  <h3 class="text-lg font-semibold text-base-content">
-                    {entry.role} · {entry.company}
-                  </h3>
-                  <span class="text-sm text-base-content/60">
-                    {entry.period}
-                  </span>
-                </div>
-                <p class="text-sm text-base-content/60 mb-3">
-                  {entry.location}
-                </p>
-                <ul class="space-y-1.5">
-                  <%= for impact <- entry.impact do %>
-                    <li class="flex gap-2 text-sm text-base-content/80">
-                      <span class="text-primary mt-1.5 flex-shrink-0">▸</span>
-                      <span>{impact}</span>
-                    </li>
-                  <% end %>
-                </ul>
+              <p class="text-sm text-base-content/60 mb-3">{entry.location}</p>
+              <ul class="space-y-1.5 mb-4">
+                <li :for={item <- entry.highlights} class="flex gap-2 text-sm text-base-content/80">
+                  <span class="text-primary mt-1.5 flex-shrink-0">▸</span>
+                  <span>{item}</span>
+                </li>
+              </ul>
+              <div :if={Map.get(entry, :technologies)} class="flex flex-wrap gap-1.5">
+                <span
+                  :for={tech <- entry.technologies}
+                  class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-primary/10 text-primary border border-primary/20"
+                >
+                  {tech}
+                </span>
               </div>
-            </li>
-          <% end %>
+            </div>
+          </li>
         </ul>
       </div>
     </section>
