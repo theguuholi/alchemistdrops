@@ -3,7 +3,7 @@ defmodule Alchemistdrops.DigitalTwin do
   Digital Twin: answers questions about Gustavo's career using OpenRouter.
   """
   @openrouter_url "https://openrouter.ai/api/v1/chat/completions"
-  @model "arcee-ai/trinity-large-preview:free"
+  @model "meta-llama/llama-3.3-70b-instruct:free"
 
   @doc """
   Sends the conversation (with system context) to OpenRouter and returns the assistant reply.
