@@ -162,3 +162,55 @@ This project is proprietary and confidential.
 **Last Updated**: November 28, 2025  
 **Version**: 1.0.0  
 **Status**: Active Development
+
+
+
+
+---
+# AlchemistDrops
+
+Full-stack web platform built with Elixir and Phoenix. Focused on real-time systems, high availability, and domain-driven architecture.
+
+## About
+
+AlchemistDrops is a platform that demonstrates best practices in Elixir/Phoenix development, including automated tests, separation of concerns, and domain-driven design.
+
+## Tech Stack
+
+- **Language:** Elixir
+- **Framework:** Phoenix
+- **Database:** PostgreSQL
+- **Tests:** ExUnit
+
+## Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/theguuholi/alchemistdrops.git
+cd alchemistdrops
+
+# Install dependencies
+mix deps.get
+
+# Set up the database
+mix ecto.setup
+
+# Start the server
+mix phx.server
+```
+
+## Usage
+
+Visit `http://localhost:4000` after starting the server.
+
+## Tests
+
+```bash
+mix test
+```
+
+## Contact
+
+- Portfolio: [alchemistdrops.com](http://alchemistdrops.com)
+- Email: g.92oliveira@gmail.com
+
