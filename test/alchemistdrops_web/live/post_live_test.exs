@@ -5,6 +5,39 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
   import Alchemistdrops.PostsFixtures
   import Ecto.Query
 
+  describe "PostLive.Index" do
+    test "renders post cards with slug navigation targets", %{conn: conn} do
+      post =
+        post_fixture(%{
+          title: "Slug Link Target",
+          body: "The index should link to this post by slug",
+          views: 12
+        })
+
+      {:ok, _view, html} = live(conn, ~p"/blog")
+
+      assert html =~ "Slug Link Target"
+      assert html =~ "/blog/#{post.slug}"
+    end
+  end
+
+  describe "PostLive.Show" do
+    test "sets canonical metadata URL with the post slug", %{conn: conn} do
+      post =
+        post_fixture(%{
+          title: "Canonical Slug",
+          body: "The show page should expose the canonical slug URL",
+          views: 8
+        })
+
+      {:ok, _view, html} = live(conn, ~p"/blog/#{post.slug}")
+
+      assert html =~ ~s(<link rel="canonical" href="http://localhost:4002/blog/#{post.slug}")
+      assert html =~ ~s(<meta property="og:url" content="http://localhost:4002/blog/#{post.slug}")
+      refute html =~ ~s(http://localhost:4002/blog/#{post.id})
+    end
+  end
+
   describe "list_published_posts/0" do
     # Given a list of card blogs
     # When the user visits the blog page
@@ -172,7 +205,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         |> render_click()
 
       # Then: the user should be redirected to the post detail page
-      assert_redirect(index_view, ~p"/blog/#{post.id}")
+      assert_redirect(index_view, ~p"/blog/#{post.slug}")
     end
 
     # Given: multiple blog post cards
@@ -194,7 +227,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         |> render_click()
 
       # Then: should redirect to the second post's page
-      assert_redirect(index_view, ~p"/blog/#{post2.id}")
+      assert_redirect(index_view, ~p"/blog/#{post2.slug}")
 
       # And: following the redirect shows the correct post
       {:ok, view, html} = follow_redirect(result, conn)
@@ -204,6 +237,41 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       assert html =~ ~r/2[01] views/
       refute html =~ "First Post"
       refute html =~ "Third Post"
+    end
+
+    # Given: an old UUID blog URL
+    # When: the user visits it
+    # Then: redirect the user to the canonical slug URL
+    test "redirects legacy UUID post URLs to the slug URL", %{conn: conn} do
+      # Given: a published post exists
+      post = post_fixture(%{title: "Legacy Link", body: "Old links should continue working"})
+
+      # When: the user visits the old UUID URL
+      result = live(conn, ~p"/blog/#{post.id}")
+
+      # Then: the user should be redirected to the canonical slug URL
+      assert {:error, {:live_redirect, %{to: "/blog/legacy-link"}}} = result
+    end
+
+    # Given: a post whose slug has a UUID shape
+    # When: the user visits the public blog slug URL
+    # Then: the slug should resolve before legacy UUID fallback
+    test "loads UUID-shaped slugs as canonical post URLs", %{conn: conn} do
+      # Given: a published post has a UUID-shaped slug
+      uuid_shaped_slug = "123e4567-e89b-12d3-a456-426614174000"
+
+      post =
+        post_fixture(%{
+          title: uuid_shaped_slug,
+          body: "This title intentionally produces a UUID-shaped slug"
+        })
+
+      # When: the user visits the slug URL
+      {:ok, view, html} = live(conn, ~p"/blog/#{post.slug}")
+
+      # Then: the page should render the post instead of treating the slug as an ID
+      assert has_element?(view, ".post-title", uuid_shaped_slug)
+      assert html =~ "This title intentionally produces a UUID-shaped slug"
     end
   end
 
@@ -223,7 +291,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         })
 
       # When: the user visits the post detail page
-      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
       # Then: the post title should be prominently displayed
       assert has_element?(view, ".post-title", "Mastering Phoenix Contexts")
@@ -253,7 +321,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       post = post_fixture(%{title: "Popular Post", body: "Great content", views: 100})
 
       # When: the user visits the post detail page in a connected socket
-      {:ok, _view, _html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, _view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
       # Then: the view count should be incremented (only happens when socket is connected in real usage)
       # In tests, this depends on how the test connection is setup
@@ -276,7 +344,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         })
 
       # When: the user visits the post detail page
-      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
       # Then: the page title should be set with the post title
       assert page_title(view) =~ "Complete Guide to Testing"
@@ -291,7 +359,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
     test "navigates back to blog index from post detail", %{conn: conn} do
       # Given: a post detail page is loaded
       post = post_fixture(%{title: "Sample Post", body: "Sample content", views: 10})
-      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
       # When: the user clicks the back button in the navigation
       _result =
@@ -315,7 +383,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         Alchemistdrops.Posts.update_post(post, %{body: "Even newer content"})
 
       # When: the user visits the post detail page
-      {:ok, view, _html} = live(conn, ~p"/blog/#{updated_post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{updated_post.slug}")
 
       # Then: the last updated date should be shown
       assert has_element?(view, ".last-updated", "Last updated:")
@@ -408,7 +476,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       post = post_fixture(%{title: "Accessible Post", body: "Accessibility matters", views: 20})
 
       # When: the detail page is rendered
-      {:ok, view, html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, html} = live(conn, ~p"/blog/#{post.slug}")
 
       # Then: proper semantic structure should exist
       assert has_element?(view, "article.post-detail")
@@ -460,6 +528,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       post =
         %Alchemistdrops.Posts.Post{
           title: "Post with nil body",
+          slug: "post-with-nil-body",
           body: nil,
           background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
           views: 0
@@ -483,6 +552,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       post =
         %Alchemistdrops.Posts.Post{
           title: "Post without content",
+          slug: "post-without-content",
           body: nil,
           background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
           views: 0
@@ -490,7 +560,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         |> Alchemistdrops.Repo.insert!()
 
       # When: the post detail page is rendered
-      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
       # Then: the page should load successfully
       assert has_element?(view, ".post-title", "Post without content")
@@ -548,7 +618,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       post = post_fixture(%{title: "Open Access", body: "No login required", views: 50})
 
       # When: accessing the post detail page
-      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
       # Then: the page should load successfully
       assert has_element?(view, ".post-title", "Open Access")
@@ -569,7 +639,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         })
 
       # When: the user visits the post detail page
-      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
       # Then: the mermaid block should be rendered as pre.mermaid (not a syntax-highlighted code block)
       assert has_element?(view, "pre.mermaid")
@@ -587,7 +657,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         })
 
       # When: the user visits the post detail page
-      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
       # Then: headings should have id attributes on their anchor elements
       assert has_element?(view, "h2 a#installation")
@@ -606,7 +676,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         })
 
       # When: the user visits the post detail page
-      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
       # Then: the anchor link and heading id should both be present
       assert has_element?(view, ~s(a[href="#skills"]))
@@ -621,7 +691,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       post = post_fixture(%{title: "Hook Test", body: "# Hello"})
 
       # When: the user visits the post detail page
-      {:ok, view, _html} = live(conn, ~p"/blog/#{post.id}")
+      {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
       # Then: the article element with id post-article should exist with the hook attribute
       assert has_element?(view, "article#post-article[phx-hook='Mermaid']")

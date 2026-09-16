@@ -74,7 +74,7 @@ defmodule AlchemistdropsWeb.Router do
       live "/users/log-in/:token", UserLive.Confirmation, :new
 
       live "/blog", PostLive.Index, :index
-      live "/blog/:id", PostLive.Show, :show
+      live "/blog/:slug", PostLive.Show, :show
       live "/about", AboutLive.Index, :index
 
       live "/courses", CourseLive.Index, :index
