@@ -42,7 +42,7 @@
         :for={{id, post} <- @streams.posts}
         id={id}
         class="post-card group relative bg-white dark:bg-gray-950 p-8 lg:p-10 cursor-pointer transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-900"
-        phx-click={JS.navigate(~p"/blog/#{post}")}
+        phx-click={JS.navigate(~p"/blog/#{post.slug}")}
       >
         <%!-- Small gradient indicator --%>
         <div

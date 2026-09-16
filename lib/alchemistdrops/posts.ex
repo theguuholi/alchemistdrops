@@ -55,6 +55,20 @@ defmodule Alchemistdrops.Posts do
   def get_post!(id), do: Repo.get!(Post, id)
 
   @doc """
+  Gets a single post by slug.
+
+  Raises `Ecto.NoResultsError` if the Post does not exist.
+  """
+  def get_post_by_slug!(slug), do: Repo.get_by!(Post, slug: slug)
+
+  @doc """
+  Gets a single post by slug.
+
+  Returns `nil` if the Post does not exist.
+  """
+  def get_post_by_slug(slug), do: Repo.get_by(Post, slug: slug)
+
+  @doc """
   Creates a post.
 
   ## Examples
