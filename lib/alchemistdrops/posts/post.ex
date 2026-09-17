@@ -40,6 +40,7 @@ defmodule Alchemistdrops.Posts.Post do
     field :cover_image_url, :string
     field :cover_image_alt, :string
     field :language, Ecto.Enum, values: [en: "en", pt_br: "pt-BR"], default: :en
+    field :category_name, :string, virtual: true
 
     belongs_to :category, Alchemistdrops.Posts.Category
     belongs_to :related_course, Alchemistdrops.Courses.Course
@@ -69,6 +70,7 @@ defmodule Alchemistdrops.Posts.Post do
       :cover_image_url,
       :cover_image_alt,
       :language,
+      :category_name,
       :category_id,
       :related_course_id
     ])
@@ -86,7 +88,20 @@ defmodule Alchemistdrops.Posts.Post do
   def publish_changeset(post, attrs) do
     post
     |> draft_changeset(put_status(attrs, :published))
-    |> validate_required([:body, :summary, :category_id])
+    |> validate_required([:body, :summary])
+    |> validate_category()
+  end
+
+  defp validate_category(changeset) do
+    case fetch_change(changeset, :category_name) do
+      {:ok, name} ->
+        if present?(name),
+          do: changeset,
+          else: add_error(changeset, :category_name, "can't be blank")
+
+      :error ->
+        validate_required(changeset, [:category_id])
+    end
   end
 
   defp put_generated_slug(changeset) do

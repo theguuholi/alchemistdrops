@@ -4,7 +4,7 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
   import Phoenix.LiveViewTest
   import Alchemistdrops.PostsFixtures
 
-  alias Alchemistdrops.Posts
+  alias Alchemistdrops.{Posts, Repo}
 
   setup :register_and_log_in_admin_user
 
@@ -57,6 +57,27 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
 
     {:ok, edit_view, _html} = live(conn, edit_path)
     assert has_element?(edit_view, "#public-post-link[href='/blog/#{post.slug}']")
+  end
+
+  test "assigns a new category to a legacy published article", %{conn: conn} do
+    post = post_fixture(%{title: "Legacy published article"})
+
+    post
+    |> Ecto.Changeset.change(category_id: nil)
+    |> Repo.update!()
+
+    {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
+
+    refute view
+           |> form("#post-form", post: %{category_name: "AI"})
+           |> render_change() =~ "can&#39;t be blank"
+
+    assert {:error, {:live_redirect, %{to: "/admin/posts"}}} =
+             view
+             |> form("#post-form", post: %{category_name: "AI"})
+             |> render_submit()
+
+    assert Posts.get_admin_post!(post.id).category.name == "AI"
   end
 
   test "unpublishes an article and removes distribution controls", %{conn: conn} do
