@@ -18,6 +18,17 @@ defmodule AlchemistdropsWeb.Router do
     plug AlchemistdropsWeb.Plugs.RawBody
   end
 
+  pipeline :xml do
+    plug :accepts, ["xml"]
+  end
+
+  scope "/", AlchemistdropsWeb do
+    pipe_through :xml
+
+    get "/sitemap.xml", BlogDiscoveryController, :sitemap
+    get "/blog/feed.xml", BlogDiscoveryController, :feed
+  end
+
   scope "/", AlchemistdropsWeb do
     pipe_through :browser
 

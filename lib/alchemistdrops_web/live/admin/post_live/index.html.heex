@@ -28,6 +28,19 @@
       <:col :let={{_id, post}} label="Views">
         <span class="text-base-content/70">{format_views(post.views)}</span>
       </:col>
+      <:col :let={{_id, post}} label="Status">
+        <span
+          data-role="post-status"
+          class={["badge badge-sm", post.status == :published && "badge-success"]}
+        >
+          {status_label(post)}
+        </span>
+      </:col>
+      <:col :let={{_id, post}} label="Published">
+        <span class="text-sm text-base-content/70">
+          {format_publication_date(post.published_at)}
+        </span>
+      </:col>
       <:action :let={{id, post}}>
         <.link navigate={~p"/admin/posts/#{post}"} class="link link-primary">View</.link>
         <.link navigate={~p"/admin/posts/#{post}/edit"} class="link link-primary">Edit</.link>

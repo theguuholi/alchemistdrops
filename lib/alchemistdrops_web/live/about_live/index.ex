@@ -181,7 +181,8 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
   defp profile do
     %{
       name: "Gustavo Oliveira",
-      title: "Senior Elixir Engineer | Phoenix · OTP · Distributed Systems · AI-Assisted Development",
+      title:
+        "Senior Elixir Engineer | Phoenix · OTP · Distributed Systems · AI-Assisted Development",
       location: "São Paulo, Brazil (Remote — Americas / Europe)",
       tagline:
         "Senior Elixir Engineer with 11+ years of experience building fault-tolerant, high-throughput distributed systems across logistics, fintech, and SaaS. Deep expertise in Elixir/OTP, Phoenix, LiveView, and real-time asynchronous architectures. Proven track record shipping systems that process millions of records and hundreds of thousands of transactions under real production load.",
@@ -209,7 +210,21 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
           "Built shipping A/B testing framework comparing price vs. delivery speed to drive data-driven decisions at scale",
           "Reduced support tickets ~80/incident cycle via real-time freight pallet visualization feature"
         ],
-        technologies: ["Elixir", "Phoenix", "Go", "React", "Oban", "PostgreSQL", "Kafka", "AWS", "GCP", "Datadog", "Claude Code", "Cursor", "MCP"]
+        technologies: [
+          "Elixir",
+          "Phoenix",
+          "Go",
+          "React",
+          "Oban",
+          "PostgreSQL",
+          "Kafka",
+          "AWS",
+          "GCP",
+          "Datadog",
+          "Claude Code",
+          "Cursor",
+          "MCP"
+        ]
       },
       %{
         company: "Lolo",
@@ -223,7 +238,16 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
           "Led team of 5 in adopting TDD, clean architecture, and LiveView patterns — reducing onboarding from 1 week to 1 hour",
           "Introduced GitHub Copilot and AI content generation across the engineering team to accelerate delivery velocity"
         ],
-        technologies: ["Elixir", "Phoenix", "LiveView", "Oban", "Stripe", "SendGrid", "PostgreSQL", "GitHub Copilot"]
+        technologies: [
+          "Elixir",
+          "Phoenix",
+          "LiveView",
+          "Oban",
+          "Stripe",
+          "SendGrid",
+          "PostgreSQL",
+          "GitHub Copilot"
+        ]
       },
       %{
         company: "Clarus R+D",
@@ -235,7 +259,15 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
           "Contributed to a platform enabling clients to claim over $100M in R&D tax credits annually",
           "Eliminated manual deployments with CI/CD pipeline via GitHub Actions and AWS EKS"
         ],
-        technologies: ["Elixir", "React", "LiveView", "GitHub Actions", "AWS EKS", "S3", "PostgreSQL"]
+        technologies: [
+          "Elixir",
+          "React",
+          "LiveView",
+          "GitHub Actions",
+          "AWS EKS",
+          "S3",
+          "PostgreSQL"
+        ]
       },
       %{
         company: "Zubale",
@@ -247,7 +279,16 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
           "Architected distributed systems with Kafka and GraphQL powering ~100,000 deliveries/day across Brazil, Mexico, and Colombia",
           "Built geolocation-enabled mobile backend for contractor order fulfillment across 3 countries"
         ],
-        technologies: ["Elixir", "GraphQL", "Kafka", "React", "React Native", "MongoDB", "PostgreSQL", "Kubernetes"]
+        technologies: [
+          "Elixir",
+          "GraphQL",
+          "Kafka",
+          "React",
+          "React Native",
+          "MongoDB",
+          "PostgreSQL",
+          "Kubernetes"
+        ]
       },
       %{
         company: "HDI Seguros",
@@ -259,7 +300,15 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
           "Engineered the Open Insurance API in compliance with SUSEP's framework — among the first insurers in Brazil to meet requirements",
           "Replaced legacy Progress Database with PostgreSQL and MongoDB; containerized services with Docker and Kubernetes"
         ],
-        technologies: ["Java 8", "Spring Boot", "Go", "PostgreSQL", "MongoDB", "Docker", "Kubernetes"]
+        technologies: [
+          "Java 8",
+          "Spring Boot",
+          "Go",
+          "PostgreSQL",
+          "MongoDB",
+          "Docker",
+          "Kubernetes"
+        ]
       },
       %{
         company: "TOTVS",
@@ -281,7 +330,17 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
           "Delivered BDD/Cucumber automated test suites for mobile applications",
           "Worked across multiple client projects delivering microservices architectures with Spring Cloud"
         ],
-        technologies: ["Java 8", "Spring Boot", "Spring Cloud", "React", "Angular", "Oracle", "Hibernate", "BDD/Cucumber", "AWS"]
+        technologies: [
+          "Java 8",
+          "Spring Boot",
+          "Spring Cloud",
+          "React",
+          "Angular",
+          "Oracle",
+          "Hibernate",
+          "BDD/Cucumber",
+          "AWS"
+        ]
       },
       %{
         company: "CWI Software",

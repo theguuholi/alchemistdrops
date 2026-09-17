@@ -1,12 +1,16 @@
 defmodule AlchemistdropsWeb.HomeLive.Index do
   use AlchemistdropsWeb, :live_view
 
+  alias Alchemistdrops.Posts
+  alias Alchemistdrops.Posts.Article
+
   def mount(_params, _session, socket) do
     socket =
       socket
       |> assign(:page_title, "Master Elixir - Alchemistdrops")
       |> assign(:learn_items, learn_items())
       |> assign(:faq_items, faq_items())
+      |> assign(:recent_posts, Posts.list_recent_published_posts(3))
 
     {:ok, socket}
   end
@@ -79,6 +83,10 @@ defmodule AlchemistdropsWeb.HomeLive.Index do
       }
     ]
   end
+
+  defp reading_minutes(post), do: Article.build(post).reading_minutes
+
+  defp format_post_date(datetime), do: Calendar.strftime(datetime, "%b %-d, %Y")
 
   attr :image, :string, required: true
   attr :image_alt, :string, required: true

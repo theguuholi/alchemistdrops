@@ -390,6 +390,143 @@ article.prose pre.mermaid {
   overflow-x: auto;
 }
 
+.mermaid-blueprint {
+  position: relative;
+  margin: 2rem 0;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklch, var(--color-primary) 32%, var(--color-base-300));
+  border-radius: 1rem;
+  background-color: var(--color-base-100);
+  background-image:
+    linear-gradient(color-mix(in oklch, var(--color-primary) 9%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklch, var(--color-primary) 9%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+  box-shadow: 0 16px 42px oklch(0% 0 0 / 0.08);
+}
+
+.mermaid-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  padding: 0.65rem;
+  border-bottom: 1px solid var(--color-base-300);
+  background: color-mix(in oklch, var(--color-base-100) 90%, transparent);
+  backdrop-filter: blur(10px);
+}
+
+.mermaid-toolbar button,
+.mermaid-dialog-header button {
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  border: 1px solid var(--color-base-300);
+  border-radius: 0.5rem;
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+  font: 600 0.75rem/1 system-ui, sans-serif;
+  cursor: pointer;
+  transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+.mermaid-toolbar button:hover,
+.mermaid-toolbar button:focus-visible,
+.mermaid-dialog-header button:hover,
+.mermaid-dialog-header button:focus-visible {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  outline: none;
+}
+
+.mermaid-toolbar [data-action="reset"] {
+  min-width: 3.5rem;
+}
+
+.mermaid-viewport {
+  overflow: auto;
+  min-height: 12rem;
+  padding: 1.5rem;
+  overscroll-behavior: contain;
+}
+
+.mermaid-canvas {
+  display: grid;
+  min-width: min-content;
+  place-items: center;
+  transform-origin: top left;
+  transition: transform 160ms ease;
+}
+
+.mermaid-canvas svg,
+.mermaid-dialog-canvas svg {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  min-height: 10rem;
+}
+
+.mermaid-error {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 2rem;
+  border: 1px solid color-mix(in oklch, var(--color-error) 45%, transparent);
+  border-radius: 0.75rem;
+  background: color-mix(in oklch, var(--color-error) 10%, var(--color-base-100));
+  color: var(--color-error);
+  text-align: left;
+}
+
+.mermaid-error span {
+  color: var(--color-base-content);
+  opacity: 0.72;
+}
+
+.mermaid-dialog {
+  width: min(92vw, 76rem);
+  max-width: none;
+  max-height: 90vh;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--color-base-300);
+  border-radius: 1rem;
+  background: var(--color-base-100);
+  color: var(--color-base-content);
+}
+
+.mermaid-dialog::backdrop {
+  background: oklch(8% 0.02 260 / 0.78);
+  backdrop-filter: blur(4px);
+}
+
+.mermaid-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--color-base-300);
+  font-weight: 700;
+}
+
+.mermaid-dialog-canvas {
+  max-height: calc(90vh - 4rem);
+  padding: 1.5rem;
+  overflow: auto;
+  background-image:
+    linear-gradient(color-mix(in oklch, var(--color-primary) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklch, var(--color-primary) 8%, transparent) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+@media (max-width: 40rem) {
+  .mermaid-toolbar {
+    justify-content: center;
+  }
+
+  .mermaid-viewport {
+    padding: 1rem;
+  }
+}
+
 /* Horizontal rules */
 article.prose hr {
   border: none;
@@ -541,4 +678,94 @@ article.prose.drop-cap > p:first-of-type::first-letter {
   padding-right: 0.75rem;
   padding-top: 0.25rem;
   color: var(--prose-links);
+}
+
+/* Guided article reading */
+.post-detail article.prose {
+  font-size: clamp(1rem, 0.96rem + 0.18vw, 1.125rem);
+  line-height: 1.8;
+}
+
+.post-detail article.prose h2,
+.post-detail article.prose h3 {
+  scroll-margin-top: 2rem;
+}
+
+.post-detail article.prose h2 > .anchor,
+.post-detail article.prose h3 > .anchor {
+  scroll-margin-top: 2rem;
+}
+
+.post-card:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+#article-toc a:focus-visible,
+#article-mobile-toc a:focus-visible,
+.back-link:focus-visible {
+  border-radius: 0.25rem;
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+@media (max-width: 40rem) {
+  .post-detail article.prose pre,
+  .post-detail article.prose .table-wrapper {
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+    border-radius: 0.5rem;
+  }
+}
+
+/* Match custom article colors to daisyUI when the theme follows the OS. */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) article.prose {
+    --prose-body: oklch(78% 0.01 230);
+    --prose-headings: oklch(96% 0.01 230);
+    --prose-links: oklch(75% 0.16 230);
+    --prose-links-hover: oklch(82% 0.18 230);
+    --prose-bold: oklch(92% 0.01 230);
+    --prose-quotes: oklch(70% 0.01 230);
+    --prose-quote-border: oklch(68% 0.15 300);
+    --prose-code-bg: oklch(22% 0.025 260);
+    --prose-code-text: oklch(78% 0.12 300);
+    --prose-pre-bg: oklch(14% 0.02 260);
+    --prose-pre-text: oklch(88% 0.01 230);
+    --prose-hr: oklch(28% 0.02 260);
+    --prose-list-marker: oklch(68% 0.15 300);
+  }
+
+  html:not([data-theme]) article.prose mark {
+    background: linear-gradient(120deg, oklch(45% 0.15 300 / 0.4) 0%, oklch(45% 0.15 300 / 0.6) 100%);
+  }
+
+  html:not([data-theme]) article.prose blockquote {
+    background: linear-gradient(90deg, oklch(20% 0.02 260 / 0.5) 0%, transparent 100%);
+  }
+
+  html:not([data-theme]) article.prose img {
+    box-shadow: 0 4px 24px oklch(0% 0 0 / 0.4);
+  }
+
+  html:not([data-theme]) article.prose .table-wrapper {
+    box-shadow: 0 1px 3px oklch(0% 0 0 / 0.25);
+  }
+
+  html:not([data-theme]) article.prose th {
+    background: oklch(22% 0.02 260);
+    color: oklch(90% 0.01 230);
+  }
+
+  html:not([data-theme]) article.prose tbody tr:nth-child(even) td {
+    background: oklch(18% 0.015 260);
+  }
+
+  html:not([data-theme]) article.prose tbody tr:hover td {
+    background: oklch(24% 0.02 260);
+  }
+
+  html:not([data-theme]) article.prose ::selection {
+    background: oklch(68% 0.15 300 / 0.35);
+  }
 }

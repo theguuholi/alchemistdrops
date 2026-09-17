@@ -106,18 +106,20 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       assert has_element?(view, "#posts-grid")
     end
 
-    # Given: posts with long body content
-    # When: the user views the blog cards
-    # Then: the body should be truncated with ellipsis
-    test "truncates long post excerpts in cards", %{conn: conn} do
-      # Given: a post with a very long body
+    test "uses the editorial summary instead of raw article Markdown", %{conn: conn} do
       long_body =
         String.duplicate(
           "This is a very long post about web development and all its intricacies. ",
           10
         )
 
-      _post = post_fixture(%{title: "Long Article", body: long_body, views: 5})
+      _post =
+        post_fixture(%{
+          title: "Long Article",
+          body: long_body,
+          summary: "A focused editorial summary",
+          views: 5
+        })
 
       # When: the user visits the blog index page
       {:ok, view, html} = live(conn, ~p"/blog")
@@ -128,9 +130,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       # And: the full long body should not be present
       refute html =~ long_body
 
-      # And: should show ellipsis for truncated content
-      assert has_element?(view, ".post-excerpt")
-      assert html =~ "..."
+      assert has_element?(view, ".post-excerpt", "A focused editorial summary")
     end
 
     # Given: multiple posts with different dates
@@ -155,15 +155,15 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
           views: 50
         })
 
-      # Update timestamps via repo
+      # Update publication timestamps via repo
       Alchemistdrops.Repo.update_all(
         from(p in Alchemistdrops.Posts.Post, where: p.id == ^old_post.id),
-        set: [inserted_at: old_date]
+        set: [published_at: old_date]
       )
 
       Alchemistdrops.Repo.update_all(
         from(p in Alchemistdrops.Posts.Post, where: p.id == ^recent_post.id),
-        set: [inserted_at: recent_date]
+        set: [published_at: recent_date]
       )
 
       # When: the user visits the blog page
@@ -201,7 +201,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       # And: the user clicks on the post card
       _result =
         index_view
-        |> element("article#posts-#{post.id}")
+        |> element("article#posts-#{post.id} .post-title a")
         |> render_click()
 
       # Then: the user should be redirected to the post detail page
@@ -223,7 +223,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       # And: clicks on the second post
       result =
         index_view
-        |> element("article#posts-#{post2.id}")
+        |> element("article#posts-#{post2.id} .post-title a")
         |> render_click()
 
       # Then: should redirect to the second post's page
@@ -441,9 +441,9 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       # Then: the card should have hover effect classes
       card_html = view |> element("article#posts-#{post.id}") |> render()
 
-      assert card_html =~ "hover:bg-gray-50"
+      assert card_html =~ "hover:border-primary/50"
       assert card_html =~ "transition-all"
-      assert card_html =~ "group-hover:text-gray-700"
+      assert card_html =~ "group-hover:translate-x-1"
     end
   end
 
@@ -505,10 +505,10 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
           views: 5
         })
 
-      # Manually update the inserted_at timestamp
+      # Manually update the publication timestamp
       Alchemistdrops.Repo.update_all(
         from(p in Alchemistdrops.Posts.Post, where: p.id == ^post.id),
-        set: [inserted_at: specific_date]
+        set: [published_at: specific_date]
       )
 
       # When: the blog index is rendered
@@ -520,11 +520,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
   end
 
   describe "edge_cases_and_error_handling" do
-    # Given: a post with nil body
-    # When: rendering the excerpt
-    # Then: should return empty string without error
-    test "handles nil body in excerpt gracefully on index page", %{conn: conn} do
-      # Given: a post with nil body (using direct repo insert to bypass changeset validation)
+    test "does not expose an incomplete draft on the index page", %{conn: conn} do
       post =
         %Alchemistdrops.Posts.Post{
           title: "Post with nil body",
@@ -538,17 +534,11 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       # When: the blog index is rendered
       {:ok, view, _html} = live(conn, ~p"/blog")
 
-      # Then: the post should be displayed without errors
-      assert has_element?(view, ".post-title", "Post with nil body")
-      # And: the excerpt should be empty
-      assert has_element?(view, "article#posts-#{post.id} .post-excerpt")
+      refute has_element?(view, ".post-title", "Post with nil body")
+      refute has_element?(view, "article#posts-#{post.id}")
     end
 
-    # Given: a post with nil body
-    # When: viewing the post detail page
-    # Then: should use fallback meta description and render empty content
-    test "handles nil body with fallback meta description on show page", %{conn: conn} do
-      # Given: a post with nil body
+    test "does not expose an incomplete draft on the show page", %{conn: conn} do
       post =
         %Alchemistdrops.Posts.Post{
           title: "Post without content",
@@ -559,13 +549,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
         }
         |> Alchemistdrops.Repo.insert!()
 
-      # When: the post detail page is rendered
-      {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
-
-      # Then: the page should load successfully
-      assert has_element?(view, ".post-title", "Post without content")
-      # And: the post body section should exist (even if empty)
-      assert has_element?(view, ".post-body")
+      assert_raise Ecto.NoResultsError, fn -> live(conn, ~p"/blog/#{post.slug}") end
     end
 
     # Given: a post with very short body (less than 160 chars)

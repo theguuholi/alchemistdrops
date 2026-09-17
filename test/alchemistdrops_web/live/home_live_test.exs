@@ -1,6 +1,7 @@
 defmodule AlchemistdropsWeb.HomeLiveTest do
   use AlchemistdropsWeb.ConnCase
   import Phoenix.LiveViewTest
+  import Alchemistdrops.PostsFixtures
 
   describe "HomeLive" do
     test "renders home page successfully", %{conn: conn} do
@@ -184,6 +185,18 @@ defmodule AlchemistdropsWeb.HomeLiveTest do
       {:ok, _view, html} = live(conn, ~p"/")
 
       assert html =~ "Master Elixir - Alchemistdrops"
+    end
+
+    test "shows exactly the three most recent published articles", %{conn: conn} do
+      Enum.each(1..4, fn number -> post_fixture(%{title: "Recent article #{number}"}) end)
+      draft_post_fixture(%{title: "Homepage draft"})
+
+      {:ok, view, html} = live(conn, ~p"/")
+
+      recent_html = view |> element("#recent-articles") |> render()
+      assert length(Regex.scan(~r/<article\b/, recent_html)) == 3
+      refute html =~ "Homepage draft"
+      assert has_element?(view, "#recent-articles a[href='/blog']", "View all articles")
     end
   end
 end
