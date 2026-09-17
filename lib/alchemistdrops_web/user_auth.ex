@@ -297,6 +297,31 @@ defmodule AlchemistdropsWeb.UserAuth do
     end
   end
 
+  @doc """
+  Plug for controller routes restricted to administrators.
+  """
+  def require_admin_user(%{assigns: %{current_scope: nil}} = conn, _opts) do
+    conn
+    |> redirect(to: ~p"/users/log-in")
+    |> halt()
+  end
+
+  def require_admin_user(
+        %{assigns: %{current_scope: %Scope{user: %{role: role}}}} = conn,
+        _opts
+      )
+      when role != :admin do
+    conn
+    |> redirect(to: ~p"/")
+    |> halt()
+  end
+
+  def require_admin_user(
+        %{assigns: %{current_scope: %Scope{user: %{role: :admin}}}} = conn,
+        _opts
+      ),
+      do: conn
+
   defp maybe_store_return_to(%{method: "GET"} = conn) do
     put_session(conn, :user_return_to, current_path(conn))
   end

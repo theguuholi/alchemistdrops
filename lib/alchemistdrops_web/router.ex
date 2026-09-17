@@ -64,6 +64,13 @@ defmodule AlchemistdropsWeb.Router do
     post "/users/update-password", UserSessionController, :update_password
   end
 
+  scope "/admin", AlchemistdropsWeb do
+    pipe_through [:browser, :require_authenticated_user, :require_admin_user]
+
+    get "/linkedin/connect", LinkedInAuthController, :connect
+    get "/linkedin/callback", LinkedInAuthController, :callback
+  end
+
   scope "/", AlchemistdropsWeb do
     pipe_through [:browser]
 

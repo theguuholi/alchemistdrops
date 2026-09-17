@@ -4,6 +4,18 @@ defmodule Alchemistdrops.Posts.Post do
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
+
+  @type t :: %__MODULE__{
+          id: Ecto.UUID.t() | nil,
+          background: String.t() | nil,
+          title: String.t() | nil,
+          slug: String.t() | nil,
+          body: String.t() | nil,
+          views: integer() | nil,
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
+        }
+
   schema "posts" do
     field :background, :string, default: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
     field :title, :string

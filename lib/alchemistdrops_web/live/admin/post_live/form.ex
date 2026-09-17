@@ -3,6 +3,7 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
 
   alias Alchemistdrops.Posts
   alias Alchemistdrops.Posts.Post
+  alias Alchemistdrops.Social
 
   @impl true
   def render(assigns) do
@@ -46,6 +47,85 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
               <.button navigate={return_path(@return_to, @post)}>Cancel</.button>
             </footer>
           </.form>
+
+          <section :if={@post.id} id="linkedin-section" class="mt-8 border-t border-base-300 pt-6">
+            <div class="mb-4 flex items-center gap-2">
+              <.icon name="hero-link" class="size-5 text-base-content/70" />
+              <h2 class="text-base font-semibold">LinkedIn</h2>
+            </div>
+
+            <%= cond do %>
+              <% published_share?(@linkedin_share) -> %>
+                <div id="linkedin-published" class="alert alert-success items-start">
+                  <.icon name="hero-check-circle" class="mt-0.5 size-5 shrink-0" />
+                  <div>
+                    <p class="font-medium">Published to LinkedIn</p>
+                    <p class="text-sm">{published_share_details(@linkedin_share)}</p>
+                  </div>
+                </div>
+              <% not @linkedin_connected? -> %>
+                <.button
+                  id="linkedin-connect"
+                  href={~p"/admin/linkedin/connect?post_id=#{@post.id}"}
+                >
+                  <.icon name="hero-link" class="size-4" /> Connect LinkedIn
+                </.button>
+              <% true -> %>
+                <div class="flex flex-wrap items-center gap-3">
+                  <.button
+                    id="generate-linkedin"
+                    phx-click="generate_linkedin"
+                    phx-disable-with="Generating LinkedIn preview..."
+                    disabled={@linkedin_dirty?}
+                  >
+                    <.icon name="hero-share" class="size-4" />
+                    {if @linkedin_share,
+                      do: "Regenerate LinkedIn preview",
+                      else: "Generate LinkedIn preview"}
+                  </.button>
+                  <p :if={@linkedin_dirty?} class="text-sm text-base-content/70">
+                    Save article changes before generating or publishing.
+                  </p>
+                </div>
+
+                <div :if={editable_share?(@linkedin_share)} class="mt-4 space-y-3">
+                  <.form
+                    for={@linkedin_share_form}
+                    id="linkedin-share-form"
+                    phx-change="edit_linkedin_share"
+                  >
+                    <.input
+                      field={@linkedin_share_form[:text]}
+                      type="textarea"
+                      label="LinkedIn preview"
+                      rows="8"
+                      maxlength="3000"
+                      phx-debounce="300"
+                    />
+                  </.form>
+
+                  <p class="text-sm text-base-content/70">
+                    Detected language: {@linkedin_share.language}
+                  </p>
+
+                  <div :if={@linkedin_share.status == :failed} class="alert alert-error items-start">
+                    <.icon name="hero-exclamation-circle" class="mt-0.5 size-5 shrink-0" />
+                    <p>{@linkedin_share.error_message}</p>
+                  </div>
+
+                  <.button
+                    id="publish-linkedin"
+                    phx-click="publish_linkedin"
+                    phx-disable-with="Publishing to LinkedIn..."
+                    data-confirm="Publish this post to your LinkedIn profile?"
+                    disabled={@linkedin_dirty?}
+                    variant="primary"
+                  >
+                    <.icon name="hero-share" class="size-4" /> Publish to LinkedIn
+                  </.button>
+                </div>
+            <% end %>
+          </section>
         </div>
 
         <div class="min-w-0 flex flex-col">
@@ -88,6 +168,7 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
     |> assign(:post, post)
     |> assign(:form, to_form(Posts.change_post(post)))
     |> assign(:preview_html, render_preview(post.body))
+    |> assign_linkedin_state(post)
   end
 
   defp apply_action(socket, :new, _params) do
@@ -98,6 +179,10 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
     |> assign(:post, post)
     |> assign(:form, to_form(Posts.change_post(post)))
     |> assign(:preview_html, render_preview(nil))
+    |> assign(:linkedin_connected?, false)
+    |> assign(:linkedin_share, nil)
+    |> assign(:linkedin_share_form, linkedin_share_form(nil))
+    |> assign(:linkedin_dirty?, false)
   end
 
   @impl true
@@ -109,11 +194,69 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
     {:noreply,
      socket
      |> assign(:form, to_form(changeset, action: :validate))
-     |> assign(:preview_html, preview_html)}
+     |> assign(:preview_html, preview_html)
+     |> assign(:linkedin_dirty?, map_size(changeset.changes) > 0)}
   end
 
   def handle_event("save", %{"post" => post_params}, socket) do
     save_post(socket, socket.assigns.live_action, post_params)
+  end
+
+  def handle_event("generate_linkedin", _params, socket) do
+    if linkedin_action_allowed?(socket) do
+      post = socket.assigns.post
+
+      case Social.generate_share(post, article_url(post)) do
+        {:ok, share} ->
+          {:noreply, assign_linkedin_share(socket, share)}
+
+        {:error, _reason} ->
+          {:noreply,
+           socket
+           |> assign_linkedin_share(Social.get_share(post))
+           |> put_flash(:error, "LinkedIn preview could not be generated. Please try again.")}
+      end
+    else
+      {:noreply, socket}
+    end
+  end
+
+  def handle_event("edit_linkedin_share", %{"linkedin_share" => %{"text" => text}}, socket) do
+    case socket.assigns.linkedin_share do
+      nil ->
+        {:noreply, socket}
+
+      share ->
+        case Social.update_share_text(share, text) do
+          {:ok, updated_share} ->
+            {:noreply, assign_linkedin_share(socket, updated_share)}
+
+          {:error, _reason} ->
+            {:noreply, assign_linkedin_share(socket, Social.get_share(socket.assigns.post))}
+        end
+    end
+  end
+
+  def handle_event("publish_linkedin", _params, socket) do
+    if linkedin_action_allowed?(socket) and editable_share?(socket.assigns.linkedin_share) do
+      post = socket.assigns.post
+
+      case Social.publish_share(post, article_url(post)) do
+        {:ok, share} ->
+          {:noreply, assign_linkedin_share(socket, share)}
+
+        {:error, :linkedin_connection_required} ->
+          {:noreply,
+           socket
+           |> refresh_linkedin_connection()
+           |> assign_linkedin_share(Social.get_share(post))}
+
+        {:error, _reason} ->
+          {:noreply, assign_linkedin_share(socket, Social.get_share(post))}
+      end
+    else
+      {:noreply, socket}
+    end
   end
 
   defp save_post(socket, :edit, post_params) do
@@ -144,6 +287,46 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
 
   defp return_path("index", _post), do: ~p"/admin/posts"
   defp return_path("show", post), do: ~p"/admin/posts/#{post}"
+
+  defp assign_linkedin_state(socket, post) do
+    socket
+    |> refresh_linkedin_connection()
+    |> assign(:linkedin_dirty?, false)
+    |> assign_linkedin_share(Social.get_share(post))
+  end
+
+  defp refresh_linkedin_connection(socket) do
+    assign(socket, :linkedin_connected?, Social.connected?())
+  end
+
+  defp assign_linkedin_share(socket, share) do
+    socket
+    |> assign(:linkedin_share, share)
+    |> assign(:linkedin_share_form, linkedin_share_form(share))
+  end
+
+  defp linkedin_share_form(share) do
+    to_form(%{"text" => share_text(share)}, as: :linkedin_share)
+  end
+
+  defp share_text(nil), do: ""
+  defp share_text(share), do: share.edited_text || share.generated_text || ""
+
+  defp linkedin_action_allowed?(socket) do
+    socket.assigns.linkedin_connected? and not socket.assigns.linkedin_dirty?
+  end
+
+  defp editable_share?(nil), do: false
+  defp editable_share?(share), do: share.status in [:draft, :failed]
+  defp published_share?(nil), do: false
+  defp published_share?(share), do: share.status == :published
+
+  defp article_url(post), do: url(~p"/blog/#{post.slug}")
+
+  defp published_share_details(share) do
+    published_at = Calendar.strftime(share.published_at, "%B %-d, %Y at %H:%M UTC")
+    "#{published_at} - #{share.linkedin_post_urn}"
+  end
 
   defp render_preview(nil), do: Phoenix.HTML.raw("")
   defp render_preview(""), do: Phoenix.HTML.raw("")
