@@ -35,6 +35,18 @@ defmodule Alchemistdrops.Posts do
     |> Repo.all()
   end
 
+  def list_categories do
+    Category
+    |> order_by([c], asc: c.name)
+    |> Repo.all()
+  end
+
+  def get_admin_post!(id) do
+    Post
+    |> Repo.get!(id)
+    |> Repo.preload(@public_preloads)
+  end
+
   def list_published_posts(opts \\ []) do
     page = positive_integer(Keyword.get(opts, :page), 1)
 

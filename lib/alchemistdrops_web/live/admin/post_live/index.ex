@@ -11,7 +11,7 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    posts = Posts.list_posts()
+    posts = Posts.list_admin_posts()
     stats = calculate_stats(posts)
 
     {:ok,
@@ -29,7 +29,8 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Index do
     {:ok, _} = Posts.delete_post(post)
 
     # Recalculate stats after deletion
-    posts = Posts.list_posts()
+    posts = Posts.list_admin_posts()
+
     stats = calculate_stats(posts)
 
     {:noreply,
@@ -53,4 +54,10 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Index do
   end
 
   defp format_views(views), do: "#{views || 0}"
+
+  defp status_label(%{status: :published}), do: "Published"
+  defp status_label(_post), do: "Draft"
+
+  defp format_publication_date(nil), do: "Not published"
+  defp format_publication_date(date), do: Calendar.strftime(date, "%b %-d, %Y")
 end
