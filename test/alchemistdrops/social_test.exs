@@ -1,12 +1,13 @@
 defmodule Alchemistdrops.SocialTest do
   use Alchemistdrops.DataCase, async: false
+  use Mimic
 
   import ExUnit.CaptureLog
   import Alchemistdrops.PostsFixtures
 
   alias Alchemistdrops.Social
-  alias Alchemistdrops.Social.{FakeContentGenerator, FakeLinkedInClient}
-  alias Alchemistdrops.Social.{LinkedInPostShare, TokenCipher}
+  alias Alchemistdrops.Social.{LinkedInPostShare, OpenRouterContentGenerator}
+  alias Alchemistdrops.Social.{ReqLinkedInClient, TokenCipher}
 
   test "get_connection/0 returns nil when the personal connection is absent" do
     assert Social.get_connection() == nil
@@ -115,7 +116,7 @@ defmodule Alchemistdrops.SocialTest do
       post = post_fixture(%{title: "Shipping small changes", body: "A practical article."})
       article_url = "https://example.com/blog/#{post.id}"
 
-      FakeContentGenerator.reply(
+      expect_generation(
         {:ok, %{language: "en", text: "First preview. Read more: #{article_url}"}}
       )
 
@@ -124,12 +125,10 @@ defmodule Alchemistdrops.SocialTest do
       assert first_share.language == "en"
       assert first_share.generated_text == "First preview. Read more: #{article_url}"
 
-      assert_received {FakeContentGenerator, :called, ^post, ^article_url}
-
       assert {:ok, edited_share} = Social.update_share_text(first_share, "My edited preview")
       assert edited_share.edited_text == "My edited preview"
 
-      FakeContentGenerator.reply(
+      expect_generation(
         {:ok, %{language: "pt-BR", text: "Segundo preview. Leia: #{article_url}"}}
       )
 
@@ -148,13 +147,11 @@ defmodule Alchemistdrops.SocialTest do
       article_url = "https://example.com/blog/#{post.id}"
       generated_text = "A valid preview. Read more: #{article_url}"
 
-      FakeContentGenerator.reply({:ok, %{language: "en", text: generated_text}})
+      expect_generation({:ok, %{language: "en", text: generated_text}})
       assert {:ok, share} = Social.generate_share(post, article_url)
       assert {:ok, _share} = Social.update_share_text(share, "Keep this edited text")
 
-      FakeContentGenerator.reply(
-        {:error, %{body: "raw provider response with secret access-token"}}
-      )
+      expect_generation({:error, %{body: "raw provider response with secret access-token"}})
 
       log =
         capture_log(fn ->
@@ -177,10 +174,10 @@ defmodule Alchemistdrops.SocialTest do
       post = post_fixture()
       article_url = "https://example.com/blog/#{post.id}"
 
-      FakeContentGenerator.reply({:ok, %{language: "en", text: "Valid preview"}})
+      expect_generation({:ok, %{language: "en", text: "Valid preview"}})
       assert {:ok, share} = Social.generate_share(post, article_url)
 
-      FakeContentGenerator.reply({:ok, %{language: "en", text: String.duplicate("x", 3_001)}})
+      expect_generation({:ok, %{language: "en", text: String.duplicate("x", 3_001)}})
 
       assert {:error, %Ecto.Changeset{}} = Social.generate_share(post, article_url)
       assert Social.get_share(post).generated_text == share.generated_text
@@ -190,20 +187,21 @@ defmodule Alchemistdrops.SocialTest do
       post = post_fixture()
       article_url = "https://example.com/blog/#{post.id}"
       parent = self()
+      expect_controlled_generation(parent, 2)
 
-      first_task = generation_task(parent, post, article_url)
-      second_task = generation_task(parent, post, article_url)
+      first_task = generation_task(post, article_url)
+      second_task = generation_task(post, article_url)
 
-      assert_receive {FakeContentGenerator, :called, first_pid, first_ref, ^post, ^article_url}
-      assert_receive {FakeContentGenerator, :called, second_pid, second_ref, ^post, ^article_url}
+      assert_receive {:generation_called, first_pid, first_ref, ^post, ^article_url}
+      assert_receive {:generation_called, second_pid, second_ref, ^post, ^article_url}
 
-      FakeContentGenerator.reply(
+      reply_to_call(
         first_pid,
         first_ref,
         {:ok, %{language: "en", text: "First concurrent preview"}}
       )
 
-      FakeContentGenerator.reply(
+      reply_to_call(
         second_pid,
         second_ref,
         {:ok, %{language: "pt-BR", text: "Segundo preview concorrente"}}
@@ -245,7 +243,20 @@ defmodule Alchemistdrops.SocialTest do
       share = generate_share(post, article_url)
       assert {:ok, _share} = Social.update_share_text(share, "The administrator's final text")
       store_valid_connection()
-      FakeLinkedInClient.reply({:ok, %{post_urn: "urn:li:share:published123"}})
+
+      expect(ReqLinkedInClient, :publish, fn access_token,
+                                             member_urn,
+                                             text,
+                                             received_url,
+                                             title ->
+        assert access_token == "valid-access-token"
+        assert member_urn == "urn:li:person:publisher"
+        assert text == "The administrator's final text"
+        assert received_url == article_url
+        assert title == "A title sent to LinkedIn"
+        {:ok, %{post_urn: "urn:li:share:published123"}}
+      end)
+
       before_publish = DateTime.utc_now(:second)
 
       assert {:ok, published_share} = Social.publish_share(post, article_url)
@@ -258,10 +269,6 @@ defmodule Alchemistdrops.SocialTest do
       assert DateTime.compare(published_share.published_at, before_publish) in [:eq, :gt]
       assert DateTime.compare(published_share.published_at, after_publish) in [:eq, :lt]
 
-      assert_received {FakeLinkedInClient, :publish_called, "valid-access-token",
-                       "urn:li:person:publisher", "The administrator's final text", ^article_url,
-                       "A title sent to LinkedIn"}
-
       assert Social.get_share(post).status == :published
     end
 
@@ -272,8 +279,8 @@ defmodule Alchemistdrops.SocialTest do
       assert {:ok, _share} = Social.update_share_text(share, "Retain this edited text")
       store_valid_connection()
 
-      FakeLinkedInClient.reply(
-        {:error, %{body: "raw LinkedIn body with bearer secret-access-token"}}
+      expect_publication(
+        {:error, {:transport_error, %{body: "raw LinkedIn body with bearer secret-access-token"}}}
       )
 
       log =
@@ -288,11 +295,11 @@ defmodule Alchemistdrops.SocialTest do
       assert failed_share.error_message == "LinkedIn publication failed. Please try again."
       refute inspect(failed_share) =~ "raw LinkedIn body"
       refute inspect(failed_share) =~ "secret-access-token"
-      assert log =~ "LinkedIn publication failed (category=external_error)"
+      assert log =~ "LinkedIn publication failed (category=transport_error)"
       refute log =~ "raw LinkedIn body"
       refute log =~ "secret-access-token"
 
-      FakeLinkedInClient.reply({:ok, %{post_urn: "urn:li:share:retry123"}})
+      expect_publication({:ok, %{post_urn: "urn:li:share:retry123"}})
       assert {:ok, retried_share} = Social.publish_share(post, article_url)
       assert retried_share.status == :published
       assert retried_share.linkedin_post_urn == "urn:li:share:retry123"
@@ -306,7 +313,7 @@ defmodule Alchemistdrops.SocialTest do
       share = generate_share(post, article_url)
       store_valid_connection()
 
-      FakeLinkedInClient.reply({:error, {:http_error, 401}})
+      expect_publication({:error, {:http_error, 401}})
 
       log =
         capture_log(fn ->
@@ -327,14 +334,13 @@ defmodule Alchemistdrops.SocialTest do
       post = post_fixture()
       share = generate_share(post)
       store_valid_connection()
+      reject(ReqLinkedInClient, :publish, 5)
 
       publishing_share = set_share_status(share, :publishing)
       assert {:error, :publish_in_progress} = Social.publish_share(post, "https://example.com")
-      refute_received {FakeLinkedInClient, :publish_called, _, _, _, _, _}
 
       set_share_status(publishing_share, :published)
       assert {:error, :already_published} = Social.publish_share(post, "https://example.com")
-      refute_received {FakeLinkedInClient, :publish_called, _, _, _, _, _}
     end
 
     test "competing publication claims invoke the LinkedIn client exactly once" do
@@ -343,19 +349,17 @@ defmodule Alchemistdrops.SocialTest do
       generate_share(post, article_url)
       store_valid_connection()
       parent = self()
+      expect_controlled_publication(parent)
 
-      first_task = publication_task(parent, post, article_url)
+      first_task = publication_task(post, article_url)
 
-      assert_receive {FakeLinkedInClient, :publish_called, first_pid, first_ref,
-                      "valid-access-token", "urn:li:person:publisher", _text, ^article_url,
-                      _title}
+      assert_receive {:publication_called, first_pid, first_ref, "valid-access-token",
+                      "urn:li:person:publisher", _text, ^article_url, _title}
 
-      second_task = publication_task(parent, post, article_url)
+      second_task = publication_task(post, article_url)
       assert {:error, :publish_in_progress} = Task.await(second_task)
 
-      refute_received {FakeLinkedInClient, :publish_called, _, _, _, _, _, _, _}
-
-      FakeLinkedInClient.reply(
+      reply_to_call(
         first_pid,
         first_ref,
         {:ok, %{post_urn: "urn:li:share:single-publication"}}
@@ -372,19 +376,19 @@ defmodule Alchemistdrops.SocialTest do
       original_share = generate_share(post, article_url)
       store_valid_connection()
       parent = self()
+      expect_controlled_generation(parent)
+      expect_controlled_publication(parent)
 
-      generation_task = generation_task(parent, post, article_url)
+      generation_task = generation_task(post, article_url)
 
-      assert_receive {FakeContentGenerator, :called, generation_pid, generation_ref, ^post,
-                      ^article_url}
+      assert_receive {:generation_called, generation_pid, generation_ref, ^post, ^article_url}
 
-      publication_task = publication_task(parent, post, article_url)
+      publication_task = publication_task(post, article_url)
 
-      assert_receive {FakeLinkedInClient, :publish_called, publication_pid, publication_ref,
-                      "valid-access-token", "urn:li:person:publisher", _text, ^article_url,
-                      _title}
+      assert_receive {:publication_called, publication_pid, publication_ref, "valid-access-token",
+                      "urn:li:person:publisher", _text, ^article_url, _title}
 
-      FakeLinkedInClient.reply(
+      reply_to_call(
         publication_pid,
         publication_ref,
         {:ok, %{post_urn: "urn:li:share:won-race"}}
@@ -393,7 +397,7 @@ defmodule Alchemistdrops.SocialTest do
       assert {:ok, published_share} = Task.await(publication_task)
       assert published_share.status == :published
 
-      FakeContentGenerator.reply(
+      reply_to_call(
         generation_pid,
         generation_ref,
         {:ok, %{language: "en", text: "Stale generation must not persist"}}
@@ -414,14 +418,14 @@ defmodule Alchemistdrops.SocialTest do
       generate_share(post, article_url)
       store_valid_connection()
       parent = self()
-      task = publication_task(parent, post, article_url)
+      expect_controlled_publication(parent)
+      task = publication_task(post, article_url)
 
-      assert_receive {FakeLinkedInClient, :publish_called, publication_pid, publication_ref, _, _,
-                      _, _, _}
+      assert_receive {:publication_called, publication_pid, publication_ref, _, _, _, _, _}
 
       Social.get_share(post) |> set_share_status(:failed)
 
-      FakeLinkedInClient.reply(
+      reply_to_call(
         publication_pid,
         publication_ref,
         {:ok, %{post_urn: "urn:li:share:stale-success"}}
@@ -440,10 +444,10 @@ defmodule Alchemistdrops.SocialTest do
       generate_share(post, article_url)
       store_valid_connection()
       parent = self()
-      task = publication_task(parent, post, article_url)
+      expect_controlled_publication(parent)
+      task = publication_task(post, article_url)
 
-      assert_receive {FakeLinkedInClient, :publish_called, publication_pid, publication_ref, _, _,
-                      _, _, _}
+      assert_receive {:publication_called, publication_pid, publication_ref, _, _, _, _, _}
 
       published_at = DateTime.utc_now(:second)
 
@@ -456,7 +460,12 @@ defmodule Alchemistdrops.SocialTest do
       |> Repo.update!()
 
       capture_log(fn ->
-        FakeLinkedInClient.reply(publication_pid, publication_ref, {:error, :provider_failure})
+        reply_to_call(
+          publication_pid,
+          publication_ref,
+          {:error, {:request_error, :unexpected}}
+        )
+
         assert {:error, :publication_state_changed} = Task.await(task)
       end)
 
@@ -470,6 +479,7 @@ defmodule Alchemistdrops.SocialTest do
     test "publish_share/2 requires a current unexpired connection after claiming the share" do
       post = post_fixture()
       share = generate_share(post)
+      reject(ReqLinkedInClient, :publish, 5)
 
       assert {:ok, _connection} =
                Social.store_connection(%{
@@ -486,12 +496,11 @@ defmodule Alchemistdrops.SocialTest do
       assert failed_share.generated_text == share.generated_text
       assert failed_share.error_message == "LinkedIn connection is missing or expired."
       refute inspect(failed_share) =~ "expired-secret-token"
-      refute_received {FakeLinkedInClient, :publish_called, _, _, _, _, _}
     end
   end
 
   defp generate_share(post, article_url \\ "https://example.com/blog/article") do
-    FakeContentGenerator.reply(
+    expect_generation(
       {:ok, %{language: "en", text: "Generated preview. Read more: #{article_url}"}}
     )
 
@@ -499,19 +508,54 @@ defmodule Alchemistdrops.SocialTest do
     share
   end
 
-  defp generation_task(parent, post, article_url) do
-    Task.async(fn ->
-      FakeContentGenerator.controlled_by(parent)
-      Social.generate_share(post, article_url)
+  defp expect_generation(result) do
+    expect(OpenRouterContentGenerator, :generate, fn _post, _article_url -> result end)
+  end
+
+  defp expect_publication(result) do
+    expect(ReqLinkedInClient, :publish, fn _access_token,
+                                           _member_urn,
+                                           _text,
+                                           _article_url,
+                                           _title ->
+      result
     end)
   end
 
-  defp publication_task(parent, post, article_url) do
-    Task.async(fn ->
-      FakeLinkedInClient.controlled_by(parent)
-      Social.publish_share(post, article_url)
+  defp expect_controlled_generation(parent, call_count \\ 1) do
+    expect(OpenRouterContentGenerator, :generate, call_count, fn post, article_url ->
+      await_controlled_reply(parent, :generation_called, [post, article_url])
     end)
   end
+
+  defp expect_controlled_publication(parent) do
+    expect(ReqLinkedInClient, :publish, fn access_token, member_urn, text, article_url, title ->
+      await_controlled_reply(
+        parent,
+        :publication_called,
+        [access_token, member_urn, text, article_url, title]
+      )
+    end)
+  end
+
+  defp await_controlled_reply(parent, message, arguments) do
+    ref = make_ref()
+    send(parent, List.to_tuple([message, self(), ref | arguments]))
+
+    receive do
+      {:controlled_reply, ^ref, result} -> result
+    after
+      5_000 -> {:error, {:request_error, :unexpected}}
+    end
+  end
+
+  defp reply_to_call(pid, ref, result), do: send(pid, {:controlled_reply, ref, result})
+
+  defp generation_task(post, article_url),
+    do: Task.async(fn -> Social.generate_share(post, article_url) end)
+
+  defp publication_task(post, article_url),
+    do: Task.async(fn -> Social.publish_share(post, article_url) end)
 
   defp set_share_status(share, status) do
     share

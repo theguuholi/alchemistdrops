@@ -48,8 +48,8 @@ config :alchemistdrops, :stripe,
 config :alchemistdrops, :linkedin_token_encryption_key, "linkedin-test-encryption-key"
 
 config :alchemistdrops,
-  linkedin_client: Alchemistdrops.Social.FakeLinkedInClient,
-  linkedin_content_generator: Alchemistdrops.Social.FakeContentGenerator
+  linkedin_client: Alchemistdrops.Social.ReqLinkedInClient,
+  linkedin_content_generator: Alchemistdrops.Social.OpenRouterContentGenerator
 
 config :alchemistdrops,
   openrouter_req_options: [plug: {Req.Test, Alchemistdrops.Social.OpenRouterContentGenerator}],

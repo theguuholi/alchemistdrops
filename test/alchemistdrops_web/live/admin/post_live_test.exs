@@ -1,12 +1,13 @@
 defmodule AlchemistdropsWeb.PostLiveTest do
   use AlchemistdropsWeb.ConnCase
+  use Mimic
 
   import ExUnit.CaptureLog
   import Phoenix.LiveViewTest
   import Alchemistdrops.PostsFixtures
 
   alias Alchemistdrops.Social
-  alias Alchemistdrops.Social.{FakeContentGenerator, FakeLinkedInClient}
+  alias Alchemistdrops.Social.{OpenRouterContentGenerator, ReqLinkedInClient}
 
   @create_attrs %{
     title: "a new post title",
@@ -175,7 +176,7 @@ defmodule AlchemistdropsWeb.PostLiveTest do
   end
 
   describe "LinkedIn posting" do
-    setup [:register_and_log_in_admin_user, :create_post, :reset_linkedin_fakes]
+    setup [:register_and_log_in_admin_user, :create_post]
 
     test "does not show LinkedIn controls for a new unsaved post", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/admin/posts/new")
@@ -203,16 +204,20 @@ defmodule AlchemistdropsWeb.PostLiveTest do
       generated_text =
         "Este artigo mostra como publicar com clareza. Leia mais: https://example.com"
 
-      FakeContentGenerator.set_static_result({:ok, %{language: "pt-BR", text: generated_text}})
-      FakeContentGenerator.set_static_controller(self())
+      expect(OpenRouterContentGenerator, :generate, fn received_post, article_url ->
+        assert received_post == post
+        assert article_url == url(~p"/blog/#{post.slug}")
+        {:ok, %{language: "pt-BR", text: generated_text}}
+      end)
+
+      reject(ReqLinkedInClient, :publish, 5)
 
       {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
+      allow(OpenRouterContentGenerator, self(), view.pid)
+      allow(ReqLinkedInClient, self(), view.pid)
 
       assert has_element?(view, "#generate-linkedin")
       assert view |> element("#generate-linkedin") |> render_click() =~ generated_text
-      assert_received {FakeContentGenerator, :called, ^post, article_url}
-      assert article_url == url(~p"/blog/#{post.slug}")
-      refute_received {FakeLinkedInClient, :publish_called, _, _, _, _, _}
       assert has_element?(view, "#linkedin-share-form textarea[name='linkedin_share[text]']")
       assert render(view) =~ "Detected language: pt-BR"
     end
@@ -272,17 +277,17 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     } do
       connect_linkedin()
       create_share(post, "Publish this text")
-      FakeLinkedInClient.set_static_result({:ok, %{post_urn: "urn:li:share:published"}})
-      FakeLinkedInClient.set_static_controller(self())
+
+      expect(ReqLinkedInClient, :publish, fn _token, _member_urn, text, article_url, _title ->
+        assert text == "Publish this text"
+        assert article_url == url(~p"/blog/#{post.slug}")
+        {:ok, %{post_urn: "urn:li:share:published"}}
+      end)
 
       {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
+      allow(ReqLinkedInClient, self(), view.pid)
 
       assert view |> element("#publish-linkedin") |> render_click() =~ "Published to LinkedIn"
-
-      assert_received {FakeLinkedInClient, :publish_called, _, _, "Publish this text",
-                       article_url, _}
-
-      assert article_url == url(~p"/blog/#{post.slug}")
       assert render(view) =~ "urn:li:share:published"
       refute has_element?(view, "#publish-linkedin")
       refute has_element?(view, "#linkedin-share-form")
@@ -291,9 +296,15 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     test "keeps failed text and allows a retry", %{conn: conn, post: post} do
       connect_linkedin()
       create_share(post, "Keep this text after failure")
-      FakeLinkedInClient.set_static_result({:error, :provider_failure})
+
+      ReqLinkedInClient
+      |> expect(:publish, fn _, _, _, _, _ -> {:error, {:request_error, :unexpected}} end)
+      |> expect(:publish, fn _, _, _, _, _ ->
+        {:ok, %{post_urn: "urn:li:share:retry"}}
+      end)
 
       {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
+      allow(ReqLinkedInClient, self(), view.pid)
 
       capture_log(fn ->
         view |> element("#publish-linkedin") |> render_click()
@@ -304,8 +315,6 @@ defmodule AlchemistdropsWeb.PostLiveTest do
       assert Social.get_share(post).status == :failed
       assert Social.get_share(post).generated_text == "Keep this text after failure"
       assert has_element?(view, "#publish-linkedin")
-
-      FakeLinkedInClient.set_static_result({:ok, %{post_urn: "urn:li:share:retry"}})
 
       assert view |> element("#publish-linkedin") |> render_click() =~ "Published to LinkedIn"
       assert Social.get_share(post).status == :published
@@ -336,9 +345,10 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     } do
       connect_linkedin()
       create_share(post, "Publish with a revoked token")
-      FakeLinkedInClient.set_static_result({:error, {:http_error, 401}})
+      expect(ReqLinkedInClient, :publish, fn _, _, _, _, _ -> {:error, {:http_error, 401}} end)
 
       {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
+      allow(ReqLinkedInClient, self(), view.pid)
 
       capture_log(fn ->
         view |> element("#publish-linkedin") |> render_click()
@@ -381,18 +391,6 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     end
   end
 
-  defp reset_linkedin_fakes(_context) do
-    FakeContentGenerator.reset_static()
-    FakeLinkedInClient.reset_static()
-
-    on_exit(fn ->
-      FakeContentGenerator.reset_static()
-      FakeLinkedInClient.reset_static()
-    end)
-
-    :ok
-  end
-
   defp connect_linkedin do
     store_linkedin_connection(3_600)
   end
@@ -411,7 +409,10 @@ defmodule AlchemistdropsWeb.PostLiveTest do
   end
 
   defp create_share(post, generated_text) do
-    FakeContentGenerator.set_static_result({:ok, %{language: "en", text: generated_text}})
+    expect(OpenRouterContentGenerator, :generate, fn _, _ ->
+      {:ok, %{language: "en", text: generated_text}}
+    end)
+
     assert {:ok, share} = Social.generate_share(post, url(~p"/blog/#{post.slug}"))
     share
   end
@@ -419,7 +420,11 @@ defmodule AlchemistdropsWeb.PostLiveTest do
   defp create_published_share(post) do
     connect_linkedin()
     create_share(post, "Already published")
-    FakeLinkedInClient.set_static_result({:ok, %{post_urn: "urn:li:share:already-published"}})
+
+    expect(ReqLinkedInClient, :publish, fn _, _, _, _, _ ->
+      {:ok, %{post_urn: "urn:li:share:already-published"}}
+    end)
+
     assert {:ok, _share} = Social.publish_share(post, url(~p"/blog/#{post.slug}"))
   end
 end
