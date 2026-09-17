@@ -542,3 +542,41 @@ article.prose.drop-cap > p:first-of-type::first-letter {
   padding-top: 0.25rem;
   color: var(--prose-links);
 }
+
+/* Guided article reading */
+.post-detail article.prose {
+  font-size: clamp(1rem, 0.96rem + 0.18vw, 1.125rem);
+  line-height: 1.8;
+}
+
+.post-detail article.prose h2,
+.post-detail article.prose h3 {
+  scroll-margin-top: 2rem;
+}
+
+.post-detail article.prose h2 > .anchor,
+.post-detail article.prose h3 > .anchor {
+  scroll-margin-top: 2rem;
+}
+
+.post-card:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+#article-toc a:focus-visible,
+#article-mobile-toc a:focus-visible,
+.back-link:focus-visible {
+  border-radius: 0.25rem;
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+@media (max-width: 40rem) {
+  .post-detail article.prose pre,
+  .post-detail article.prose .table-wrapper {
+    margin-left: -0.75rem;
+    margin-right: -0.75rem;
+    border-radius: 0.5rem;
+  }
+}

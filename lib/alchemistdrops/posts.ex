@@ -78,6 +78,17 @@ defmodule Alchemistdrops.Posts do
     |> Repo.all()
   end
 
+  def list_tags_with_published_counts do
+    from(t in Tag,
+      join: p in assoc(t, :posts),
+      where: p.status == :published and not is_nil(p.published_at),
+      group_by: t.id,
+      order_by: t.name,
+      select: %{tag: t, published_count: count(p.id)}
+    )
+    |> Repo.all()
+  end
+
   def list_related_posts(%Post{} = post, limit) when is_integer(limit) and limit > 0 do
     post = Repo.preload(post, [:tags])
     tag_ids = Enum.map(post.tags, & &1.id)
@@ -160,6 +171,18 @@ defmodule Alchemistdrops.Posts do
   def get_published_post_by_slug!(slug) do
     published_query()
     |> where([p], p.slug == ^slug)
+    |> Repo.one!()
+  end
+
+  def get_published_post_by_slug(slug) do
+    published_query()
+    |> where([p], p.slug == ^slug)
+    |> Repo.one()
+  end
+
+  def get_published_post_by_id!(id) do
+    published_query()
+    |> where([p], p.id == ^id)
     |> Repo.one!()
   end
 

@@ -194,6 +194,45 @@
     </div>
   </section>
 
+  <section id="recent-articles" class="space-y-8" aria-labelledby="recent-articles-title">
+    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+          From the journal
+        </p>
+        <h2 id="recent-articles-title" class="mt-2 text-3xl font-bold sm:text-4xl">
+          Recent articles
+        </h2>
+      </div>
+      <.link
+        navigate={~p"/blog"}
+        class="inline-flex items-center gap-2 font-semibold text-primary"
+      >
+        View all articles <.icon name="hero-arrow-right" class="size-4" />
+      </.link>
+    </div>
+
+    <div class="grid gap-5 md:grid-cols-3">
+      <article
+        :for={post <- @recent_posts}
+        class="group relative rounded-2xl border border-base-300 bg-base-100 p-6 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
+      >
+        <p class="text-xs font-semibold uppercase tracking-wider text-primary">
+          {post.category.name}
+        </p>
+        <h3 class="mt-3 text-xl font-bold leading-snug">
+          <.link navigate={~p"/blog/#{post.slug}"} class="after:absolute after:inset-0">
+            {post.title}
+          </.link>
+        </h3>
+        <p class="mt-3 line-clamp-3 text-sm leading-6 text-base-content/70">{post.summary}</p>
+        <p class="mt-5 text-xs text-base-content/50">
+          {format_post_date(post.published_at)} · {reading_minutes(post)} min read
+        </p>
+      </article>
+    </div>
+  </section>
+
   <%!-- Pricing Section --%>
   <section id="pricing" class="space-y-8" aria-labelledby="pricing-title">
     <div class="text-center space-y-4">

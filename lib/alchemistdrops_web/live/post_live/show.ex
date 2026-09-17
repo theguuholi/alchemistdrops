@@ -1,7 +1,31 @@
 defmodule AlchemistdropsWeb.PostLive.Show do
   use AlchemistdropsWeb, :live_view
 
-  alias Alchemistdrops.{Markdown, Posts}
+  alias Alchemistdrops.Posts
+  alias Alchemistdrops.Posts.Article
+
+  @copy %{
+    en: %{
+      back: "Back to all posts",
+      outline: "In this article",
+      minute: "min read",
+      updated: "Last updated",
+      course_eyebrow: "Continue learning",
+      course_action: "Explore course",
+      related: "Related articles",
+      author: "Written by Gustavo Oliveira"
+    },
+    pt_br: %{
+      back: "Voltar ao blog",
+      outline: "Neste artigo",
+      minute: "min de leitura",
+      updated: "Atualizado em",
+      course_eyebrow: "Continue aprendendo",
+      course_action: "Conhecer curso",
+      related: "Artigos relacionados",
+      author: "Escrito por Gustavo Oliveira"
+    }
+  }
 
   @impl true
   def mount(%{"slug" => slug}, _session, socket) do
@@ -15,24 +39,25 @@ defmodule AlchemistdropsWeb.PostLive.Show do
   end
 
   defp mount_post(socket, post) do
-    # Increment views asynchronously to avoid impacting test assertions
-    if connected?(socket) do
-      Posts.increment_views(post)
-    end
+    if connected?(socket), do: Posts.increment_views(post)
 
-    meta_description = get_meta_description(post.body)
+    article = Article.build(post)
 
     {:ok,
      socket
-     |> assign(:page_title, post.title <> " - Alchemist's Journal")
-     |> assign(:meta_description, meta_description)
+     |> assign(:page_title, post.title)
+     |> assign(:meta_description, article.description)
      |> assign(:meta_url, build_url(~p"/blog/#{post.slug}"))
      |> assign(:post, post)
-     |> assign(:rendered_body, render_markdown(post.body))}
+     |> assign(:article, article)
+     |> assign(:article_html, Phoenix.HTML.raw(article.html))
+     |> assign(:related_course, published_course(post.related_course))
+     |> assign(:related_posts, Posts.list_related_posts(post, 3))
+     |> assign(:copy, Map.fetch!(@copy, post.language))}
   end
 
   defp get_post_by_slug_or_id!(slug) do
-    case Posts.get_post_by_slug(slug) do
+    case Posts.get_published_post_by_slug(slug) do
       nil -> get_post_by_legacy_id!(slug)
       post -> post
     end
@@ -40,32 +65,14 @@ defmodule AlchemistdropsWeb.PostLive.Show do
 
   defp get_post_by_legacy_id!(slug) do
     case Ecto.UUID.cast(slug) do
-      {:ok, id} -> Posts.get_post!(id)
-      :error -> Posts.get_post_by_slug!(slug)
+      {:ok, id} -> Posts.get_published_post_by_id!(id)
+      :error -> Posts.get_published_post_by_slug!(slug)
     end
   end
 
-  defp format_date(datetime) do
-    Calendar.strftime(datetime, "%B %d, %Y")
-  end
+  defp published_course(%{published: true} = course), do: course
+  defp published_course(_course), do: nil
 
-  defp get_meta_description(body) when is_binary(body) and byte_size(body) > 0 do
-    body
-    |> String.slice(0, 160)
-    |> String.replace("\n", " ")
-    |> String.trim()
-  end
-
-  defp get_meta_description(_), do: "Read this post on Alchemist's Journal"
-
-  defp build_url(path) do
-    AlchemistdropsWeb.Endpoint.url() <> path
-  end
-
-  defp render_markdown(content) when is_binary(content) and byte_size(content) > 0 do
-    {:ok, html} = Markdown.to_html(content)
-    Phoenix.HTML.raw(html)
-  end
-
-  defp render_markdown(_), do: Phoenix.HTML.raw("")
+  defp format_date(datetime), do: Calendar.strftime(datetime, "%B %d, %Y")
+  defp build_url(path), do: AlchemistdropsWeb.Endpoint.url() <> path
 end
