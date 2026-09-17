@@ -5,7 +5,7 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
   import Alchemistdrops.PostsFixtures
   import Alchemistdrops.CoursesFixtures
 
-  alias Alchemistdrops.Posts
+  alias Alchemistdrops.{Posts, Repo}
 
   test "drafts stay out of the public index and cannot be opened", %{conn: conn} do
     draft = draft_post_fixture(%{title: "Hidden draft"})
@@ -17,6 +17,19 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
 
     assert_raise Ecto.NoResultsError, fn -> live(conn, ~p"/blog/#{draft.slug}") end
     assert_raise Ecto.NoResultsError, fn -> live(conn, ~p"/blog/#{draft.id}") end
+  end
+
+  test "public index renders legacy published posts without a category", %{conn: conn} do
+    post = post_fixture(%{title: "Legacy article"})
+
+    post
+    |> Ecto.Changeset.change(category_id: nil)
+    |> Repo.update!()
+
+    {:ok, view, _html} = live(conn, ~p"/blog")
+
+    assert has_element?(view, "#posts-#{post.id}", "Legacy article")
+    assert has_element?(view, "#posts-#{post.id} .post-category", "Uncategorized")
   end
 
   test "category and tag filters update the result set", %{conn: conn} do

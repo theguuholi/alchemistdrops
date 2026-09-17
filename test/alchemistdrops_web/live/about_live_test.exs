@@ -33,14 +33,14 @@ defmodule AlchemistdropsWeb.AboutLiveTest do
       {:ok, _lv, html} = live(conn, ~p"/about")
 
       assert html =~ "About"
-      assert html =~ "Agile Methodologies"
-      assert html =~ "Evolutive Engineering"
+      assert html =~ "Elixir/OTP"
+      assert html =~ "Distributed Systems"
     end
 
-    test "renders Impact section with roles", %{conn: conn} do
+    test "renders Experience section with roles", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/about")
 
-      assert html =~ "Impact"
+      assert html =~ "Experience"
       assert html =~ "Stord"
       assert html =~ "Lolo"
       assert html =~ "Clarus R+D"

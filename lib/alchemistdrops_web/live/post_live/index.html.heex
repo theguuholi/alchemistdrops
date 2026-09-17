@@ -62,12 +62,18 @@
       >
         <div>
           <div class="mb-5 flex flex-wrap items-center gap-3 text-xs text-base-content/60">
-            <.link
-              navigate={~p"/blog?category=#{post.category.slug}"}
-              class="post-category font-semibold uppercase tracking-wider text-primary"
-            >
-              {post.category.name}
-            </.link>
+            <%= if post.category do %>
+              <.link
+                navigate={~p"/blog?category=#{post.category.slug}"}
+                class="post-category font-semibold uppercase tracking-wider text-primary"
+              >
+                {post.category.name}
+              </.link>
+            <% else %>
+              <span class="post-category font-semibold uppercase tracking-wider text-base-content/50">
+                Uncategorized
+              </span>
+            <% end %>
             <span aria-hidden="true">·</span>
             <time class="post-date" datetime={post.published_at}>
               {format_date(post.published_at)}

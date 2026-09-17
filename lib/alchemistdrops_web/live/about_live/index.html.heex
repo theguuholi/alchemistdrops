@@ -69,7 +69,10 @@
               </div>
               <p class="text-sm text-base-content/60 mb-3">{entry.location}</p>
               <ul class="space-y-1.5 mb-4">
-                <li :for={item <- entry.highlights} class="flex gap-2 text-sm text-base-content/80">
+                <li
+                  :for={item <- entry.highlights}
+                  class="flex gap-2 text-sm text-base-content/80"
+                >
                   <span class="text-primary mt-1.5 flex-shrink-0">▸</span>
                   <span>{item}</span>
                 </li>
