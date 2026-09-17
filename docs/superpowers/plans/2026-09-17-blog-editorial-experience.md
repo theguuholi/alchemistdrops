@@ -13,7 +13,7 @@
 ## Global Constraints
 
 - Preserve existing slug generation, canonical slug routes, and legacy UUID redirects.
-- Preserve the committed LinkedIn publishing workflow; LinkedIn actions become available only for published articles.
+- Keep third-party distribution integrations outside this branch.
 - Public blog LiveViews stay in the existing `live_session :current_user`; admin blog LiveViews stay in `live_session :required_admin_user`.
 - Existing posts must remain public after migration by backfilling `status = 'published'` and `published_at = inserted_at`.
 - The first release supports only `draft` and `published`; no scheduling.
@@ -24,7 +24,7 @@
 - Follow TDD: add a failing focused test, observe the expected failure, implement the minimum behavior, and rerun the focused test before broader suites.
 - Do not modify `mix.exs` coverage thresholds or coverage-ignore configuration.
 - Do not include unrelated dirty files in commits.
-- Baseline recorded before this plan: 722 tests, 26 failures (24 LinkedIn fake-module failures and 2 stale About-page assertions). Every focused blog test introduced here must pass; final reporting must distinguish these preexisting failures.
+- The known baseline contains two stale About-page assertion failures. Every focused blog test introduced here must pass; final reporting must distinguish these preexisting failures.
 
 ---
 
@@ -40,7 +40,7 @@
 - `lib/alchemistdrops_web/controllers/blog_discovery_controller.ex` — sitemap and Atom endpoints.
 - `test/alchemistdrops/posts/article_test.exs` — article presentation unit tests.
 - `test/alchemistdrops_web/controllers/blog_discovery_controller_test.exs` — XML discovery tests.
-- `test/alchemistdrops_web/live/admin/post_editorial_live_test.exs` — isolated editorial admin workflow tests that do not overlap the dirty LinkedIn test file.
+- `test/alchemistdrops_web/live/admin/post_editorial_live_test.exs` — isolated editorial admin workflow tests.
 - `assets/js/hooks/Mermaid/index.test.js` — Mermaid hook behavior tests.
 
 ### Existing files modified
@@ -348,7 +348,6 @@ Test:
 - category can be reused or created inline;
 - tag input rejects more than five unique tags;
 - course selection is optional;
-- LinkedIn controls do not appear for a draft;
 - admin index displays Draft/Published status and publication date.
 
 Use stable DOM IDs: `#save-draft`, `#publish-post`, `#unpublish-post`, `#post-category`, `#post-tags`, `#post-related-course`, and `#seo-preview`.
@@ -357,7 +356,7 @@ Use stable DOM IDs: `#save-draft`, `#publish-post`, `#unpublish-post`, `#post-ca
 
 Run: `mix test test/alchemistdrops_web/live/admin/post_editorial_live_test.exs`
 
-Expected: new editorial tests FAIL. Preexisting LinkedIn fake-module failures remain separately visible until their owning dirty changes are resolved.
+Expected: new editorial tests FAIL.
 
 - [ ] **Step 3: Restructure the form into focused sections**
 
@@ -371,9 +370,9 @@ Do not create a separate category-management route in this release. Use a catego
 
 The post route remains in `live_session :required_admin_user` because all three actions are administrative.
 
-- [ ] **Step 5: Gate LinkedIn controls on published status**
+- [ ] **Step 5: Verify draft visibility boundaries**
 
-Render a short explanation for drafts instead of Connect/Generate/Publish controls. Preserve published LinkedIn metadata and current dirty-form protection.
+Ensure draft posts remain available to administrators but absent from public queries and routes.
 
 - [ ] **Step 6: Run focused admin tests**
 
@@ -618,7 +617,7 @@ git commit -m "feat(blog): add blueprint Mermaid viewer"
 
 **Files:**
 - Modify only files required to fix failures introduced by Tasks 1–7.
-- Do not fix the preexisting LinkedIn fake-module or About-page failures unless the user separately authorizes that scope.
+- Do not fix the preexisting About-page failures unless the user separately authorizes that scope.
 
 **Interfaces:**
 - Consumes: all deliverables from Tasks 1–7.

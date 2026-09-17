@@ -5,7 +5,7 @@
 
 ## Objective
 
-Transform the existing blog from a basic post CRUD into a controlled editorial and acquisition surface while preserving the current Markdown, slug, Mermaid, and LinkedIn functionality.
+Transform the existing blog from a basic post CRUD into a controlled editorial and acquisition surface while preserving the current Markdown, slug, and Mermaid functionality.
 
 The release must deliver:
 
@@ -22,7 +22,6 @@ The release must deliver:
 - Legacy UUID URLs redirecting to the canonical slug URL.
 - Markdown rendering with tables, heading IDs, task lists, and Mermaid blocks.
 - Admin-side live Markdown preview.
-- LinkedIn preview generation and publishing.
 - Public routes inside the existing `live_session :current_user`, because the blog works for authenticated and anonymous visitors.
 - Admin routes inside the existing `live_session :required_admin_user`, because editorial actions require an admin.
 
@@ -121,7 +120,6 @@ The admin form is divided into focused sections:
 2. **Organization:** language, category, and up to five tags.
 3. **Conversion:** optional related course.
 4. **SEO preview:** resolved title, description, canonical URL, and social card preview.
-5. **Distribution:** existing LinkedIn controls.
 
 The primary actions are:
 
@@ -129,8 +127,6 @@ The primary actions are:
 - **Publish:** validates all publication requirements, sets `published_at` on first publication, and exposes the public URL.
 - **Update published article:** saves changes while retaining the original `published_at`.
 - **Move to draft:** removes the post from public queries without deleting it.
-
-LinkedIn generation and publication are available only for a published article. Existing published LinkedIn metadata remains immutable under the current social workflow.
 
 ## Public Blog Index
 
@@ -242,7 +238,6 @@ Follow TDD for every behavior. Coverage includes:
 - article and index rendering in both supported languages;
 - Mermaid hook registration, controls, error markup, and theme-change behavior;
 - legacy UUID redirect compatibility;
-- LinkedIn actions restricted to published articles;
 - homepage recent-article section.
 
 Browser-level JavaScript tests cover Mermaid rendering, zoom, expanded dialog behavior, theme re-rendering, and parse failures. LiveView tests cover the server-rendered structure and accessibility hooks.

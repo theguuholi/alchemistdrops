@@ -65,8 +65,6 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
 
     assert view |> element("#unpublish-post") |> render_click() =~ "Draft saved"
     assert Posts.get_post!(post.id).status == :draft
-    refute has_element?(view, "#generate-linkedin")
-    refute has_element?(view, "#linkedin-connect")
   end
 
   test "shows taxonomy, optional course, SEO preview, and tag validation", %{conn: conn} do
