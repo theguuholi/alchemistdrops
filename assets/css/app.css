@@ -717,3 +717,55 @@ article.prose.drop-cap > p:first-of-type::first-letter {
     border-radius: 0.5rem;
   }
 }
+
+/* Match custom article colors to daisyUI when the theme follows the OS. */
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme]) article.prose {
+    --prose-body: oklch(78% 0.01 230);
+    --prose-headings: oklch(96% 0.01 230);
+    --prose-links: oklch(75% 0.16 230);
+    --prose-links-hover: oklch(82% 0.18 230);
+    --prose-bold: oklch(92% 0.01 230);
+    --prose-quotes: oklch(70% 0.01 230);
+    --prose-quote-border: oklch(68% 0.15 300);
+    --prose-code-bg: oklch(22% 0.025 260);
+    --prose-code-text: oklch(78% 0.12 300);
+    --prose-pre-bg: oklch(14% 0.02 260);
+    --prose-pre-text: oklch(88% 0.01 230);
+    --prose-hr: oklch(28% 0.02 260);
+    --prose-list-marker: oklch(68% 0.15 300);
+  }
+
+  html:not([data-theme]) article.prose mark {
+    background: linear-gradient(120deg, oklch(45% 0.15 300 / 0.4) 0%, oklch(45% 0.15 300 / 0.6) 100%);
+  }
+
+  html:not([data-theme]) article.prose blockquote {
+    background: linear-gradient(90deg, oklch(20% 0.02 260 / 0.5) 0%, transparent 100%);
+  }
+
+  html:not([data-theme]) article.prose img {
+    box-shadow: 0 4px 24px oklch(0% 0 0 / 0.4);
+  }
+
+  html:not([data-theme]) article.prose .table-wrapper {
+    box-shadow: 0 1px 3px oklch(0% 0 0 / 0.25);
+  }
+
+  html:not([data-theme]) article.prose th {
+    background: oklch(22% 0.02 260);
+    color: oklch(90% 0.01 230);
+  }
+
+  html:not([data-theme]) article.prose tbody tr:nth-child(even) td {
+    background: oklch(18% 0.015 260);
+  }
+
+  html:not([data-theme]) article.prose tbody tr:hover td {
+    background: oklch(24% 0.02 260);
+  }
+
+  html:not([data-theme]) article.prose ::selection {
+    background: oklch(68% 0.15 300 / 0.35);
+  }
+}
