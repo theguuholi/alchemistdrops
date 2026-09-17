@@ -218,7 +218,7 @@
         class="group relative rounded-2xl border border-base-300 bg-base-100 p-6 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
       >
         <p class="text-xs font-semibold uppercase tracking-wider text-primary">
-          {post.category.name}
+          {if post.category, do: post.category.name, else: "Uncategorized"}
         </p>
         <h3 class="mt-3 text-xl font-bold leading-snug">
           <.link navigate={~p"/blog/#{post.slug}"} class="after:absolute after:inset-0">

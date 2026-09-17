@@ -3,6 +3,8 @@ defmodule AlchemistdropsWeb.HomeLiveTest do
   import Phoenix.LiveViewTest
   import Alchemistdrops.PostsFixtures
 
+  alias Alchemistdrops.Repo
+
   describe "HomeLive" do
     test "renders home page successfully", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/")
@@ -197,6 +199,19 @@ defmodule AlchemistdropsWeb.HomeLiveTest do
       assert length(Regex.scan(~r/<article\b/, recent_html)) == 3
       refute html =~ "Homepage draft"
       assert has_element?(view, "#recent-articles a[href='/blog']", "View all articles")
+    end
+
+    test "renders a legacy published article without a category", %{conn: conn} do
+      post = post_fixture(%{title: "Legacy homepage article"})
+
+      post
+      |> Ecto.Changeset.change(category_id: nil)
+      |> Repo.update!()
+
+      {:ok, view, _html} = live(conn, ~p"/")
+
+      assert has_element?(view, "#recent-articles article", "Legacy homepage article")
+      assert has_element?(view, "#recent-articles article", "Uncategorized")
     end
   end
 end

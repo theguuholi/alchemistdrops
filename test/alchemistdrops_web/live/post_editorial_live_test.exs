@@ -32,6 +32,33 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
     assert has_element?(view, "#posts-#{post.id} .post-category", "Uncategorized")
   end
 
+  test "article page renders a legacy published post without a category", %{conn: conn} do
+    post = post_fixture(%{title: "Legacy article detail"})
+
+    post
+    |> Ecto.Changeset.change(category_id: nil)
+    |> Repo.update!()
+
+    {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
+
+    assert has_element?(view, ".post-header", "Legacy article detail")
+    assert has_element?(view, ".post-header", "Uncategorized")
+  end
+
+  test "article page renders a related legacy post without a category", %{conn: conn} do
+    current = post_fixture(%{title: "Current tagged article", tag_names: "OTP"})
+    related = post_fixture(%{title: "Legacy related article", tag_names: "OTP"})
+
+    related
+    |> Ecto.Changeset.change(category_id: nil)
+    |> Repo.update!()
+
+    {:ok, view, _html} = live(conn, ~p"/blog/#{current.slug}")
+
+    assert has_element?(view, "#related-articles", "Legacy related article")
+    assert has_element?(view, "#related-articles", "Uncategorized")
+  end
+
   test "category and tag filters update the result set", %{conn: conn} do
     {:ok, elixir} =
       Posts.create_post(%{

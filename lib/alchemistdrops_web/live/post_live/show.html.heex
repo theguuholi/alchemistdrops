@@ -10,12 +10,18 @@
 
   <header class="post-header border-b border-base-300 px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
     <div class="mx-auto max-w-5xl">
-      <.link
-        navigate={~p"/blog?category=#{@post.category.slug}"}
-        class="text-xs font-semibold uppercase tracking-[0.2em] text-primary"
-      >
-        {@post.category.name}
-      </.link>
+      <%= if @post.category do %>
+        <.link
+          navigate={~p"/blog?category=#{@post.category.slug}"}
+          class="text-xs font-semibold uppercase tracking-[0.2em] text-primary"
+        >
+          {@post.category.name}
+        </.link>
+      <% else %>
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+          Uncategorized
+        </p>
+      <% end %>
       <h1 class="post-title mt-5 max-w-4xl text-4xl font-bold leading-[1.08] tracking-tight text-base-content sm:text-6xl">
         {@post.title}
       </h1>
@@ -127,7 +133,7 @@
     <div class="mt-6 grid gap-4 md:grid-cols-3">
       <article :for={post <- @related_posts} class="rounded-xl border border-base-300 p-5">
         <p class="text-xs font-semibold uppercase tracking-wider text-primary">
-          {post.category.name}
+          {if post.category, do: post.category.name, else: "Uncategorized"}
         </p>
         <h3 class="mt-2 font-semibold leading-snug">
           <.link navigate={~p"/blog/#{post.slug}"} class="hover:text-primary">{post.title}</.link>
