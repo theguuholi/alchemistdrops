@@ -44,3 +44,18 @@ config :alchemistdrops, :stripe,
   secret_key: "sk_test_mock",
   webhook_secret: "whsec_test_mock",
   http_client: Alchemistdrops.Payments.MockHttpClient
+
+config :alchemistdrops, :linkedin_token_encryption_key, "linkedin-test-encryption-key"
+
+config :alchemistdrops,
+  linkedin_client: Alchemistdrops.Social.ReqLinkedInClient,
+  linkedin_content_generator: Alchemistdrops.Social.OpenRouterContentGenerator
+
+config :alchemistdrops,
+  openrouter_req_options: [plug: {Req.Test, Alchemistdrops.Social.OpenRouterContentGenerator}],
+  linkedin_req_options: [
+    connect_options: [timeout: 5_000],
+    receive_timeout: 15_000,
+    plug: {Req.Test, Alchemistdrops.Social.ReqLinkedInClient},
+    retry: false
+  ]

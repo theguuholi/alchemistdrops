@@ -24,6 +24,21 @@ config :alchemistdrops,
   ecto_repos: [Alchemistdrops.Repo],
   generators: [timestamp_type: :utc_datetime, binary_id: true]
 
+config :alchemistdrops,
+  linkedin_client: Alchemistdrops.Social.ReqLinkedInClient,
+  linkedin_content_generator: Alchemistdrops.Social.OpenRouterContentGenerator
+
+config :alchemistdrops, :linkedin,
+  client_id: nil,
+  client_secret: nil,
+  redirect_uri: nil,
+  api_version: nil
+
+config :alchemistdrops, :linkedin_token_encryption_key, nil
+
+config :alchemistdrops,
+  linkedin_req_options: [connect_options: [timeout: 5_000], receive_timeout: 15_000]
+
 # Configures the endpoint
 config :alchemistdrops, AlchemistdropsWeb.Endpoint,
   url: [host: "localhost"],

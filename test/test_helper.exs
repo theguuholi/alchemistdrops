@@ -1,3 +1,6 @@
+Mimic.copy(Alchemistdrops.Social.OpenRouterContentGenerator, type_check: true)
+Mimic.copy(Alchemistdrops.Social.ReqLinkedInClient, type_check: true)
+
 ExUnit.start()
 Ecto.Adapters.SQL.Sandbox.mode(Alchemistdrops.Repo, :manual)
 

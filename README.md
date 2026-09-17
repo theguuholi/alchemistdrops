@@ -19,6 +19,58 @@ mix phx.server
 
 Now visit [`localhost:4000`](http://localhost:4000) from your browser.
 
+### LinkedIn Publishing Setup
+
+The admin post editor can generate an AI-assisted preview and publish it to one
+personal LinkedIn profile. Preview generation uses OpenRouter; publishing uses
+LinkedIn's three-legged OAuth flow.
+
+#### 1. Configure a LinkedIn application
+
+1. Create or select an application in the [LinkedIn Developer Portal](https://www.linkedin.com/developers/apps).
+2. In **Products**, enable **Sign in with LinkedIn using OpenID Connect** and
+   **Share on LinkedIn**. The application needs the `openid`, `profile`, and
+   `w_member_social` scopes.
+3. In **Auth > OAuth 2.0 settings**, add the exact authorized redirect URL:
+   - Development: `http://localhost:4000/admin/linkedin/callback`
+   - Production: `https://your-domain.example/admin/linkedin/callback`
+4. Copy the Client ID and Client Secret from the **Auth** tab.
+
+See LinkedIn's official documentation for
+[API access and products](https://learn.microsoft.com/en-us/linkedin/shared/authentication/getting-access),
+[OAuth authentication](https://learn.microsoft.com/en-us/linkedin/shared/authentication/authentication),
+and the [Posts API](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api).
+
+#### 2. Set environment variables
+
+```bash
+export OPENROUTER_API_KEY="your-openrouter-key"
+export LINKEDIN_CLIENT_ID="your-linkedin-client-id"
+export LINKEDIN_CLIENT_SECRET="your-linkedin-client-secret"
+export LINKEDIN_REDIRECT_URI="http://localhost:4000/admin/linkedin/callback"
+export LINKEDIN_API_VERSION="YYYYMM"
+export LINKEDIN_TOKEN_ENCRYPTION_KEY="$(mix phx.gen.secret)"
+```
+
+Use a currently supported LinkedIn API version in `YYYYMM` format. The value of
+`LINKEDIN_REDIRECT_URI` must exactly match the URL registered in the LinkedIn
+Developer Portal. Keep the client secret, OpenRouter key, and encryption key out
+of source control. Use a stable encryption key in each deployed environment;
+changing it invalidates the stored LinkedIn access token and requires reconnecting.
+
+#### 3. Apply the database migration and connect
+
+```bash
+mix ecto.migrate
+mix phx.server
+```
+
+Log in as an administrator, open an existing post under **Admin > Posts**, and
+select **Connect LinkedIn**. After authorizing the personal profile, use
+**Generate LinkedIn preview**, edit the generated text if needed, and confirm
+**Publish to LinkedIn**. The application never publishes during preview
+generation.
+
 ### Test Accounts (from seeds)
 
 After running `mix ecto.setup`, you can log in with:
@@ -213,4 +265,3 @@ mix test
 
 - Portfolio: [alchemistdrops.com](http://alchemistdrops.com)
 - Email: g.92oliveira@gmail.com
-

@@ -229,4 +229,42 @@ defmodule AlchemistdropsWeb.UserAuthTest do
       assert get_session(conn, :user_return_to) == "/protected-page"
     end
   end
+
+  describe "require_admin_user/2" do
+    test "redirects a guest to login", %{conn: conn} do
+      conn =
+        conn
+        |> Phoenix.ConnTest.init_test_session(%{})
+        |> Plug.Conn.assign(:current_scope, Accounts.Scope.for_user(nil))
+        |> UserAuth.require_admin_user([])
+
+      assert conn.halted
+      assert redirected_to(conn) == "/users/log-in"
+    end
+
+    test "redirects a signed-in non-admin user home", %{conn: conn} do
+      user = user_fixture(%{role: :user})
+
+      conn =
+        conn
+        |> Phoenix.ConnTest.init_test_session(%{})
+        |> Plug.Conn.assign(:current_scope, Accounts.Scope.for_user(user))
+        |> UserAuth.require_admin_user([])
+
+      assert conn.halted
+      assert redirected_to(conn) == "/"
+    end
+
+    test "allows an administrator to continue", %{conn: conn} do
+      admin = user_fixture(%{role: :admin})
+
+      conn =
+        conn
+        |> Plug.Conn.assign(:current_scope, Accounts.Scope.for_user(admin))
+        |> UserAuth.require_admin_user([])
+
+      refute conn.halted
+      refute conn.status
+    end
+  end
 end
