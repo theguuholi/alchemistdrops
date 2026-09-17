@@ -59,7 +59,6 @@
           "post-card group relative overflow-hidden rounded-2xl border border-base-300 bg-base-100 p-6 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-xl sm:p-8",
           index == 0 && "lg:col-span-2 lg:grid lg:grid-cols-[1fr_auto] lg:gap-12"
         ]}
-        phx-click={JS.navigate(~p"/blog/#{post.slug}")}
       >
         <div>
           <div class="mb-5 flex flex-wrap items-center gap-3 text-xs text-base-content/60">
@@ -83,7 +82,7 @@
           ]}>
             <.link
               navigate={~p"/blog/#{post.slug}"}
-              class="after:absolute after:inset-0 focus:outline-none"
+              class="focus:outline-none hover:text-primary"
             >
               {post.title}
             </.link>

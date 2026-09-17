@@ -43,6 +43,12 @@ describe("Mermaid hook", () => {
     hook.updated()
     await flush()
     expect(blueprint.querySelectorAll(".mermaid-toolbar")).toHaveLength(1)
+
+    hook.el.innerHTML = '<pre class="mermaid">graph LR\n  C --> D</pre>'
+    hook.updated()
+    await flush()
+    expect(hook.diagrams).toHaveLength(1)
+    expect(hook.el.querySelector(".mermaid-blueprint").dataset.mermaidSource).toContain("graph LR")
   })
 
   it("zooms within bounds and resets the canvas", async () => {

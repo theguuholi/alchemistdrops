@@ -20,11 +20,22 @@ const MermaidHook = {
   destroyed() {
     this.themeObserver?.disconnect()
     this.colorSchemeQuery?.removeEventListener?.("change", this.colorSchemeListener)
-    this.diagrams.forEach(diagram => diagram.cleanup.forEach(cleanup => cleanup()))
+    this.diagrams.forEach(diagram => {
+      diagram.renderToken += 1
+      diagram.cleanup.forEach(cleanup => cleanup())
+    })
     this.diagrams = []
   },
 
   renderDiagrams() {
+    this.diagrams = this.diagrams.filter(diagram => {
+      if (diagram.wrapper.isConnected) return true
+
+      diagram.renderToken += 1
+      diagram.cleanup.forEach(cleanup => cleanup())
+      return false
+    })
+
     this.el.querySelectorAll("pre.mermaid:not([data-blueprint-ready])").forEach(node => {
       node.dataset.blueprintReady = "true"
       const diagram = this.buildDiagram(node)

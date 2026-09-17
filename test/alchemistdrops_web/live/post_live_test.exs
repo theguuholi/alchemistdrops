@@ -201,7 +201,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       # And: the user clicks on the post card
       _result =
         index_view
-        |> element("article#posts-#{post.id}")
+        |> element("article#posts-#{post.id} .post-title a")
         |> render_click()
 
       # Then: the user should be redirected to the post detail page
@@ -223,7 +223,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       # And: clicks on the second post
       result =
         index_view
-        |> element("article#posts-#{post2.id}")
+        |> element("article#posts-#{post2.id} .post-title a")
         |> render_click()
 
       # Then: should redirect to the second post's page
