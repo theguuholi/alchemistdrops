@@ -4,7 +4,7 @@ defmodule Alchemistdrops.PostsTest do
   alias Alchemistdrops.Posts
 
   describe "posts" do
-    alias Alchemistdrops.Posts.Post
+    alias Alchemistdrops.Posts.{Category, Post, Tag}
 
     import Alchemistdrops.PostsFixtures
 
@@ -70,6 +70,80 @@ defmodule Alchemistdrops.PostsTest do
         })
 
       assert Ecto.Changeset.get_change(changeset, :slug) == "generated-by-changeset"
+    end
+
+    test "draft_changeset/2 allows publication-only fields to remain empty" do
+      changeset = Post.draft_changeset(%Post{}, %{title: "Work in progress"})
+
+      assert changeset.valid?
+      assert Ecto.Changeset.get_field(changeset, :status) == :draft
+      assert Ecto.Changeset.get_field(changeset, :slug) == "work-in-progress"
+    end
+
+    test "publish_changeset/2 requires the editorial publication fields" do
+      changeset = Post.publish_changeset(%Post{}, %{title: "Incomplete article"})
+
+      refute changeset.valid?
+
+      assert %{
+               body: ["can't be blank"],
+               category_id: ["can't be blank"],
+               summary: ["can't be blank"]
+             } = errors_on(changeset)
+    end
+
+    test "draft_changeset/2 requires alternative text when a cover image is present" do
+      changeset =
+        Post.draft_changeset(%Post{}, %{
+          title: "Article with cover",
+          cover_image_url: "https://example.com/cover.jpg"
+        })
+
+      refute changeset.valid?
+
+      assert %{cover_image_alt: ["can't be blank when a cover image is present"]} =
+               errors_on(changeset)
+    end
+
+    test "publish_changeset/2 accepts string-keyed form parameters" do
+      changeset =
+        Post.publish_changeset(%Post{}, %{
+          "title" => "Publish from form",
+          "body" => "Complete body",
+          "summary" => "Complete summary",
+          "category_id" => Ecto.UUID.generate()
+        })
+
+      assert changeset.valid?
+      assert Ecto.Changeset.get_field(changeset, :status) == :published
+    end
+
+    test "draft_changeset/2 rejects non-HTTPS cover image URLs" do
+      changeset =
+        Post.draft_changeset(%Post{}, %{
+          title: "Unsafe cover",
+          cover_image_url: "http://example.com/cover.jpg",
+          cover_image_alt: "Cover"
+        })
+
+      refute changeset.valid?
+      assert %{cover_image_url: ["must be an absolute HTTPS URL"]} = errors_on(changeset)
+    end
+
+    test "category changeset trims its name and generates a stable slug" do
+      changeset = Category.changeset(%Category{}, %{name: "  Phoenix LiveView  "})
+
+      assert changeset.valid?
+      assert Ecto.Changeset.get_field(changeset, :name) == "Phoenix LiveView"
+      assert Ecto.Changeset.get_field(changeset, :slug) == "phoenix-liveview"
+    end
+
+    test "tag changeset trims its name and generates a stable slug" do
+      changeset = Tag.changeset(%Tag{}, %{name: "  OTP & BEAM  "})
+
+      assert changeset.valid?
+      assert Ecto.Changeset.get_field(changeset, :name) == "OTP & BEAM"
+      assert Ecto.Changeset.get_field(changeset, :slug) == "otp-beam"
     end
 
     test "update_post/2 with valid data updates the post" do
