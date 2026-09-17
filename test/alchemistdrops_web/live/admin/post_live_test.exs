@@ -5,7 +5,7 @@ defmodule AlchemistdropsWeb.PostLiveTest do
   import Alchemistdrops.PostsFixtures
 
   @create_attrs %{
-    title: "some title",
+    title: "a new post title",
     body: "some body",
     background: "some background",
     views: 42
