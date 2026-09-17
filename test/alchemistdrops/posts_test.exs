@@ -189,5 +189,151 @@ defmodule Alchemistdrops.PostsTest do
       post = post_fixture()
       assert %Ecto.Changeset{} = Posts.change_post(post)
     end
+
+    test "public queries exclude drafts and preload editorial associations" do
+      published = post_fixture(%{title: "Visible article"})
+      draft = draft_post_fixture(%{title: "Private draft"})
+
+      assert [listed] = Posts.list_published_posts()
+      assert listed.id == published.id
+      assert Ecto.assoc_loaded?(listed.category)
+      assert Ecto.assoc_loaded?(listed.tags)
+      refute Enum.any?(Posts.list_published_posts(), &(&1.id == draft.id))
+
+      assert Posts.get_published_post_by_slug!(published.slug).id == published.id
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Posts.get_published_post_by_slug!(draft.slug)
+      end
+    end
+
+    test "publish_post/1 stamps the first publication and unpublish_post/1 hides the article" do
+      category = category_fixture()
+
+      draft =
+        draft_post_fixture(%{
+          title: "Ready article",
+          body: "Complete body",
+          summary: "Complete summary",
+          category_id: category.id
+        })
+
+      assert {:ok, published} = Posts.publish_post(draft)
+      assert published.status == :published
+      assert published.published_at
+      first_published_at = published.published_at
+
+      assert {:ok, draft_again} = Posts.unpublish_post(published)
+      assert draft_again.status == :draft
+
+      assert {:ok, republished} = Posts.publish_post(draft_again)
+      assert republished.published_at == first_published_at
+    end
+
+    test "create_post/1 reuses category and tag names case-insensitively" do
+      attrs = %{
+        title: "Taxonomy article",
+        category_name: "Elixir",
+        tag_names: "OTP, beam, OTP"
+      }
+
+      assert {:ok, first_post} = Posts.create_post(attrs)
+
+      assert {:ok, second_post} =
+               Posts.create_post(%{
+                 title: "Another taxonomy article",
+                 category_name: "elixir",
+                 tag_names: "otp, BEAM"
+               })
+
+      first_post = Repo.preload(first_post, [:category, :tags])
+      second_post = Repo.preload(second_post, [:category, :tags])
+
+      assert first_post.category.id == second_post.category.id
+      assert Enum.sort(Enum.map(first_post.tags, & &1.slug)) == ["beam", "otp"]
+
+      assert Enum.sort(Enum.map(second_post.tags, & &1.id)) ==
+               Enum.sort(Enum.map(first_post.tags, & &1.id))
+    end
+
+    test "create_post/1 rejects more than five unique tags" do
+      assert {:error, changeset} =
+               Posts.create_post(%{
+                 title: "Too many tags",
+                 tag_names: "one, two, three, four, five, six"
+               })
+
+      assert %{tags: ["must contain at most 5 tags"]} = errors_on(changeset)
+    end
+
+    test "list_published_posts/1 filters by category and tag slugs" do
+      {:ok, first} =
+        Posts.create_post(%{
+          title: "OTP article",
+          body: "Body",
+          summary: "Summary",
+          category_name: "Elixir",
+          tag_names: "OTP"
+        })
+
+      {:ok, first} = Posts.publish_post(first)
+
+      {:ok, second} =
+        Posts.create_post(%{
+          title: "LiveView article",
+          body: "Body",
+          summary: "Summary",
+          category_name: "Phoenix",
+          tag_names: "LiveView"
+        })
+
+      {:ok, second} = Posts.publish_post(second)
+
+      assert Enum.map(Posts.list_published_posts(category: "elixir"), & &1.id) == [first.id]
+      assert Enum.map(Posts.list_published_posts(tag: "liveview"), & &1.id) == [second.id]
+    end
+
+    test "list_related_posts/2 prefers shared tags and excludes the current post" do
+      category = category_fixture(%{name: "Architecture"})
+      shared_tag = tag_fixture(%{name: "OTP"})
+      other_tag = tag_fixture(%{name: "Ecto"})
+
+      current = published_post_with_taxonomy("Current", category, [shared_tag])
+      shared = published_post_with_taxonomy("Shared tag", category, [shared_tag])
+      same_category = published_post_with_taxonomy("Same category", category, [other_tag])
+
+      assert Enum.map(Posts.list_related_posts(current, 3), & &1.id) == [
+               shared.id,
+               same_category.id
+             ]
+    end
+
+    test "increment_views/1 does not lose increments from stale structs" do
+      post = post_fixture(%{views: 10})
+
+      assert {:ok, _post} = Posts.increment_views(post)
+      assert {:ok, _post} = Posts.increment_views(post)
+
+      assert Posts.get_post!(post.id).views == 12
+    end
+  end
+
+  defp published_post_with_taxonomy(title, category, tags) do
+    post =
+      %Alchemistdrops.Posts.Post{}
+      |> Alchemistdrops.Posts.Post.publish_changeset(%{
+        title: title,
+        body: "Body",
+        summary: "Summary",
+        category_id: category.id
+      })
+      |> Ecto.Changeset.put_change(
+        :published_at,
+        DateTime.utc_now() |> DateTime.truncate(:second)
+      )
+      |> Ecto.Changeset.put_assoc(:tags, tags)
+      |> Alchemistdrops.Repo.insert!()
+
+    Alchemistdrops.Repo.preload(post, [:category, :tags, :related_course])
   end
 end

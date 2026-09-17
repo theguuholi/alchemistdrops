@@ -10,7 +10,7 @@ defmodule Alchemistdrops.PostsFixtures do
   def post_fixture(attrs \\ %{}) do
     category_id = Map.get(attrs, :category_id) || category_fixture().id
 
-    {:ok, post} =
+    {:ok, draft} =
       attrs
       |> Enum.into(%{
         background: "some background",
@@ -23,11 +23,8 @@ defmodule Alchemistdrops.PostsFixtures do
       })
       |> Alchemistdrops.Posts.create_post()
 
-    published_at = DateTime.utc_now() |> DateTime.truncate(:second)
-
-    post
-    |> Ecto.Changeset.change(published_at: published_at)
-    |> Alchemistdrops.Repo.update!()
+    {:ok, post} = Alchemistdrops.Posts.publish_post(draft)
+    Alchemistdrops.Repo.get!(Alchemistdrops.Posts.Post, post.id)
   end
 
   @doc """
