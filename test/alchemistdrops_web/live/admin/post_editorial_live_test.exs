@@ -76,6 +76,7 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
     assert has_element?(view, "#post-tags")
     assert has_element?(view, "#post-related-course")
     assert has_element?(view, "#seo-preview")
+    assert has_element?(view, "#preview-article[phx-hook='Mermaid']")
 
     html =
       view
