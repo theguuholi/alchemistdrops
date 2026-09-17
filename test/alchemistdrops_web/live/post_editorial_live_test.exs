@@ -110,4 +110,40 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
     assert has_element?(view, ".reading-time", "min de leitura")
     assert has_element?(view, ".back-link", "Voltar ao blog")
   end
+
+  test "article emits canonical social metadata and safe BlogPosting JSON-LD", %{conn: conn} do
+    post =
+      post_fixture(%{
+        title: "Metadata <Guide>",
+        summary: "A clear summary",
+        seo_title: "Search title",
+        seo_description: "Search description",
+        cover_image_url: "https://example.com/cover.png",
+        cover_image_alt: "Article cover",
+        language: :pt_br
+      })
+
+    {:ok, _view, html} = live(conn, ~p"/blog/#{post.slug}")
+
+    canonical = "http://localhost:4002/blog/#{post.slug}"
+    assert html =~ ~s(<html lang="pt-BR">)
+    assert html =~ ~s(<link rel="canonical" href="#{canonical}")
+    assert html =~ ~s(<meta property="og:type" content="article")
+    assert html =~ ~s(<meta property="og:image" content="https://example.com/cover.png")
+    assert html =~ ~s(<meta property="og:locale" content="pt_BR")
+    assert html =~ ~s(<meta property="article:published_time")
+    assert html =~ ~s(<script type="application/ld+json")
+
+    [_, json] = Regex.run(~r/<script type="application\/ld\+json">\s*(.*?)\s*<\/script>/s, html)
+    assert %{"@type" => "BlogPosting", "headline" => "Metadata <Guide>"} = Jason.decode!(json)
+  end
+
+  test "article metadata falls back to the summary and site image", %{conn: conn} do
+    post = post_fixture(%{title: "Fallback metadata", summary: "Summary fallback"})
+
+    {:ok, _view, html} = live(conn, ~p"/blog/#{post.slug}")
+
+    assert html =~ ~s(<meta name="description" content="Summary fallback")
+    assert html =~ ~s(<meta property="og:image" content="http://localhost:4002/images/logo.svg")
+  end
 end

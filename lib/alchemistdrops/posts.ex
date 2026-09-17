@@ -67,6 +67,11 @@ defmodule Alchemistdrops.Posts do
     |> Repo.all()
   end
 
+  def list_all_published_posts do
+    published_query()
+    |> Repo.all()
+  end
+
   def list_categories_with_published_counts do
     from(c in Category,
       join: p in assoc(c, :posts),
