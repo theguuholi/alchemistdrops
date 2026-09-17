@@ -2,9 +2,11 @@ defmodule Alchemistdrops.PostsTest do
   use Alchemistdrops.DataCase
 
   alias Alchemistdrops.Posts
+  alias Alchemistdrops.Posts.Post
+  alias Alchemistdrops.Repo
 
   describe "posts" do
-    alias Alchemistdrops.Posts.{Category, Post, Tag}
+    alias Alchemistdrops.Posts.{Category, Tag}
 
     import Alchemistdrops.PostsFixtures
 
@@ -320,8 +322,8 @@ defmodule Alchemistdrops.PostsTest do
 
   defp published_post_with_taxonomy(title, category, tags) do
     post =
-      %Alchemistdrops.Posts.Post{}
-      |> Alchemistdrops.Posts.Post.publish_changeset(%{
+      %Post{}
+      |> Post.publish_changeset(%{
         title: title,
         body: "Body",
         summary: "Summary",
@@ -332,8 +334,8 @@ defmodule Alchemistdrops.PostsTest do
         DateTime.utc_now() |> DateTime.truncate(:second)
       )
       |> Ecto.Changeset.put_assoc(:tags, tags)
-      |> Alchemistdrops.Repo.insert!()
+      |> Repo.insert!()
 
-    Alchemistdrops.Repo.preload(post, [:category, :tags, :related_course])
+    Repo.preload(post, [:category, :tags, :related_course])
   end
 end

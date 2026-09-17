@@ -4,10 +4,9 @@ defmodule Alchemistdrops.Posts do
   """
 
   import Ecto.Query, warn: false
-  alias Ecto.Multi
-  alias Alchemistdrops.Repo
-
   alias Alchemistdrops.Posts.{Category, Post, Tag}
+  alias Alchemistdrops.Repo
+  alias Ecto.Multi
 
   @public_preloads [:category, :tags, :related_course]
   @default_page_size 12
@@ -361,24 +360,29 @@ defmodule Alchemistdrops.Posts do
     end
   end
 
-  defp resolve_tags(_repo, attrs, _tag_names) when not is_map(attrs), do: {:ok, :unchanged}
-
   defp resolve_tags(repo, attrs, tag_names) do
     if attr_present?(attrs, :tag_names) do
-      Enum.reduce_while(tag_names, {:ok, []}, fn name, {:ok, tags} ->
-        case find_or_create_tag(repo, name) do
-          {:ok, tag} -> {:cont, {:ok, [tag | tags]}}
-          {:error, changeset} -> {:halt, {:error, changeset}}
-        end
-      end)
-      |> case do
-        {:ok, tags} -> {:ok, Enum.reverse(tags)}
-        error -> error
-      end
+      resolve_tag_names(repo, tag_names)
     else
       {:ok, :unchanged}
     end
   end
+
+  defp resolve_tag_names(repo, tag_names) do
+    tag_names
+    |> Enum.reduce_while({:ok, []}, &resolve_tag_name(repo, &1, &2))
+    |> reverse_resolved_tags()
+  end
+
+  defp resolve_tag_name(repo, name, {:ok, tags}) do
+    case find_or_create_tag(repo, name) do
+      {:ok, tag} -> {:cont, {:ok, [tag | tags]}}
+      {:error, changeset} -> {:halt, {:error, changeset}}
+    end
+  end
+
+  defp reverse_resolved_tags({:ok, tags}), do: {:ok, Enum.reverse(tags)}
+  defp reverse_resolved_tags(error), do: error
 
   defp find_or_create_tag(repo, name) do
     query = from t in Tag, where: fragment("lower(?)", t.name) == ^String.downcase(name)

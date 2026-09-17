@@ -1,9 +1,9 @@
 defmodule AlchemistdropsWeb.Admin.PostLive.Form do
   use AlchemistdropsWeb, :live_view
 
+  alias Alchemistdrops.Courses
   alias Alchemistdrops.Posts
   alias Alchemistdrops.Posts.Post
-  alias Alchemistdrops.Courses
 
   @impl true
   def render(assigns) do
