@@ -14,6 +14,26 @@ Keep socket state deliberate, templates component-driven, and collection/form up
 - Prefer function components. Introduce a LiveComponent only when isolated state, event targeting, or component lifecycle is necessary.
 - Assign only state needed to render or process later events. Do not retain large collections as ordinary assigns when a stream fits the interaction.
 
+## Callback responsibility
+
+LiveView is an interface and orchestration layer. Its callbacks call a context/domain function, interpret the result, and return the new socket state. Never implement business rules, authorization policy, domain validation, pricing/calculation logic, state transitions, persistence transactions, or reusable query construction inside a LiveView.
+
+- `mount/3` loads initial state through contexts and establishes UI-only assigns or streams.
+- `on_mount/4` delegates authentication/authorization decisions to the established account or policy APIs, then halts or continues navigation.
+- `handle_params/3` translates URL state into a context query and assigns or streams the result.
+- `handle_event/3` converts UI input into a context call, then updates forms, streams, flash, or navigation from the returned result.
+- `handle_info/2` delegates message handling to the appropriate context/domain operation before reflecting the result in the socket.
+
+Small UI transformations such as selecting params, setting a changeset action for display, `to_form/2`, assigning values, updating streams, flash, and navigation belong in LiveView. If a decision changes domain behavior independently of the page, move it to a context or domain module and test it there.
+
+## URL-driven search and filters
+
+- Make the URL query string the source of truth for search, filters, sorting, and pagination. Handle those values in `handle_params/3`, including initial entry and every patch.
+- Search events only normalize UI input enough to build a resource URL and call `push_patch/2`. They do not run the query or keep a separate socket-only filter state.
+- Use RESTful resource paths with query parameters, for example `~p"/products?#{%{q: query, page: page}}"`; do not encode search state as imperative event names or opaque path segments.
+- Let the context validate supported filters, construct the Ecto query, enforce scope, and return results. `handle_params/3` maps that result into assigns or a stream, including empty and invalid-query states.
+- Preserve bookmark, refresh, share, and browser back/forward behavior by ensuring the rendered state can be reconstructed from the URL.
+
 ## Collections and streams
 
 Use streams for growing, frequently updated, or server-patched collections. A small static or computed list can remain a normal assign.
