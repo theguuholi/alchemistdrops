@@ -14,13 +14,28 @@ defmodule Alchemistdrops.Posts.Tag do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
+  @typedoc "Database identifier for the tag. Nil before persistence."
+  @type id :: Ecto.UUID.t() | nil
+
+  @typedoc "Human-readable tag name. Nil before validation."
+  @type name :: String.t() | nil
+
+  @typedoc "URL-safe tag identifier. Nil before slug generation."
+  @type slug :: String.t() | nil
+
+  @typedoc "Timestamp when the tag was persisted. Nil before persistence."
+  @type inserted_at :: DateTime.t() | nil
+
+  @typedoc "Timestamp when the tag was last updated. Nil before persistence."
+  @type updated_at :: DateTime.t() | nil
+
   @typedoc "A post tag before or after persistence."
   @type t :: %__MODULE__{
-          id: Ecto.UUID.t() | nil,
-          name: String.t() | nil,
-          slug: String.t() | nil,
-          inserted_at: DateTime.t() | nil,
-          updated_at: DateTime.t() | nil
+          id: id(),
+          name: name(),
+          slug: slug(),
+          inserted_at: inserted_at(),
+          updated_at: updated_at()
         }
 
   schema "post_tags" do
@@ -38,13 +53,13 @@ defmodule Alchemistdrops.Posts.Tag do
   ## Examples
 
       iex> changeset = Alchemistdrops.Posts.Tag.changeset(%Alchemistdrops.Posts.Tag{}, %{name: "  LiveView Tips  "})
-      iex> {Ecto.Changeset.get_change(changeset, :name), Ecto.Changeset.get_change(changeset, :slug)}
+      iex> {changeset.changes.name, changeset.changes.slug}
       {"LiveView Tips", "liveview-tips"}
 
       iex> Alchemistdrops.Posts.Tag.changeset(%Alchemistdrops.Posts.Tag{}, %{name: ""}).valid?
       false
   """
-  @spec changeset(t(), map()) :: Ecto.Changeset.t()
+  @spec changeset(t(), map()) :: Ecto.Changeset.t(t())
   def changeset(tag, attrs) do
     tag
     |> cast(attrs, [:name, :slug])

@@ -12,15 +12,20 @@ defmodule Alchemistdrops.Posts.TagTest do
       changeset = Tag.changeset(%Tag{}, %{name: "  LiveView Tips  "})
 
       assert changeset.valid?
-      assert Ecto.Changeset.get_change(changeset, :name) == "LiveView Tips"
-      assert Ecto.Changeset.get_change(changeset, :slug) == "liveview-tips"
+      assert changeset.changes.name == "LiveView Tips"
+      assert changeset.changes.slug == "liveview-tips"
     end
 
-    test "given boundary values, when validated, then required and maximum lengths are enforced" do
-      assert %{name: ["can't be blank"]} = errors_on(Tag.changeset(%Tag{}, %{}))
+    test "given no name, when validated, then the name is required" do
+      changeset = Tag.changeset(%Tag{}, %{})
 
-      assert %{name: ["should be at most 50 character(s)"]} =
-               errors_on(Tag.changeset(%Tag{}, %{name: String.duplicate("a", 51)}))
+      assert %{name: ["can't be blank"]} = errors_on(changeset)
+    end
+
+    test "given a name longer than 50 characters, when validated, then it is rejected" do
+      changeset = Tag.changeset(%Tag{}, %{name: String.duplicate("a", 51)})
+
+      assert %{name: ["should be at most 50 character(s)"]} = errors_on(changeset)
     end
 
     test "given duplicate names and slugs, when inserted, then constraints become changeset errors" do

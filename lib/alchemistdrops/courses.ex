@@ -242,7 +242,7 @@ defmodule Alchemistdrops.Courses do
 
   defp price_from_changeset(changeset) do
     Ecto.Changeset.get_change(changeset, :price) ||
-      (changeset.data && Map.get(changeset.data, :price))
+      Map.get(changeset.data, :price)
   end
 
   defp attr_or_course(attrs, key, course) when is_atom(key) do

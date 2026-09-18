@@ -12,23 +12,32 @@ defmodule Alchemistdrops.Posts.CategoryTest do
       changeset = Category.changeset(%Category{}, %{name: "  Elixir Patterns  "})
 
       assert changeset.valid?
-      assert Ecto.Changeset.get_change(changeset, :name) == "Elixir Patterns"
-      assert Ecto.Changeset.get_change(changeset, :slug) == "elixir-patterns"
+      assert changeset.changes.name == "Elixir Patterns"
+      assert changeset.changes.slug == "elixir-patterns"
     end
 
-    test "given boundary values, when validated, then required and maximum lengths are enforced" do
-      assert %{name: ["can't be blank"]} = errors_on(Category.changeset(%Category{}, %{}))
+    test "given no name, when validated, then the name is required" do
+      changeset = Category.changeset(%Category{}, %{})
 
-      assert %{name: ["should be at most 80 character(s)"]} =
-               errors_on(Category.changeset(%Category{}, %{name: String.duplicate("a", 81)}))
+      assert %{name: ["can't be blank"]} = errors_on(changeset)
+    end
+
+    test "given a name longer than 80 characters, when validated, then it is rejected" do
+      changeset =
+        Category.changeset(%Category{}, %{name: String.duplicate("a", 81)})
+
+      assert %{name: ["should be at most 80 character(s)"]} = errors_on(changeset)
+    end
+
+    test "given a description longer than 240 characters, when validated, then it is rejected" do
+      changeset =
+        Category.changeset(%Category{}, %{
+          name: "Elixir",
+          description: String.duplicate("a", 241)
+        })
 
       assert %{description: ["should be at most 240 character(s)"]} =
-               errors_on(
-                 Category.changeset(%Category{}, %{
-                   name: "Elixir",
-                   description: String.duplicate("a", 241)
-                 })
-               )
+               errors_on(changeset)
     end
 
     test "given duplicate names and slugs, when inserted, then constraints become changeset errors" do

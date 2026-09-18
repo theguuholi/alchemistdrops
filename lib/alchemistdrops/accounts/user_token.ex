@@ -23,18 +23,36 @@ defmodule Alchemistdrops.Accounts.UserToken do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
-  @typedoc "Authentication purpose attached to a stored token."
-  @type context :: String.t()
+  @typedoc "Database identifier for the token. Nil before persistence."
+  @type id :: Ecto.UUID.t() | nil
+
+  @typedoc "Raw or hashed token payload. Nil before token construction."
+  @type token :: binary() | nil
+
+  @typedoc "Authentication purpose attached to the token. Nil before token construction."
+  @type context :: String.t() | nil
+
+  @typedoc "Email destination associated with the token. Nil for session tokens."
+  @type sent_to :: String.t() | nil
+
+  @typedoc "Authentication timestamp carried by the token. Nil when unavailable."
+  @type authenticated_at :: DateTime.t() | nil
+
+  @typedoc "Identifier of the user that owns the token. Nil before association."
+  @type user_id :: Ecto.UUID.t() | nil
+
+  @typedoc "Timestamp when the token was persisted. Nil before persistence."
+  @type inserted_at :: DateTime.t() | nil
 
   @typedoc "A stored session, magic-link, or email-change token."
   @type t :: %__MODULE__{
-          id: Ecto.UUID.t() | nil,
-          token: binary() | nil,
-          context: context() | nil,
-          sent_to: String.t() | nil,
-          authenticated_at: DateTime.t() | nil,
-          user_id: Ecto.UUID.t() | nil,
-          inserted_at: DateTime.t() | nil
+          id: id(),
+          token: token(),
+          context: context(),
+          sent_to: sent_to(),
+          authenticated_at: authenticated_at(),
+          user_id: user_id(),
+          inserted_at: inserted_at()
         }
 
   schema "users_tokens" do
@@ -125,7 +143,7 @@ defmodule Alchemistdrops.Accounts.UserToken do
       iex> {is_binary(encoded), stored_token.context, stored_token.sent_to}
       {true, "login", "person@example.com"}
   """
-  @spec build_email_token(User.t(), context()) :: {String.t(), t()}
+  @spec build_email_token(User.t(), String.t()) :: {String.t(), t()}
   def build_email_token(user, context) do
     build_hashed_token(user, context, user.email)
   end

@@ -18,18 +18,45 @@ defmodule Alchemistdrops.Payments.Payment do
   @typedoc "Lifecycle state reported for a payment: pending, completed, failed, or refunded."
   @type status :: String.t()
 
+  @typedoc "Database identifier for the payment. Nil before persistence."
+  @type id :: Ecto.UUID.t() | nil
+
+  @typedoc "Identifier of the user that made the payment. Nil before association."
+  @type user_id :: Ecto.UUID.t() | nil
+
+  @typedoc "Identifier of the purchased course. Nil before association."
+  @type course_id :: Ecto.UUID.t() | nil
+
+  @typedoc "Amount charged for the course. Nil before payment construction."
+  @type amount :: Money.t() | nil
+
+  @typedoc "Stripe PaymentIntent identifier. Nil before Stripe creates one."
+  @type stripe_payment_intent_id :: String.t() | nil
+
+  @typedoc "Stripe Checkout Session identifier. Nil before checkout creation."
+  @type stripe_checkout_session_id :: String.t() | nil
+
+  @typedoc "Provider metadata stored with the payment. Nil when unavailable."
+  @type metadata :: map() | nil
+
+  @typedoc "Timestamp when the payment was persisted. Nil before persistence."
+  @type inserted_at :: DateTime.t() | nil
+
+  @typedoc "Timestamp when the payment was last updated. Nil before persistence."
+  @type updated_at :: DateTime.t() | nil
+
   @typedoc "A payment before or after persistence."
   @type t :: %__MODULE__{
-          id: Ecto.UUID.t() | nil,
-          user_id: Ecto.UUID.t() | nil,
-          course_id: Ecto.UUID.t() | nil,
-          amount: Money.t() | nil,
-          stripe_payment_intent_id: String.t() | nil,
-          stripe_checkout_session_id: String.t() | nil,
+          id: id(),
+          user_id: user_id(),
+          course_id: course_id(),
+          amount: amount(),
+          stripe_payment_intent_id: stripe_payment_intent_id(),
+          stripe_checkout_session_id: stripe_checkout_session_id(),
           status: status(),
-          metadata: map() | nil,
-          inserted_at: DateTime.t() | nil,
-          updated_at: DateTime.t() | nil
+          metadata: metadata(),
+          inserted_at: inserted_at(),
+          updated_at: updated_at()
         }
 
   schema "payments" do
@@ -58,7 +85,7 @@ defmodule Alchemistdrops.Payments.Payment do
       iex> Alchemistdrops.Payments.Payment.changeset(%Alchemistdrops.Payments.Payment{}, attrs).valid?
       false
   """
-  @spec changeset(t(), map()) :: Ecto.Changeset.t()
+  @spec changeset(t(), map()) :: Ecto.Changeset.t(t())
   def changeset(payment, attrs) do
     payment
     |> cast(attrs, [

@@ -14,14 +14,32 @@ defmodule Alchemistdrops.Posts.Category do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
+  @typedoc "Database identifier for the category. Nil before persistence."
+  @type id :: Ecto.UUID.t() | nil
+
+  @typedoc "Human-readable category name. Nil before validation."
+  @type name :: String.t() | nil
+
+  @typedoc "URL-safe category identifier. Nil before slug generation."
+  @type slug :: String.t() | nil
+
+  @typedoc "Short explanation of the category. Nil when it has not been provided."
+  @type description :: String.t() | nil
+
+  @typedoc "Timestamp when the category was persisted. Nil before persistence."
+  @type inserted_at :: DateTime.t() | nil
+
+  @typedoc "Timestamp when the category was last updated. Nil before persistence."
+  @type updated_at :: DateTime.t() | nil
+
   @typedoc "A post category before or after persistence."
   @type t :: %__MODULE__{
-          id: Ecto.UUID.t() | nil,
-          name: String.t() | nil,
-          slug: String.t() | nil,
-          description: String.t() | nil,
-          inserted_at: DateTime.t() | nil,
-          updated_at: DateTime.t() | nil
+          id: id(),
+          name: name(),
+          slug: slug(),
+          description: description(),
+          inserted_at: inserted_at(),
+          updated_at: updated_at()
         }
 
   schema "post_categories" do
@@ -40,13 +58,13 @@ defmodule Alchemistdrops.Posts.Category do
   ## Examples
 
       iex> changeset = Alchemistdrops.Posts.Category.changeset(%Alchemistdrops.Posts.Category{}, %{name: "  Elixir Patterns  "})
-      iex> {Ecto.Changeset.get_change(changeset, :name), Ecto.Changeset.get_change(changeset, :slug)}
+      iex> {changeset.changes.name, changeset.changes.slug}
       {"Elixir Patterns", "elixir-patterns"}
 
       iex> Alchemistdrops.Posts.Category.changeset(%Alchemistdrops.Posts.Category{}, %{name: ""}).valid?
       false
   """
-  @spec changeset(t(), map()) :: Ecto.Changeset.t()
+  @spec changeset(t(), map()) :: Ecto.Changeset.t(t())
   def changeset(category, attrs) do
     category
     |> cast(attrs, [:name, :slug, :description])

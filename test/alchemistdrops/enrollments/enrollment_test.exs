@@ -264,7 +264,7 @@ defmodule Alchemistdrops.Enrollments.EnrollmentTest do
       assert changeset.valid?
 
       # And completed_at should be set correctly
-      assert Ecto.Changeset.get_change(changeset, :completed_at) == completed_at
+      assert changeset.changes.completed_at == completed_at
     end
 
     test "Scenario: Status can be set to completed", %{user: user, course: course} do
@@ -282,7 +282,7 @@ defmodule Alchemistdrops.Enrollments.EnrollmentTest do
       assert changeset.valid?
 
       # And status should be completed
-      assert Ecto.Changeset.get_change(changeset, :status) == "completed"
+      assert changeset.changes.status == "completed"
     end
 
     test "Scenario: Status can be set to cancelled", %{user: user, course: course} do
@@ -300,7 +300,7 @@ defmodule Alchemistdrops.Enrollments.EnrollmentTest do
       assert changeset.valid?
 
       # And status should be cancelled
-      assert Ecto.Changeset.get_change(changeset, :status) == "cancelled"
+      assert changeset.changes.status == "cancelled"
     end
 
     test "Scenario: Completed enrollment with both status and timestamp", %{
@@ -324,8 +324,8 @@ defmodule Alchemistdrops.Enrollments.EnrollmentTest do
       assert changeset.valid?
 
       # And both fields should be set
-      assert Ecto.Changeset.get_change(changeset, :status) == "completed"
-      assert Ecto.Changeset.get_change(changeset, :completed_at) == completed_at
+      assert changeset.changes.status == "completed"
+      assert changeset.changes.completed_at == completed_at
     end
 
     test "Scenario: Enrolled_at can be set to a past date", %{user: user, course: course} do
@@ -345,7 +345,7 @@ defmodule Alchemistdrops.Enrollments.EnrollmentTest do
       assert changeset.valid?
 
       # And enrolled_at should be set to the past date
-      assert Ecto.Changeset.get_change(changeset, :enrolled_at) == past_date
+      assert changeset.changes.enrolled_at == past_date
     end
 
     test "Scenario: Nil completed_at is accepted", %{user: user, course: course} do

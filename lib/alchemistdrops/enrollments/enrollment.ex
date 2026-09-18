@@ -18,16 +18,37 @@ defmodule Alchemistdrops.Enrollments.Enrollment do
   @typedoc "Lifecycle state of a course enrollment: active, completed, or cancelled."
   @type status :: String.t()
 
+  @typedoc "Database identifier for the enrollment. Nil before persistence."
+  @type id :: Ecto.UUID.t() | nil
+
+  @typedoc "Identifier of the enrolled user. Nil before association."
+  @type user_id :: Ecto.UUID.t() | nil
+
+  @typedoc "Identifier of the enrolled course. Nil before association."
+  @type course_id :: Ecto.UUID.t() | nil
+
+  @typedoc "Timestamp when access to the course began. Nil before enrollment."
+  @type enrolled_at :: DateTime.t() | nil
+
+  @typedoc "Timestamp when the course was completed. Nil until completion."
+  @type completed_at :: DateTime.t() | nil
+
+  @typedoc "Timestamp when the enrollment was persisted. Nil before persistence."
+  @type inserted_at :: DateTime.t() | nil
+
+  @typedoc "Timestamp when the enrollment was last updated. Nil before persistence."
+  @type updated_at :: DateTime.t() | nil
+
   @typedoc "An enrollment before or after persistence."
   @type t :: %__MODULE__{
-          id: Ecto.UUID.t() | nil,
-          user_id: Ecto.UUID.t() | nil,
-          course_id: Ecto.UUID.t() | nil,
+          id: id(),
+          user_id: user_id(),
+          course_id: course_id(),
           status: status(),
-          enrolled_at: DateTime.t() | nil,
-          completed_at: DateTime.t() | nil,
-          inserted_at: DateTime.t() | nil,
-          updated_at: DateTime.t() | nil
+          enrolled_at: enrolled_at(),
+          completed_at: completed_at(),
+          inserted_at: inserted_at(),
+          updated_at: updated_at()
         }
 
   schema "enrollments" do
@@ -48,13 +69,13 @@ defmodule Alchemistdrops.Enrollments.Enrollment do
 
       iex> attrs = %{user_id: Ecto.UUID.generate(), course_id: Ecto.UUID.generate()}
       iex> changeset = Alchemistdrops.Enrollments.Enrollment.changeset(%Alchemistdrops.Enrollments.Enrollment{}, attrs)
-      iex> {changeset.valid?, Ecto.Changeset.get_field(changeset, :status), is_struct(Ecto.Changeset.get_change(changeset, :enrolled_at), DateTime)}
+      iex> {changeset.valid?, Ecto.Changeset.get_field(changeset, :status), is_struct(changeset.changes.enrolled_at, DateTime)}
       {true, "active", true}
 
       iex> Alchemistdrops.Enrollments.Enrollment.changeset(%Alchemistdrops.Enrollments.Enrollment{}, %{status: "unknown"}).valid?
       false
   """
-  @spec changeset(t(), map()) :: Ecto.Changeset.t()
+  @spec changeset(t(), map()) :: Ecto.Changeset.t(t())
   def changeset(enrollment, attrs) do
     enrollment
     |> cast(attrs, [:user_id, :course_id, :status, :enrolled_at, :completed_at])

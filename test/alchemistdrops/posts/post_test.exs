@@ -12,7 +12,7 @@ defmodule Alchemistdrops.Posts.PostTest do
       assert changeset.valid?
       assert Ecto.Changeset.get_field(changeset, :status) == :draft
       assert Ecto.Changeset.get_field(changeset, :views) == 0
-      assert Ecto.Changeset.get_change(changeset, :slug) == "hello-otp"
+      assert changeset.changes.slug == "hello-otp"
     end
 
     test "given invalid SEO and cover metadata, when validated, then each invariant is reported" do

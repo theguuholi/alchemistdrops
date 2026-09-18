@@ -89,13 +89,13 @@ defmodule Alchemistdrops.Courses.Course do
   ## Examples
 
       iex> changeset = Alchemistdrops.Courses.Course.changeset(%Alchemistdrops.Courses.Course{}, %{title: "  Elixir  ", description: "OTP"})
-      iex> {changeset.valid?, Ecto.Changeset.get_change(changeset, :title)}
+      iex> {changeset.valid?, changeset.changes.title}
       {true, "Elixir"}
 
       iex> Alchemistdrops.Courses.Course.changeset(%Alchemistdrops.Courses.Course{}, %{title: "", description: ""}).valid?
       false
   """
-  @spec changeset(t() | Ecto.Changeset.t(), map()) :: Ecto.Changeset.t()
+  @spec changeset(t() | Ecto.Changeset.t(t()), map()) :: Ecto.Changeset.t(t())
   def changeset(course, attrs) do
     course
     |> cast(attrs, [
