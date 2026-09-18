@@ -1,8 +1,8 @@
 defmodule AlchemistdropsWeb.CoreComponentsTest do
   use AlchemistdropsWeb.ConnCase, async: true
 
-  import Phoenix.LiveViewTest
   import Phoenix.Component
+  import Phoenix.LiveViewTest
 
   alias AlchemistdropsWeb.CoreComponents
   alias Phoenix.LiveView.JS
@@ -391,12 +391,12 @@ defmodule AlchemistdropsWeb.CoreComponentsTest do
     end
 
     test "show with existing JS" do
-      js = JS.push("event") |> CoreComponents.show("#modal")
+      js = "event" |> JS.push() |> CoreComponents.show("#modal")
       assert %JS{} = js
     end
 
     test "hide with existing JS" do
-      js = JS.push("event") |> CoreComponents.hide("#modal")
+      js = "event" |> JS.push() |> CoreComponents.hide("#modal")
       assert %JS{} = js
     end
   end

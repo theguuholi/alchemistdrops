@@ -1,8 +1,8 @@
 defmodule AlchemistdropsWeb.UserAuthTest do
   use AlchemistdropsWeb.ConnCase, async: true
 
-  import Ecto.Query
   import Alchemistdrops.AccountsFixtures
+  import Ecto.Query
 
   alias Alchemistdrops.Accounts
   alias AlchemistdropsWeb.UserAuth
@@ -218,7 +218,8 @@ defmodule AlchemistdropsWeb.UserAuthTest do
     test "redirects unauthenticated user for GET request and stores return_to", %{conn: _conn} do
       # Create conn with correct path
       conn =
-        Phoenix.ConnTest.build_conn(:get, "/protected-page")
+        :get
+        |> Phoenix.ConnTest.build_conn("/protected-page")
         |> Phoenix.ConnTest.init_test_session(%{})
         |> Phoenix.Controller.fetch_flash([])
         |> Plug.Conn.assign(:current_scope, nil)

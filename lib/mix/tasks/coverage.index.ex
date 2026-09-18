@@ -8,22 +8,23 @@ defmodule Mix.Tasks.Coverage.Index do
 
   Or use the precommit alias which includes both.
   """
-  @shortdoc "Generates an index.html for coverage reports"
-
   use Mix.Task
+
+  @shortdoc "Generates an index.html for coverage reports"
 
   @impl Mix.Task
   def run(_args) do
     cover_dir = "cover"
 
-    unless File.dir?(cover_dir) do
+    if !File.dir?(cover_dir) do
       Mix.shell().error("No coverage directory found. Run 'mix test --cover' first.")
       System.halt(1)
     end
 
     # Get all HTML files except index.html
     html_files =
-      Path.wildcard("#{cover_dir}/Elixir.*.html")
+      "#{cover_dir}/Elixir.*.html"
+      |> Path.wildcard()
       |> Enum.map(&Path.basename/1)
       |> Enum.sort()
 
@@ -81,8 +82,6 @@ defmodule Mix.Tasks.Coverage.Index do
 
         if total > 0 do
           {hit_count, total}
-        else
-          nil
         end
 
       {:error, _} ->

@@ -114,10 +114,10 @@ defmodule Alchemistdrops.Payments.MockHttpClient do
      %{
        status: 200,
        body: %{
-         "id" => "cs_test_#{:crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)}",
+         "id" => "cs_test_#{8 |> :crypto.strong_rand_bytes() |> Base.encode16(case: :lower)}",
          "url" => "https://checkout.stripe.com/test/session",
          "payment_intent" =>
-           "pi_test_#{:crypto.strong_rand_bytes(8) |> Base.encode16(case: :lower)}"
+           "pi_test_#{8 |> :crypto.strong_rand_bytes() |> Base.encode16(case: :lower)}"
        }
      }}
   end

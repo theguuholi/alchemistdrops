@@ -1,10 +1,10 @@
 defmodule Alchemistdrops.Posts.ArticleTest do
   use ExUnit.Case, async: true
 
+  alias Alchemistdrops.Posts.{Article, Post}
+
   doctest Alchemistdrops.Posts.Article
   doctest Alchemistdrops.Posts.Slug
-
-  alias Alchemistdrops.Posts.{Article, Post}
 
   describe "build/1" do
     test "removes only a leading h1 that duplicates the post title" do

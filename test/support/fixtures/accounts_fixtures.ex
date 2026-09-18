@@ -29,7 +29,7 @@ defmodule Alchemistdrops.AccountsFixtures do
 
   def user_fixture(attrs \\ %{}) do
     # Convert keyword list to map if needed
-    attrs = if is_list(attrs), do: Enum.into(attrs, %{}), else: attrs
+    attrs = if is_list(attrs), do: Map.new(attrs), else: attrs
 
     # Extract special attributes before creating user
     role = Map.get(attrs, :role, :user)
@@ -68,12 +68,12 @@ defmodule Alchemistdrops.AccountsFixtures do
       end
 
     # Set role if different from default
-    if role != :user do
+    if role == :user do
+      user
+    else
       user
       |> Ecto.Changeset.change(role: role)
       |> Alchemistdrops.Repo.update!()
-    else
-      user
     end
   end
 

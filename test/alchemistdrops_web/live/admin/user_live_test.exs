@@ -4,8 +4,8 @@ defmodule AlchemistdropsWeb.Admin.UserLiveTest do
   """
   use AlchemistdropsWeb.ConnCase
 
-  import Phoenix.LiveViewTest
   import Alchemistdrops.AccountsFixtures
+  import Phoenix.LiveViewTest
 
   describe "Index" do
     setup [:register_and_log_in_admin_user]

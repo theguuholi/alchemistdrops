@@ -4,10 +4,10 @@ defmodule AlchemistdropsWeb.Admin.EnrollmentLiveTest do
   """
   use AlchemistdropsWeb.ConnCase
 
-  import Phoenix.LiveViewTest
-  import Alchemistdrops.EnrollmentsFixtures
-  import Alchemistdrops.CoursesFixtures
   import Alchemistdrops.AccountsFixtures
+  import Alchemistdrops.CoursesFixtures
+  import Alchemistdrops.EnrollmentsFixtures
+  import Phoenix.LiveViewTest
 
   describe "Index" do
     setup [:register_and_log_in_admin_user]
@@ -81,13 +81,13 @@ defmodule AlchemistdropsWeb.Admin.EnrollmentLiveTest do
     end
 
     test "handles unknown status with ghost badge", %{conn: conn} do
+      import Ecto.Query
+
       user = user_fixture()
       course = course_fixture()
       enrollment = enrollment_fixture(%{user_id: user.id, course_id: course.id, status: "active"})
 
       # Directly update the database to set an unknown status (bypassing changeset validation)
-      import Ecto.Query
-
       from(e in Alchemistdrops.Enrollments.Enrollment, where: e.id == ^enrollment.id)
       |> Alchemistdrops.Repo.update_all(set: [status: "unknown_status"])
 

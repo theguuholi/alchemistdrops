@@ -1,10 +1,10 @@
 defmodule AlchemistdropsWeb.StudentLive.LessonTest do
   use AlchemistdropsWeb.ConnCase
 
-  import Phoenix.LiveViewTest
   import Alchemistdrops.AccountsFixtures
   import Alchemistdrops.CoursesFixtures
   import Alchemistdrops.EnrollmentsFixtures
+  import Phoenix.LiveViewTest
 
   describe "mount/3" do
     test "given an enrolled user when they visit lesson page then they see lesson content", %{

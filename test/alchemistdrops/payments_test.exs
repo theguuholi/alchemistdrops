@@ -1,14 +1,14 @@
 defmodule Alchemistdrops.PaymentsTest do
   use Alchemistdrops.DataCase
 
+  import Alchemistdrops.AccountsFixtures
+  import Alchemistdrops.CoursesFixtures
+  import Alchemistdrops.PaymentsFixtures
+
   alias Alchemistdrops.Enrollments
   alias Alchemistdrops.Payments
   alias Alchemistdrops.Payments.MockHttpClient
   alias Alchemistdrops.Payments.Payment
-
-  import Alchemistdrops.AccountsFixtures
-  import Alchemistdrops.CoursesFixtures
-  import Alchemistdrops.PaymentsFixtures
 
   doctest Alchemistdrops.Payments
 

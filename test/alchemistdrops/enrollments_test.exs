@@ -1,12 +1,12 @@
 defmodule Alchemistdrops.EnrollmentsTest do
   use Alchemistdrops.DataCase
 
-  alias Alchemistdrops.Enrollments
-  alias Alchemistdrops.Enrollments.Enrollment
-
+  import Alchemistdrops.AccountsFixtures
   import Alchemistdrops.CoursesFixtures
   import Alchemistdrops.EnrollmentsFixtures
-  import Alchemistdrops.AccountsFixtures
+
+  alias Alchemistdrops.Enrollments
+  alias Alchemistdrops.Enrollments.Enrollment
 
   doctest Alchemistdrops.Enrollments
 
@@ -374,7 +374,7 @@ defmodule Alchemistdrops.EnrollmentsTest do
 
       # Then all statuses should be included
       assert length(enrollments) == 3
-      statuses = Enum.map(enrollments, & &1.status) |> Enum.sort()
+      statuses = enrollments |> Enum.map(& &1.status) |> Enum.sort()
       assert statuses == ["active", "cancelled", "completed"]
     end
   end
@@ -555,7 +555,7 @@ defmodule Alchemistdrops.EnrollmentsTest do
       enrollments = Enrollments.list_enrollments_with_details()
 
       # Just verify we get both enrollments (ordering depends on DB insert timing)
-      enrollment_ids = Enum.map(enrollments, & &1.id) |> MapSet.new()
+      enrollment_ids = enrollments |> MapSet.new(& &1.id)
       assert MapSet.member?(enrollment_ids, enrollment1.id)
       assert MapSet.member?(enrollment_ids, enrollment2.id)
       assert length(enrollments) == 2

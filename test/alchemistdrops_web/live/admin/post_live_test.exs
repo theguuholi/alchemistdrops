@@ -1,8 +1,8 @@
 defmodule AlchemistdropsWeb.PostLiveTest do
   use AlchemistdropsWeb.ConnCase
 
-  import Phoenix.LiveViewTest
   import Alchemistdrops.PostsFixtures
+  import Phoenix.LiveViewTest
 
   @create_attrs %{
     title: "a new post title",

@@ -9,9 +9,9 @@ defmodule Alchemistdrops.Accounts do
   """
 
   import Ecto.Query, warn: false
-  alias Alchemistdrops.Repo
 
   alias Alchemistdrops.Accounts.{User, UserNotifier, UserToken}
+  alias Alchemistdrops.Repo
 
   ## Database getters
 

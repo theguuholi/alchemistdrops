@@ -1,9 +1,9 @@
 defmodule Alchemistdrops.Posts.CategoryTest do
   use Alchemistdrops.DataCase, async: true
 
-  alias Alchemistdrops.Posts.Category
-
   import Alchemistdrops.PostsFixtures
+
+  alias Alchemistdrops.Posts.Category
 
   doctest Alchemistdrops.Posts.Category
 

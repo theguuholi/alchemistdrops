@@ -7,6 +7,7 @@ defmodule Alchemistdrops.Posts.Category do
   """
 
   use Ecto.Schema
+
   import Ecto.Changeset
 
   alias Alchemistdrops.Posts.Slug

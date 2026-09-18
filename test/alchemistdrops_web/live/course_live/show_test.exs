@@ -1,11 +1,11 @@
 defmodule AlchemistdropsWeb.CourseLive.ShowTest do
   use AlchemistdropsWeb.ConnCase
 
-  import Ecto.Query
-  import Phoenix.LiveViewTest
   import Alchemistdrops.AccountsFixtures
   import Alchemistdrops.CoursesFixtures
   import Alchemistdrops.EnrollmentsFixtures
+  import Ecto.Query
+  import Phoenix.LiveViewTest
 
   alias Alchemistdrops.Courses.Course
   alias Alchemistdrops.Payments.MockHttpClient
@@ -510,9 +510,9 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
       html = render(view)
 
       # Check that Lesson 1 appears before Lesson 2 which appears before Lesson 3
-      lesson1_pos = :binary.match(html, "Lesson 1") |> elem(0)
-      lesson2_pos = :binary.match(html, "Lesson 2") |> elem(0)
-      lesson3_pos = :binary.match(html, "Lesson 3") |> elem(0)
+      lesson1_pos = html |> :binary.match("Lesson 1") |> elem(0)
+      lesson2_pos = html |> :binary.match("Lesson 2") |> elem(0)
+      lesson3_pos = html |> :binary.match("Lesson 3") |> elem(0)
 
       assert lesson1_pos < lesson2_pos
       assert lesson2_pos < lesson3_pos

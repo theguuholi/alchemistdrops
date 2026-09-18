@@ -7,10 +7,10 @@ defmodule Alchemistdrops.Payments.PaymentTest do
   """
   use Alchemistdrops.DataCase
 
-  alias Alchemistdrops.Payments.Payment
-
   import Alchemistdrops.AccountsFixtures
   import Alchemistdrops.CoursesFixtures
+
+  alias Alchemistdrops.Payments.Payment
 
   doctest Alchemistdrops.Payments.Payment
 

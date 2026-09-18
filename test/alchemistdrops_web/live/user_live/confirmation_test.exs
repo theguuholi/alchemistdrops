@@ -1,8 +1,8 @@
 defmodule AlchemistdropsWeb.UserLive.ConfirmationTest do
   use AlchemistdropsWeb.ConnCase, async: true
 
-  import Phoenix.LiveViewTest
   import Alchemistdrops.AccountsFixtures
+  import Phoenix.LiveViewTest
 
   alias Alchemistdrops.Accounts
 
@@ -57,7 +57,8 @@ defmodule AlchemistdropsWeb.UserLive.ConfirmationTest do
       conn = build_conn()
 
       {:ok, login_view, _html} =
-        live(conn, ~p"/users/log-in/#{token}")
+        conn
+        |> live(~p"/users/log-in/#{token}")
         |> follow_redirect(conn, ~p"/users/log-in")
 
       assert has_element?(login_view, "#flash-error", "Magic link is invalid or it has expired")
@@ -88,7 +89,8 @@ defmodule AlchemistdropsWeb.UserLive.ConfirmationTest do
       conn = build_conn()
 
       {:ok, login_view, _html} =
-        live(conn, ~p"/users/log-in/#{token}")
+        conn
+        |> live(~p"/users/log-in/#{token}")
         |> follow_redirect(conn, ~p"/users/log-in")
 
       assert has_element?(login_view, "#flash-error", "Magic link is invalid or it has expired")
@@ -96,7 +98,8 @@ defmodule AlchemistdropsWeb.UserLive.ConfirmationTest do
 
     test "raises error for invalid token", %{conn: conn} do
       {:ok, login_view, _html} =
-        live(conn, ~p"/users/log-in/invalid-token")
+        conn
+        |> live(~p"/users/log-in/invalid-token")
         |> follow_redirect(conn, ~p"/users/log-in")
 
       assert has_element?(login_view, "#flash-error", "Magic link is invalid or it has expired")

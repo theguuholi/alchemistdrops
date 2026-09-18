@@ -1,8 +1,8 @@
 defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
   use AlchemistdropsWeb.ConnCase
 
-  import Phoenix.LiveViewTest
   import Alchemistdrops.PostsFixtures
+  import Phoenix.LiveViewTest
 
   alias Alchemistdrops.{Posts, Repo}
 

@@ -1,9 +1,10 @@
 defmodule AlchemistdropsWeb.UserLive.SettingsTest do
   use AlchemistdropsWeb.ConnCase, async: true
 
-  alias Alchemistdrops.Accounts
-  import Phoenix.LiveViewTest
   import Alchemistdrops.AccountsFixtures
+  import Phoenix.LiveViewTest
+
+  alias Alchemistdrops.Accounts
 
   describe "mount/3" do
     test "given an authenticated user, when the page loads, then it renders both settings forms",

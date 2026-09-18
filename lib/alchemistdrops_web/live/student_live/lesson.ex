@@ -103,8 +103,6 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
 
     if current_index && current_index < length(lessons) - 1 do
       Enum.at(lessons, current_index + 1)
-    else
-      nil
     end
   end
 
@@ -113,8 +111,6 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
 
     if current_index && current_index > 0 do
       Enum.at(lessons, current_index - 1)
-    else
-      nil
     end
   end
 
@@ -156,7 +152,7 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
 
     case uri.query do
       nil -> ""
-      query -> URI.decode_query(query) |> Map.get("v", "")
+      query -> query |> URI.decode_query() |> Map.get("v", "")
     end
   end
 end

@@ -8,6 +8,7 @@ defmodule Alchemistdrops.Posts do
   """
 
   import Ecto.Query, warn: false
+
   alias Alchemistdrops.Courses.Course
   alias Alchemistdrops.Posts.{Category, Post, Tag}
   alias Alchemistdrops.Repo
@@ -117,7 +118,10 @@ defmodule Alchemistdrops.Posts do
     page = positive_integer(Keyword.get(opts, :page), 1)
 
     page_size =
-      Keyword.get(opts, :page_size) |> positive_integer(@default_page_size) |> min(@max_page_size)
+      opts
+      |> Keyword.get(:page_size)
+      |> positive_integer(@default_page_size)
+      |> min(@max_page_size)
 
     published_query()
     |> maybe_filter_category(Keyword.get(opts, :category))
@@ -144,7 +148,8 @@ defmodule Alchemistdrops.Posts do
   @spec list_published_page(map(), keyword()) :: published_page()
   def list_published_page(params, opts \\ []) when is_map(params) do
     page_size =
-      Keyword.get(opts, :page_size, @default_page_size)
+      opts
+      |> Keyword.get(:page_size, @default_page_size)
       |> positive_integer(1)
       |> min(@max_page_size)
 
@@ -308,7 +313,9 @@ defmodule Alchemistdrops.Posts do
   """
   @spec increment_views(Post.t()) :: {:ok, Post.t()} | {:error, :not_found}
   def increment_views(%Post{} = post) do
-    case from(p in Post, where: p.id == ^post.id) |> Repo.update_all(inc: [views: 1]) do
+    from(p in Post, where: p.id == ^post.id)
+    |> Repo.update_all(inc: [views: 1])
+    |> case do
       {1, _rows} -> {:ok, Repo.get!(Post, post.id)}
       {0, _rows} -> {:error, :not_found}
     end
@@ -628,7 +635,11 @@ defmodule Alchemistdrops.Posts do
 
   defp resolve_category(repo, attrs) do
     if attr_present?(attrs, :category_name) do
-      case attr(attrs, :category_name) |> to_string() |> String.trim() do
+      attrs
+      |> attr(:category_name)
+      |> to_string()
+      |> String.trim()
+      |> case do
         "" -> {:ok, nil}
         name -> find_or_create_category(repo, name)
       end

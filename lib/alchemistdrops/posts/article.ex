@@ -73,7 +73,7 @@ defmodule Alchemistdrops.Posts.Article do
   end
 
   defp reading_minutes(body) do
-    word_count = Regex.scan(~r/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/u, body) |> length()
+    word_count = ~r/[\p{L}\p{N}]+(?:['’\-][\p{L}\p{N}]+)*/u |> Regex.scan(body) |> length()
     max(1, ceil(word_count / @words_per_minute))
   end
 

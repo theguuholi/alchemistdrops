@@ -1,9 +1,9 @@
 defmodule Alchemistdrops.Posts.TagTest do
   use Alchemistdrops.DataCase, async: true
 
-  alias Alchemistdrops.Posts.Tag
-
   import Alchemistdrops.PostsFixtures
+
+  alias Alchemistdrops.Posts.Tag
 
   doctest Alchemistdrops.Posts.Tag
 
