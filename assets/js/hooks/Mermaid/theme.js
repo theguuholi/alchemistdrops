@@ -19,15 +19,38 @@ export function observeTheme(onChange) {
   return {observer, colorSchemeQuery, colorSchemeListener}
 }
 
+const palettes = {
+  light: {
+    canvas: "#fcfcfe",
+    processFill: "#eff6ff",
+    processStroke: "#3b82f6",
+    processText: "#172554",
+    decisionFill: "#f5f3ff",
+    decisionStroke: "#7c3aed",
+    decisionText: "#2e1065",
+    connector: "#64748b",
+    edgeText: "#334155",
+    clusterFill: "#f8fafc",
+    clusterStroke: "#cbd5e1"
+  },
+  dark: {
+    canvas: "#0b1220",
+    processFill: "#172554",
+    processStroke: "#60a5fa",
+    processText: "#f8fafc",
+    decisionFill: "#312e81",
+    decisionStroke: "#a78bfa",
+    decisionText: "#f5f3ff",
+    connector: "#94a3b8",
+    edgeText: "#e2e8f0",
+    clusterFill: "#111827",
+    clusterStroke: "#334155"
+  }
+}
+
 export function mermaidOptions(theme) {
   const dark = theme === "dark"
-  const styles = getComputedStyle(document.documentElement)
-  const color = (name, fallback) => {
-    const value = styles.getPropertyValue(name).trim()
-    const supported = /^(?:#[\da-f]{3,8}|(?:rgb|rgba|hsl|hsla)\(|[a-z]+$)/i
-
-    return supported.test(value) ? value : fallback
-  }
+  const colors = palettes[dark ? "dark" : "light"]
 
   return {
     startOnLoad: false,
@@ -36,16 +59,35 @@ export function mermaidOptions(theme) {
     themeVariables: {
       darkMode: dark,
       fontSize: "18px",
-      background: color("--color-base-100", dark ? "#111827" : "#ffffff"),
-      primaryColor: color("--color-primary", dark ? "#38bdf8" : "#7c3aed"),
-      primaryTextColor: color("--color-primary-content", dark ? "#082f49" : "#ffffff"),
-      primaryBorderColor: color("--color-secondary", dark ? "#c084fc" : "#7c3aed"),
-      lineColor: color("--color-primary", dark ? "#38bdf8" : "#6d28d9"),
-      secondaryColor: color("--color-base-200", dark ? "#172033" : "#f5f3ff"),
-      tertiaryColor: color("--color-base-300", dark ? "#0f172a" : "#ecfeff"),
-      clusterBkg: color("--color-base-200", dark ? "#172033" : "#f8fafc"),
-      clusterBorder: color("--color-secondary", dark ? "#c084fc" : "#7c3aed"),
-      edgeLabelBackground: color("--color-base-100", dark ? "#111827" : "#ffffff")
-    }
+      background: colors.canvas,
+      primaryColor: colors.processFill,
+      primaryTextColor: colors.processText,
+      primaryBorderColor: colors.processStroke,
+      lineColor: colors.connector,
+      textColor: colors.edgeText,
+      secondaryColor: colors.decisionFill,
+      secondaryTextColor: colors.decisionText,
+      secondaryBorderColor: colors.decisionStroke,
+      tertiaryColor: colors.clusterFill,
+      tertiaryTextColor: colors.edgeText,
+      tertiaryBorderColor: colors.clusterStroke,
+      clusterBkg: colors.clusterFill,
+      clusterBorder: colors.clusterStroke,
+      edgeLabelBackground: colors.canvas
+    },
+    themeCSS: `
+      g.node:has(> polygon) > polygon {
+        fill: ${colors.decisionFill} !important;
+        stroke: ${colors.decisionStroke} !important;
+      }
+
+      g.node:has(> polygon) .nodeLabel {
+        color: ${colors.decisionText} !important;
+      }
+
+      .edgeLabel {
+        color: ${colors.edgeText} !important;
+      }
+    `
   }
 }
