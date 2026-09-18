@@ -17,7 +17,7 @@ Test observable behavior through stable DOM contracts and verify persistence or 
 - Select stable IDs, names, roles, and `data-*` contracts that the template intentionally exposes. Avoid styling classes and incidental text when a structural selector is available.
 - Prefer `element/2`, `has_element?/2`, `render_click/1`, `render_change/2`, and `render_submit/2` over assertions against a full raw HTML string.
 
-Raw fragment inspection is appropriate when diagnosing output or when a framework component has no stable higher-level assertion. Parse only the relevant fragment with LazyHTML rather than printing the entire page.
+Raw fragment inspection is diagnostic only. Never keep assertions such as `assert html =~ "error"`: unrelated markup can make them pass while the correct field remains broken. Add or use a stable selector for the responsible element, then assert it with `has_element?/2`, `has_element?/3`, or `element/2`.
 
 ## Given, When, Then
 
@@ -31,10 +31,14 @@ describe "handle_event/3 - validate" do
     {:ok, view, _html} = live(conn, ~p"/users/new")
 
     # When
-    html = view |> form("#user-form", user: %{email: ""}) |> render_change()
+    view |> form("#user-form", user: %{email: ""}) |> render_change()
 
     # Then
-    assert html =~ "can't be blank"
+    assert has_element?(
+             view,
+             "#user-form [data-error-for='user_email']",
+             "can't be blank"
+           )
   end
 end
 ```
@@ -44,6 +48,7 @@ Describe user-visible behavior, not implementation trivia. Given establishes sta
 ## Assert the right layer
 
 - Rendered state: assert the relevant element appears, changes, or disappears.
+- Validation errors: assert the field's dedicated error element through a stable ID or `data-error-for` contract; never search the full rendered HTML for the message.
 - Navigation: use redirect, live redirect, patch, or current-path assertions matching the action.
 - Persistence: query the context or database after the event; HTML alone does not prove a write occurred.
 - Rejected actions: verify both the visible outcome and that data did not change.
