@@ -13,45 +13,10 @@ defmodule AlchemistdropsWeb.PostLive.Index do
 
   @impl true
   def handle_params(params, _uri, socket) do
-    categories = Posts.list_categories_with_published_counts()
-    tags = Posts.list_tags_with_published_counts()
-    category = known_slug(params["category"], categories, :category)
-    tag = known_slug(params["tag"], tags, :tag)
-    page = positive_page(params["page"])
+    page = Posts.list_published_page(params, page_size: @page_size)
 
-    posts =
-      Posts.list_published_posts(
-        page: page,
-        page_size: @page_size + 1,
-        category: category,
-        tag: tag
-      )
-
-    {:noreply,
-     socket
-     |> assign(:posts, Enum.take(posts, @page_size))
-     |> assign(:categories, categories)
-     |> assign(:tags, tags)
-     |> assign(:selected_category, category)
-     |> assign(:selected_tag, tag)
-     |> assign(:current_page, page)
-     |> assign(:has_next_page?, length(posts) > @page_size)}
+    {:noreply, assign(socket, page)}
   end
-
-  defp known_slug(nil, _items, _key), do: nil
-
-  defp known_slug(value, items, key) do
-    if Enum.any?(items, &(Map.fetch!(&1, key).slug == value)), do: value
-  end
-
-  defp positive_page(value) when is_binary(value) do
-    case Integer.parse(value) do
-      {page, ""} when page > 0 -> page
-      _invalid -> 1
-    end
-  end
-
-  defp positive_page(_value), do: 1
 
   defp page_params(category, tag, page) do
     %{}

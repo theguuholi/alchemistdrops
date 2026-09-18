@@ -295,6 +295,85 @@ defmodule Alchemistdrops.PostsTest do
       assert Enum.map(Posts.list_published_posts(tag: "liveview"), & &1.id) == [second.id]
     end
 
+    test "list_published_page/2 returns normalized URL state and one-page lookahead" do
+      {:ok, first} =
+        Posts.create_post(%{
+          title: "First filtered article",
+          body: "Body",
+          summary: "Summary",
+          category_name: "Elixir",
+          tag_names: "OTP"
+        })
+
+      {:ok, first} = Posts.publish_post(first)
+
+      {:ok, second} =
+        Posts.create_post(%{
+          title: "Second filtered article",
+          body: "Body",
+          summary: "Summary",
+          category_name: "Elixir",
+          tag_names: "OTP"
+        })
+
+      {:ok, second} = Posts.publish_post(second)
+
+      page =
+        Posts.list_published_page(
+          %{"category" => "elixir", "tag" => "otp", "page" => "1"},
+          page_size: 1
+        )
+
+      assert [listed] = page.posts
+      assert listed.id in [first.id, second.id]
+      assert page.selected_category == "elixir"
+      assert page.selected_tag == "otp"
+      assert page.current_page == 1
+      assert page.has_next_page?
+      assert Enum.any?(page.categories, &(&1.category.slug == "elixir"))
+      assert Enum.any?(page.tags, &(&1.tag.slug == "otp"))
+    end
+
+    test "list_published_page/2 rejects unknown filters and invalid pages" do
+      post = post_fixture(%{title: "Visible article"})
+
+      page =
+        Posts.list_published_page(
+          %{"category" => "unknown", "tag" => "unknown", "page" => "zero"},
+          page_size: 10
+        )
+
+      assert Enum.map(page.posts, & &1.id) == [post.id]
+      assert page.selected_category == nil
+      assert page.selected_tag == nil
+      assert page.current_page == 1
+      refute page.has_next_page?
+    end
+
+    test "get_published_post_page!/1 resolves canonical slugs before legacy UUID ids" do
+      uuid_slug = "123e4567-e89b-12d3-a456-426614174000"
+      slug_post = post_fixture(%{title: uuid_slug})
+      legacy_post = post_fixture(%{title: "Legacy public article"})
+
+      assert %{post: %{id: slug_id}} = Posts.get_published_post_page!(uuid_slug)
+      assert slug_id == slug_post.id
+
+      assert %{post: %{id: legacy_id}} = Posts.get_published_post_page!(legacy_post.id)
+      assert legacy_id == legacy_post.id
+    end
+
+    test "get_published_post_page!/1 rejects missing and draft identifiers" do
+      draft = draft_post_fixture(%{title: "Private article"})
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Posts.get_published_post_page!(draft.slug)
+      end
+
+      assert_raise Ecto.NoResultsError, fn ->
+        Posts.get_published_post_page!("missing-article")
+      end
+    end
+
     test "list_related_posts/2 prefers shared tags and excludes the current post" do
       category = category_fixture(%{name: "Architecture"})
       shared_tag = tag_fixture(%{name: "OTP"})
