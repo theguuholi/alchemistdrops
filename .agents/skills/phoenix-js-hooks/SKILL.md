@@ -10,8 +10,43 @@ Define an explicit ownership boundary between LiveView patches and client JavaSc
 ## Choose the hook form
 
 - Use a colocated hook when behavior belongs to one component and the project already compiles colocated hooks.
-- When the repository uses a central hooks registry, place substantial or shared hooks under its established structure, such as `assets/js/hooks/<Name>/index.js`. Export through that registry and merge it into the `LiveSocket` hooks option without replacing colocated hooks.
+- Inspect `assets/js/hooks.js` and `assets/js/hooks/` before adding a hook. Follow their naming, exports, directory layout, and colocated test conventions.
+- Place substantial or shared hooks under `assets/js/hooks/<Name>/index.js`, with focused helpers and their tests beside it. Register every hook in `assets/js/hooks.js`.
+- If the project has no central registry, create `assets/js/hooks.js` and the `assets/js/hooks/<Name>/` structure rather than defining shared hooks inline in `app.js`.
 - Never embed custom `<script>` tags in HEEx.
+
+Keep the registry explicit and small:
+
+```javascript
+import Mermaid from "./hooks/Mermaid"
+
+const Hooks = {
+  Mermaid,
+}
+
+export default Hooks
+```
+
+## LiveSocket registration
+
+Preserve Phoenix's generated LiveSocket and navigation setup. Import the central registry and merge it after the colocated hooks so both forms remain available:
+
+```javascript
+import Hooks from "./hooks"
+
+const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
+const liveSocket = new LiveSocket("/live", Socket, {
+  longPollFallbackMs: 2500,
+  params: {_csrf_token: csrfToken},
+  hooks: {...colocatedHooks, ...Hooks},
+})
+
+topbar.config({barColors: {0: "#29d"}, shadowColor: "rgba(0, 0, 0, .3)"})
+window.addEventListener("phx:page-loading-start", _info => topbar.show(300))
+window.addEventListener("phx:page-loading-stop", _info => topbar.hide())
+```
+
+Do not replace `colocatedHooks`, omit the CSRF params, duplicate `LiveSocket`, or remove the generated topbar listeners while registering a hook.
 
 ## Attach the hook
 
@@ -38,13 +73,17 @@ Store references to callbacks and acquired resources on `this`; anonymous listen
 
 ## Verification
 
-Test the hook with the repository's JavaScript runner and DOM environment:
+Create a colocated `*.test.js` for every hook and every non-trivial JavaScript helper under `assets/js/hooks/`. Use the repository's JavaScript runner and DOM environment; in this project, use Vitest with jsdom. Test:
 
 - mount and initial render;
 - repeated `updated()` calls without duplication;
 - server-patched content when `phx-update="ignore"` is absent;
 - event exchange and error behavior;
 - async stale-result protection;
+- missing elements, attributes, payload fields, malformed input, and empty content;
+- `disconnected()` and `reconnected()` when implemented;
 - cleanup of listeners, observers, timers, subscriptions, and third-party instances in `destroyed()`.
 
-Use LiveViewTest separately to assert the stable hook root, `phx-hook`, and the intended `phx-update` boundary. LiveViewTest does not execute JavaScript hooks.
+When the hook calls `pushEvent`, add a LiveViewTest that uses `render_hook/3` to exercise the matching server `handle_event/3`, including valid and invalid payloads. Separately assert the stable hook root, `phx-hook`, and intended `phx-update` boundary.
+
+`render_hook/3` tests the server side of the hook contract; it does not execute JavaScript. Vitest/jsdom must cover the actual hook lifecycle, DOM changes, `pushEvent`, `handleEvent`, and cleanup. Run both the focused JavaScript tests and the relevant LiveView tests before completion.
