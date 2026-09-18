@@ -21,6 +21,8 @@ Follow Phoenix 1.8 component, router, template, and asset conventions while pres
 - Use the imported `<.icon>` component rather than calling an icon library module directly.
 - Use the application's imported `<.input>` component when available. Supplying a custom `class` replaces its default classes, so provide the complete styling intentionally.
 - Build nested component forms with `Phoenix.Component.inputs_for/1`; do not reintroduce legacy `Phoenix.HTML.form_for` or `Phoenix.HTML.inputs_for` APIs.
+- When one page contains several substantial, conceptually independent sections that are not reused elsewhere, define them as function components in a `components.ex` file beside that page. Keep the page template as a semantic composition of those sections, and keep section-specific child markup inside its owning component.
+- Promote a page-local component to `CoreComponents` or shared HTML helpers only after multiple pages genuinely reuse it. Name local components for the semantic region or purpose they render, not for their visual styling.
 - Put shared imports and aliases in the web module's `html_helpers` block when they genuinely apply to all HTML modules.
 
 ## HEEx rules

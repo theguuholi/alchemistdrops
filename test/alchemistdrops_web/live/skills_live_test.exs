@@ -3,6 +3,7 @@ defmodule AlchemistdropsWeb.SkillsLiveTest do
 
   import Phoenix.LiveViewTest
 
+  doctest AlchemistdropsWeb.SkillsLive.Components
   doctest AlchemistdropsWeb.SkillsLive.Index
 
   @skills ~w(
