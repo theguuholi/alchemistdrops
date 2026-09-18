@@ -3,6 +3,8 @@ import mermaid from "mermaid"
 import {setScale} from "./diagram.js"
 import {mermaidOptions} from "./theme.js"
 
+mermaid.initialize({startOnLoad: false})
+
 let diagramSequence = 0
 
 export async function renderDiagram(diagram, theme) {

@@ -22,7 +22,12 @@ export function observeTheme(onChange) {
 export function mermaidOptions(theme) {
   const dark = theme === "dark"
   const styles = getComputedStyle(document.documentElement)
-  const color = (name, fallback) => styles.getPropertyValue(name).trim() || fallback
+  const color = (name, fallback) => {
+    const value = styles.getPropertyValue(name).trim()
+    const supported = /^(?:#[\da-f]{3,8}|(?:rgb|rgba|hsl|hsla)\(|[a-z]+$)/i
+
+    return supported.test(value) ? value : fallback
+  }
 
   return {
     startOnLoad: false,
