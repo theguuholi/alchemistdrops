@@ -1,29 +1,35 @@
 // @vitest-environment jsdom
 
-import {afterEach, describe, expect, it} from "vitest"
+import {describe, expect, it} from "vitest"
 
 import {mermaidOptions} from "./theme.js"
 
 describe("Mermaid theme", () => {
-  afterEach(() => document.documentElement.removeAttribute("style"))
-
-  it("replaces unsupported CSS color formats with Mermaid-compatible fallbacks", () => {
-    document.documentElement.style.setProperty("--color-base-100", "oklch(16% .02 240)")
-    document.documentElement.style.setProperty("--color-primary", "rgb(14, 165, 233)")
-
+  it("uses the approved high-contrast dark palette", () => {
     const options = mermaidOptions("dark")
 
-    expect(options.themeVariables.background).toBe("#111827")
-    expect(options.themeVariables.primaryColor).toBe("rgb(14, 165, 233)")
-    expect(options.themeVariables.primaryTextColor).toBe("#082f49")
-    expect(options.themeVariables.fontSize).toBe("18px")
+    expect(options.themeVariables).toMatchObject({
+      background: "#0b1220",
+      primaryColor: "#172554",
+      primaryTextColor: "#f8fafc",
+      primaryBorderColor: "#60a5fa",
+      lineColor: "#94a3b8"
+    })
+    expect(options.themeCSS).toContain("fill: #312e81")
+    expect(options.themeCSS).toContain("color: #f5f3ff")
   })
 
-  it("uses a light label fallback on the light theme's purple nodes", () => {
-    document.documentElement.style.setProperty("--color-primary-content", "oklch(98% .01 290)")
-
+  it("uses the approved high-contrast light palette", () => {
     const options = mermaidOptions("light")
 
-    expect(options.themeVariables.primaryTextColor).toBe("#ffffff")
+    expect(options.themeVariables).toMatchObject({
+      background: "#fcfcfe",
+      primaryColor: "#eff6ff",
+      primaryTextColor: "#172554",
+      primaryBorderColor: "#3b82f6",
+      lineColor: "#64748b"
+    })
+    expect(options.themeCSS).toContain("fill: #f5f3ff")
+    expect(options.themeCSS).toContain("color: #2e1065")
   })
 })

@@ -391,17 +391,32 @@ article.prose pre.mermaid {
 }
 
 .mermaid-blueprint {
+  --mermaid-surface: #fcfcfe;
+  --mermaid-frame: #c7d2fe;
+  --mermaid-grid: #e7e9f2;
+  --mermaid-control: #ffffff;
+  --mermaid-control-text: #334155;
+  --mermaid-accent: #3b82f6;
   position: relative;
   margin: 2rem 0;
   overflow: hidden;
-  border: 1px solid color-mix(in oklch, var(--color-primary) 32%, var(--color-base-300));
+  border: 1px solid var(--mermaid-frame);
   border-radius: 1rem;
-  background-color: var(--color-base-100);
+  background-color: var(--mermaid-surface);
   background-image:
-    linear-gradient(color-mix(in oklch, var(--color-primary) 9%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in oklch, var(--color-primary) 9%, transparent) 1px, transparent 1px);
+    linear-gradient(var(--mermaid-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--mermaid-grid) 1px, transparent 1px);
   background-size: 22px 22px;
   box-shadow: 0 16px 42px oklch(0% 0 0 / 0.08);
+}
+
+[data-theme="dark"] .mermaid-blueprint {
+  --mermaid-surface: #0b1220;
+  --mermaid-frame: #334155;
+  --mermaid-grid: #1e293b;
+  --mermaid-control: #111827;
+  --mermaid-control-text: #e2e8f0;
+  --mermaid-accent: #60a5fa;
 }
 
 .mermaid-toolbar {
@@ -409,18 +424,18 @@ article.prose pre.mermaid {
   justify-content: flex-end;
   gap: 0.35rem;
   padding: 0.65rem;
-  border-bottom: 1px solid var(--color-base-300);
-  background: color-mix(in oklch, var(--color-base-100) 90%, transparent);
+  border-bottom: 1px solid var(--mermaid-frame);
+  background: var(--mermaid-surface);
   backdrop-filter: blur(10px);
 }
 
 .mermaid-toolbar button {
   min-width: 2.25rem;
   min-height: 2.25rem;
-  border: 1px solid var(--color-base-300);
+  border: 1px solid var(--mermaid-frame);
   border-radius: 0.5rem;
-  background: var(--color-base-100);
-  color: var(--color-base-content);
+  background: var(--mermaid-control);
+  color: var(--mermaid-control-text);
   font: 600 0.75rem/1 system-ui, sans-serif;
   cursor: pointer;
   transition: border-color 150ms ease, color 150ms ease, background-color 150ms ease;
@@ -428,8 +443,8 @@ article.prose pre.mermaid {
 
 .mermaid-toolbar button:hover,
 .mermaid-toolbar button:focus-visible {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--mermaid-accent);
+  color: var(--mermaid-accent);
   outline: none;
 }
 
@@ -693,6 +708,15 @@ article.prose.drop-cap > p:first-of-type::first-letter {
 
 /* Match custom article colors to daisyUI when the theme follows the OS. */
 @media (prefers-color-scheme: dark) {
+  html:not([data-theme]) .mermaid-blueprint {
+    --mermaid-surface: #0b1220;
+    --mermaid-frame: #334155;
+    --mermaid-grid: #1e293b;
+    --mermaid-control: #111827;
+    --mermaid-control-text: #e2e8f0;
+    --mermaid-accent: #60a5fa;
+  }
+
   html:not([data-theme]) article.prose {
     --prose-body: oklch(78% 0.01 230);
     --prose-headings: oklch(96% 0.01 230);
