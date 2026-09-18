@@ -18,7 +18,10 @@ Enforce invariants at the changeset and database layers, and enforce ownership a
 ## Schema documentation and tests
 
 - Give every schema module an ExDoc-compatible `@moduledoc` that explains what the schema represents, why it matters to the domain, and its principal invariants and relationships. Do not use `@moduledoc false` for domain schemas.
+- Define and document `@type t :: %__MODULE__{...}` for every schema. Include the schema's real persisted and construction states, including `nil` where the database or lifecycle permits it.
+- Use documented domain types for meaningful schema concepts such as statuses, enums, identifiers, money values, and external references. Avoid per-field type aliases that merely rename a primitive without adding meaning.
 - Give every public changeset function an ExDoc `@doc` that states its purpose and includes at least one executable `iex>` example. Add `doctest SchemaModule` to that schema's test module; an example is not complete until the doctest executes it.
+- Give every public changeset function a precise spec such as `@spec changeset(t(), map()) :: Ecto.Changeset.t()`. Context functions that accept or return schemas must reference `Schema.t()` in their specs.
 - Do not exempt changesets that depend on the database. Run their doctests from a test module using the project's `DataCase` and SQL Sandbox. Make examples self-contained or call fixture helpers by their fully qualified module name, and generate deterministic unique values so examples remain isolated.
 - Create a dedicated `*_test.exs` module for every schema. Cover the valid changeset and every distinct observable behavior: each required field, validation and exact boundary, normalization, database constraint, declared association, default, protected/non-cast field, and public changeset variant. Internal branches with identical public results do not require duplicate cases.
 - Test every declared database constraint both as a translated changeset error and by proving the database rejects an invalid direct operation. Keep exhaustive schema tests even when context tests cover the same happy path.
