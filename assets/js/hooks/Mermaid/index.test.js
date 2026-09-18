@@ -28,14 +28,16 @@ describe("Mermaid hook", () => {
     mermaidMock.render.mockResolvedValue({ svg: '<svg viewBox="0 0 100 80"><text>diagram</text></svg>' })
   })
 
-  it("retains source and renders a blueprint toolbar once", async () => {
+  it("retains source and renders only the useful diagram controls", async () => {
     const hook = mountHook()
     await flush()
 
     const blueprint = hook.el.querySelector(".mermaid-blueprint")
     expect(blueprint.dataset.mermaidSource).toContain("graph TD")
     expect(blueprint.querySelectorAll(".mermaid-toolbar")).toHaveLength(1)
-    expect(blueprint.querySelectorAll(".mermaid-toolbar [data-action]")).toHaveLength(4)
+    expect(blueprint.querySelectorAll(".mermaid-toolbar [data-action]")).toHaveLength(3)
+    expect(blueprint.querySelector('[data-action="expand"]')).toBeNull()
+    expect(blueprint.querySelector("dialog")).toBeNull()
     expect(mermaidMock.initialize).toHaveBeenCalledWith(
       expect.objectContaining({ theme: "base", startOnLoad: false })
     )
@@ -60,37 +62,34 @@ describe("Mermaid hook", () => {
     for (let index = 0; index < 20; index++) {
       blueprint.querySelector('[data-action="zoom-in"]').click()
     }
-    expect(canvas.style.transform).toBe("scale(2)")
+    expect(canvas.style.width).toBe("200%")
+    expect(canvas.style.transform).toBe("")
+    expect(blueprint.classList.contains("is-zoomed")).toBe(true)
 
     blueprint.querySelector('[data-action="reset"]').click()
-    expect(canvas.style.transform).toBe("scale(1)")
+    expect(canvas.style.width).toBe("100%")
+    expect(blueprint.classList.contains("is-zoomed")).toBe(false)
 
     for (let index = 0; index < 20; index++) {
       blueprint.querySelector('[data-action="zoom-out"]').click()
     }
-    expect(canvas.style.transform).toBe("scale(0.6)")
+    expect(canvas.style.width).toBe("60%")
   })
 
-  it("opens an accessible dialog and restores focus when it closes", async () => {
+  it("pans a zoomed diagram by dragging the viewport", async () => {
     const hook = mountHook()
     await flush()
-    const expand = hook.el.querySelector('[data-action="expand"]')
+    const blueprint = hook.el.querySelector(".mermaid-blueprint")
+    const viewport = blueprint.querySelector(".mermaid-viewport")
 
-    expand.focus()
-    expand.click()
+    blueprint.querySelector('[data-action="zoom-in"]').click()
+    viewport.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true, clientX: 100, clientY: 90 }))
+    viewport.dispatchEvent(new MouseEvent("pointermove", { bubbles: true, clientX: 70, clientY: 50 }))
+    viewport.dispatchEvent(new MouseEvent("pointerup", { bubbles: true }))
 
-    const dialog = hook.el.querySelector("dialog.mermaid-dialog")
-    expect(dialog.hasAttribute("open")).toBe(true)
-    expect(dialog.getAttribute("aria-label")).toBe("Expanded diagram")
-
-    dialog.querySelector('[data-action="close"]').click()
-    expect(dialog.hasAttribute("open")).toBe(false)
-    expect(document.activeElement).toBe(expand)
-
-    expand.click()
-    dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }))
-    expect(dialog.hasAttribute("open")).toBe(false)
-    expect(document.activeElement).toBe(expand)
+    expect(viewport.scrollLeft).toBe(30)
+    expect(viewport.scrollTop).toBe(40)
+    expect(viewport.classList.contains("is-dragging")).toBe(false)
   })
 
   it("rerenders from original source when the effective theme changes", async () => {

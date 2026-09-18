@@ -414,8 +414,7 @@ article.prose pre.mermaid {
   backdrop-filter: blur(10px);
 }
 
-.mermaid-toolbar button,
-.mermaid-dialog-header button {
+.mermaid-toolbar button {
   min-width: 2.25rem;
   min-height: 2.25rem;
   border: 1px solid var(--color-base-300);
@@ -428,9 +427,7 @@ article.prose pre.mermaid {
 }
 
 .mermaid-toolbar button:hover,
-.mermaid-toolbar button:focus-visible,
-.mermaid-dialog-header button:hover,
-.mermaid-dialog-header button:focus-visible {
+.mermaid-toolbar button:focus-visible {
   border-color: var(--color-primary);
   color: var(--color-primary);
   outline: none;
@@ -445,21 +442,29 @@ article.prose pre.mermaid {
   min-height: 12rem;
   padding: 1.5rem;
   overscroll-behavior: contain;
+  user-select: none;
+}
+
+.mermaid-blueprint.is-zoomed .mermaid-viewport {
+  cursor: grab;
+}
+
+.mermaid-viewport.is-dragging {
+  cursor: grabbing;
 }
 
 .mermaid-canvas {
   display: grid;
-  min-width: min-content;
+  width: 100%;
+  min-width: 0;
   place-items: center;
-  transform-origin: top left;
-  transition: transform 160ms ease;
+  transition: width 160ms ease;
 }
 
-.mermaid-canvas svg,
-.mermaid-dialog-canvas svg {
+.mermaid-canvas svg {
   display: block;
-  width: auto;
-  max-width: 100%;
+  width: 100%;
+  max-width: none;
   height: auto;
   min-height: 10rem;
 }
@@ -479,42 +484,6 @@ article.prose pre.mermaid {
 .mermaid-error span {
   color: var(--color-base-content);
   opacity: 0.72;
-}
-
-.mermaid-dialog {
-  width: min(92vw, 76rem);
-  max-width: none;
-  max-height: 90vh;
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid var(--color-base-300);
-  border-radius: 1rem;
-  background: var(--color-base-100);
-  color: var(--color-base-content);
-}
-
-.mermaid-dialog::backdrop {
-  background: oklch(8% 0.02 260 / 0.78);
-  backdrop-filter: blur(4px);
-}
-
-.mermaid-dialog-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.8rem 1rem;
-  border-bottom: 1px solid var(--color-base-300);
-  font-weight: 700;
-}
-
-.mermaid-dialog-canvas {
-  max-height: calc(90vh - 4rem);
-  padding: 1.5rem;
-  overflow: auto;
-  background-image:
-    linear-gradient(color-mix(in oklch, var(--color-primary) 8%, transparent) 1px, transparent 1px),
-    linear-gradient(90deg, color-mix(in oklch, var(--color-primary) 8%, transparent) 1px, transparent 1px);
-  background-size: 22px 22px;
 }
 
 @media (max-width: 40rem) {
@@ -684,6 +653,10 @@ article.prose.drop-cap > p:first-of-type::first-letter {
 .post-detail article.prose {
   font-size: clamp(1rem, 0.96rem + 0.18vw, 1.125rem);
   line-height: 1.8;
+}
+
+.post-detail article.prose > :not(.mermaid-blueprint, .table-wrapper) {
+  max-width: 54rem;
 }
 
 .post-detail article.prose h2,

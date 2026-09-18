@@ -123,6 +123,8 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
     assert has_element?(view, "#article-toc a[href='#first-step']", "First step")
     assert has_element?(view, "#article-mobile-toc details")
     assert has_element?(view, "#post-article h2 a#first-step")
+    assert has_element?(view, ".post-content-grid > #post-article")
+    assert has_element?(view, ".post-content-grid > #article-toc")
   end
 
   test "related course CTA is rendered only for a published course", %{conn: conn} do

@@ -15,5 +15,15 @@ describe("Mermaid theme", () => {
 
     expect(options.themeVariables.background).toBe("#111827")
     expect(options.themeVariables.primaryColor).toBe("rgb(14, 165, 233)")
+    expect(options.themeVariables.primaryTextColor).toBe("#082f49")
+    expect(options.themeVariables.fontSize).toBe("18px")
+  })
+
+  it("uses a light label fallback on the light theme's purple nodes", () => {
+    document.documentElement.style.setProperty("--color-primary-content", "oklch(98% .01 290)")
+
+    const options = mermaidOptions("light")
+
+    expect(options.themeVariables.primaryTextColor).toBe("#ffffff")
   })
 })

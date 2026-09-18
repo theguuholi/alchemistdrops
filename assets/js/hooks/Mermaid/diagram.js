@@ -16,19 +16,17 @@ export function createDiagram(node) {
   viewport.className = "mermaid-viewport"
   viewport.append(canvas)
 
-  const dialog = buildDialog()
-  wrapper.append(buildToolbar(), viewport, dialog)
+  wrapper.append(buildToolbar(), viewport)
   node.replaceWith(wrapper)
 
   const diagram = {
     source,
     wrapper,
+    viewport,
     canvas,
-    dialog,
     scale: 1,
     cleanup: [],
-    renderToken: 0,
-    lastTrigger: null
+    renderToken: 0
   }
 
   bindControls(diagram)
@@ -44,7 +42,8 @@ export function destroyDiagram(diagram) {
 export function setScale(diagram, requestedScale) {
   const boundedScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, requestedScale))
   diagram.scale = Math.round(boundedScale * 10) / 10
-  diagram.canvas.style.transform = `scale(${diagram.scale})`
+  diagram.canvas.style.width = `${Math.round(diagram.scale * 100)}%`
+  diagram.wrapper.classList.toggle("is-zoomed", diagram.scale > 1)
   diagram.wrapper.querySelector('[data-action="reset"]').textContent = `${Math.round(diagram.scale * 100)}%`
 }
 
@@ -55,8 +54,7 @@ function buildToolbar() {
   toolbar.append(
     controlButton("zoom-out", "Zoom out", "−"),
     controlButton("reset", "Reset zoom", "100%"),
-    controlButton("zoom-in", "Zoom in", "+"),
-    controlButton("expand", "Expand diagram", "↗")
+    controlButton("zoom-in", "Zoom in", "+")
   )
   return toolbar
 }
@@ -71,20 +69,6 @@ function controlButton(action, label, text) {
   return button
 }
 
-function buildDialog() {
-  const dialog = document.createElement("dialog")
-  dialog.className = "mermaid-dialog"
-  dialog.setAttribute("aria-label", "Expanded diagram")
-  dialog.innerHTML = `
-    <div class="mermaid-dialog-header">
-      <span>Diagram</span>
-      <button type="button" data-action="close" aria-label="Close expanded diagram">Close</button>
-    </div>
-    <div class="mermaid-dialog-canvas"></div>
-  `
-  return dialog
-}
-
 function bindControls(diagram) {
   const onClick = event => {
     const action = event.target.closest("[data-action]")?.dataset.action
@@ -92,42 +76,45 @@ function bindControls(diagram) {
     if (action === "zoom-in") setScale(diagram, diagram.scale + SCALE_STEP)
     if (action === "zoom-out") setScale(diagram, diagram.scale - SCALE_STEP)
     if (action === "reset") setScale(diagram, 1)
-    if (action === "expand") openDialog(diagram, event.target.closest("button"))
-    if (action === "close") closeDialog(diagram)
   }
 
-  const onKeydown = event => {
-    if (event.key === "Escape" && diagram.dialog.hasAttribute("open")) {
-      event.preventDefault()
-      closeDialog(diagram)
+  const drag = {active: false, x: 0, y: 0, left: 0, top: 0}
+  const startDragging = event => {
+    if (event.button !== 0 || diagram.scale <= 1) return
+
+    drag.active = true
+    drag.x = event.clientX
+    drag.y = event.clientY
+    drag.left = diagram.viewport.scrollLeft
+    drag.top = diagram.viewport.scrollTop
+    diagram.viewport.classList.add("is-dragging")
+    diagram.viewport.setPointerCapture?.(event.pointerId)
+  }
+  const dragDiagram = event => {
+    if (!drag.active) return
+
+    diagram.viewport.scrollLeft = drag.left + drag.x - event.clientX
+    diagram.viewport.scrollTop = drag.top + drag.y - event.clientY
+    event.preventDefault()
+  }
+  const stopDragging = event => {
+    if (!drag.active) return
+
+    drag.active = false
+    diagram.viewport.classList.remove("is-dragging")
+    if (diagram.viewport.hasPointerCapture?.(event.pointerId)) {
+      diagram.viewport.releasePointerCapture(event.pointerId)
     }
   }
 
   diagram.wrapper.addEventListener("click", onClick)
-  diagram.dialog.addEventListener("keydown", onKeydown)
+  diagram.viewport.addEventListener("pointerdown", startDragging)
+  diagram.viewport.addEventListener("pointermove", dragDiagram)
+  diagram.viewport.addEventListener("pointerup", stopDragging)
+  diagram.viewport.addEventListener("pointercancel", stopDragging)
   diagram.cleanup.push(() => diagram.wrapper.removeEventListener("click", onClick))
-  diagram.cleanup.push(() => diagram.dialog.removeEventListener("keydown", onKeydown))
-}
-
-function openDialog(diagram, trigger) {
-  diagram.lastTrigger = trigger
-  diagram.dialog.querySelector(".mermaid-dialog-canvas").innerHTML = diagram.canvas.innerHTML
-
-  if (typeof diagram.dialog.showModal === "function") {
-    diagram.dialog.showModal()
-  } else {
-    diagram.dialog.setAttribute("open", "")
-  }
-
-  diagram.dialog.querySelector('[data-action="close"]').focus()
-}
-
-function closeDialog(diagram) {
-  if (typeof diagram.dialog.close === "function") {
-    diagram.dialog.close()
-  } else {
-    diagram.dialog.removeAttribute("open")
-  }
-
-  diagram.lastTrigger?.focus()
+  diagram.cleanup.push(() => diagram.viewport.removeEventListener("pointerdown", startDragging))
+  diagram.cleanup.push(() => diagram.viewport.removeEventListener("pointermove", dragDiagram))
+  diagram.cleanup.push(() => diagram.viewport.removeEventListener("pointerup", stopDragging))
+  diagram.cleanup.push(() => diagram.viewport.removeEventListener("pointercancel", stopDragging))
 }

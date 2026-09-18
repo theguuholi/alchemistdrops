@@ -35,9 +35,10 @@ export function mermaidOptions(theme) {
     theme: "base",
     themeVariables: {
       darkMode: dark,
+      fontSize: "18px",
       background: color("--color-base-100", dark ? "#111827" : "#ffffff"),
       primaryColor: color("--color-primary", dark ? "#38bdf8" : "#7c3aed"),
-      primaryTextColor: color("--color-base-content", dark ? "#f8fafc" : "#272334"),
+      primaryTextColor: color("--color-primary-content", dark ? "#082f49" : "#ffffff"),
       primaryBorderColor: color("--color-secondary", dark ? "#c084fc" : "#7c3aed"),
       lineColor: color("--color-primary", dark ? "#38bdf8" : "#6d28d9"),
       secondaryColor: color("--color-base-200", dark ? "#172033" : "#f5f3ff"),
