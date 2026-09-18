@@ -16,21 +16,22 @@ defmodule AlchemistdropsWeb.ConnCase do
   """
 
   use ExUnit.CaseTemplate
+
   alias Alchemistdrops.Accounts
   alias Alchemistdrops.Accounts.Scope
   alias Alchemistdrops.AccountsFixtures
 
   using do
     quote do
+      use AlchemistdropsWeb, :verified_routes
+
+      import AlchemistdropsWeb.ConnCase
+      import Phoenix.ConnTest
+      import Plug.Conn
       # The default endpoint for testing
       @endpoint AlchemistdropsWeb.Endpoint
 
-      use AlchemistdropsWeb, :verified_routes
-
       # Import conveniences for testing with connections
-      import Plug.Conn
-      import Phoenix.ConnTest
-      import AlchemistdropsWeb.ConnCase
     end
   end
 
@@ -54,7 +55,7 @@ defmodule AlchemistdropsWeb.ConnCase do
     opts =
       context
       |> Map.take([:token_authenticated_at])
-      |> Enum.into([])
+      |> Enum.to_list()
 
     %{conn: log_in_user(conn, user, opts), user: user, scope: scope}
   end

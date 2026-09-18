@@ -8,6 +8,7 @@ defmodule Alchemistdrops.Payments.Payment do
   """
 
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @statuses ~w(pending completed failed refunded)

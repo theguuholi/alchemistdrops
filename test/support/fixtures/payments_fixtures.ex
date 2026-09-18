@@ -49,7 +49,10 @@ defmodule Alchemistdrops.PaymentsFixtures do
   def generate_webhook_signature(payload, secret, timestamp \\ nil) do
     timestamp = timestamp || System.system_time(:second)
     signed_payload = "#{timestamp}.#{payload}"
-    signature = :crypto.mac(:hmac, :sha256, secret, signed_payload) |> Base.encode16(case: :lower)
+
+    signature =
+      :hmac |> :crypto.mac(:sha256, secret, signed_payload) |> Base.encode16(case: :lower)
+
     "t=#{timestamp},v1=#{signature}"
   end
 

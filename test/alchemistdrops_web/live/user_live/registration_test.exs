@@ -1,8 +1,8 @@
 defmodule AlchemistdropsWeb.UserLive.RegistrationTest do
   use AlchemistdropsWeb.ConnCase, async: true
 
-  import Phoenix.LiveViewTest
   import Alchemistdrops.AccountsFixtures
+  import Phoenix.LiveViewTest
 
   describe "mount/3" do
     test "renders registration page", %{conn: conn} do
@@ -42,7 +42,8 @@ defmodule AlchemistdropsWeb.UserLive.RegistrationTest do
       form = form(lv, "#registration_form", user: valid_user_attributes(email: email))
 
       {:ok, login_view, _html} =
-        render_submit(form)
+        form
+        |> render_submit()
         |> follow_redirect(conn, ~p"/users/log-in")
 
       assert has_element?(login_view, "#flash-info", "An email was sent to #{email}")

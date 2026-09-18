@@ -1,8 +1,8 @@
 defmodule AlchemistdropsWeb.UserLive.LoginTest do
   use AlchemistdropsWeb.ConnCase, async: true
 
-  import Phoenix.LiveViewTest
   import Alchemistdrops.AccountsFixtures
+  import Phoenix.LiveViewTest
 
   describe "login page" do
     test "renders login page", %{conn: conn} do
@@ -21,7 +21,8 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
       {:ok, lv, _html} = live(conn, ~p"/users/log-in")
 
       {:ok, login_view, _html} =
-        form(lv, "#login_form_magic", user: %{email: user.email})
+        lv
+        |> form("#login_form_magic", user: %{email: user.email})
         |> render_submit()
         |> follow_redirect(conn, ~p"/users/log-in")
 
@@ -35,7 +36,8 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
       {:ok, lv, _html} = live(conn, ~p"/users/log-in")
 
       {:ok, login_view, _html} =
-        form(lv, "#login_form_magic", user: %{email: "idonotexist@example.com"})
+        lv
+        |> form("#login_form_magic", user: %{email: "idonotexist@example.com"})
         |> render_submit()
         |> follow_redirect(conn, ~p"/users/log-in")
 
@@ -110,7 +112,8 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
       {:ok, lv, _html} = live(conn, ~p"/users/log-in")
 
       {:ok, login_view, _html} =
-        form(lv, "#login_form_magic", user: %{email: "nonexistent@example.com"})
+        lv
+        |> form("#login_form_magic", user: %{email: "nonexistent@example.com"})
         |> render_submit()
         |> follow_redirect(conn, ~p"/users/log-in")
 

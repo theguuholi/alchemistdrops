@@ -1,14 +1,14 @@
 defmodule Alchemistdrops.AccountsTest do
   use Alchemistdrops.DataCase
 
+  import Alchemistdrops.AccountsFixtures
+
+  alias Alchemistdrops.Accounts
+  alias Alchemistdrops.Accounts.{User, UserToken}
+
   doctest Alchemistdrops.Accounts
   doctest Alchemistdrops.Accounts.Scope
   doctest Alchemistdrops.Accounts.UserNotifier
-
-  alias Alchemistdrops.Accounts
-
-  import Alchemistdrops.AccountsFixtures
-  alias Alchemistdrops.Accounts.{User, UserToken}
 
   describe "get_user_by_email/1" do
     test "does not return the user if the email does not exist" do
@@ -294,7 +294,7 @@ defmodule Alchemistdrops.AccountsTest do
       token = Accounts.generate_user_session_token(user)
       assert user_token = Repo.get_by(UserToken, token: token)
       assert user_token.authenticated_at == user.authenticated_at
-      assert DateTime.compare(user_token.inserted_at, user.authenticated_at) == :gt
+      assert DateTime.after?(user_token.inserted_at, user.authenticated_at)
     end
   end
 
@@ -417,7 +417,7 @@ defmodule Alchemistdrops.AccountsTest do
       user2 = user_fixture()
 
       users = Accounts.list_users()
-      user_ids = Enum.map(users, & &1.id) |> MapSet.new()
+      user_ids = users |> MapSet.new(& &1.id)
 
       # Verify we get both users
       assert MapSet.member?(user_ids, user1.id)

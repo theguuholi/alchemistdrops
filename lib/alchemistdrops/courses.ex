@@ -8,6 +8,7 @@ defmodule Alchemistdrops.Courses do
   """
 
   import Ecto.Query, warn: false
+
   alias Alchemistdrops.Courses.{Course, Lesson}
   alias Alchemistdrops.Payments
   alias Alchemistdrops.Repo
@@ -256,7 +257,7 @@ defmodule Alchemistdrops.Courses do
   defp price_to_cents(nil), do: nil
 
   defp price_to_currency_string(%Money{currency: currency}),
-    do: to_string(currency) |> String.downcase()
+    do: currency |> to_string() |> String.downcase()
 
   defp price_to_currency_string(_), do: "usd"
 

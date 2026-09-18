@@ -8,7 +8,9 @@ defmodule Alchemistdrops.Accounts.UserToken do
   """
 
   use Ecto.Schema
+
   import Ecto.Query
+
   alias Alchemistdrops.Accounts.{User, UserToken}
 
   @hash_algorithm :sha256

@@ -15,7 +15,8 @@ defmodule AlchemistdropsWeb.Plugs.RawBodyTest do
       body = ~s({"test": "data"})
 
       conn =
-        conn(:post, "/test", body)
+        :post
+        |> conn("/test", body)
         |> RawBody.call([])
 
       assert conn.assigns[:raw_body] == body
@@ -25,7 +26,8 @@ defmodule AlchemistdropsWeb.Plugs.RawBodyTest do
       body = "original body"
 
       conn =
-        conn(:post, "/test", "new body")
+        :post
+        |> conn("/test", "new body")
         |> Plug.Conn.assign(:raw_body, body)
         |> RawBody.call([])
 
@@ -35,7 +37,8 @@ defmodule AlchemistdropsWeb.Plugs.RawBodyTest do
 
     test "handles empty body" do
       conn =
-        conn(:post, "/test", "")
+        :post
+        |> conn("/test", "")
         |> RawBody.call([])
 
       assert conn.assigns[:raw_body] == ""

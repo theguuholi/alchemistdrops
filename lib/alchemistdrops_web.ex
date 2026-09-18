@@ -23,10 +23,11 @@ defmodule AlchemistdropsWeb do
     quote do
       use Phoenix.Router, helpers: false
 
-      # Import common connection and controller functions to use in pipelines
-      import Plug.Conn
       import Phoenix.Controller
       import Phoenix.LiveView.Router
+
+      # Import common connection and controller functions to use in pipelines
+      import Plug.Conn
     end
   end
 
@@ -39,7 +40,6 @@ defmodule AlchemistdropsWeb do
   def controller do
     quote do
       use Phoenix.Controller, formats: [:html, :json]
-
       use Gettext, backend: AlchemistdropsWeb.Gettext
 
       import Plug.Conn
@@ -82,10 +82,11 @@ defmodule AlchemistdropsWeb do
       # Translation
       use Gettext, backend: AlchemistdropsWeb.Gettext
 
+      import AlchemistdropsWeb.CoreComponents
+
       # HTML escaping functionality
       import Phoenix.HTML
       # Core UI components
-      import AlchemistdropsWeb.CoreComponents
 
       # Common modules used in templates
       alias AlchemistdropsWeb.Layouts

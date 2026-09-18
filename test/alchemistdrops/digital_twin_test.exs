@@ -1,9 +1,9 @@
 defmodule Alchemistdrops.DigitalTwinTest do
   use ExUnit.Case, async: true
 
-  doctest Alchemistdrops.DigitalTwin
-
   alias Alchemistdrops.DigitalTwin
+
+  doctest Alchemistdrops.DigitalTwin
 
   @profile %{
     name: "Gustavo",

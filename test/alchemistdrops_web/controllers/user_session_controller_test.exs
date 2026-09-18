@@ -2,6 +2,7 @@ defmodule AlchemistdropsWeb.UserSessionControllerTest do
   use AlchemistdropsWeb.ConnCase, async: true
 
   import Alchemistdrops.AccountsFixtures
+
   alias Alchemistdrops.Accounts
 
   setup do

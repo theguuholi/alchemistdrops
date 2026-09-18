@@ -8,10 +8,10 @@ defmodule AlchemistdropsWeb.PostLive.Show do
   def mount(%{"slug" => slug}, _session, socket) do
     page = Posts.get_published_post_page!(slug)
 
-    if page.post.slug != slug do
-      {:ok, push_navigate(socket, to: ~p"/blog/#{page.post.slug}")}
-    else
+    if page.post.slug == slug do
       mount_post(socket, page)
+    else
+      {:ok, push_navigate(socket, to: ~p"/blog/#{page.post.slug}")}
     end
   end
 

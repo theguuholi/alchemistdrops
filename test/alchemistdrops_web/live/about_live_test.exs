@@ -1,5 +1,6 @@
 defmodule AlchemistdropsWeb.AboutLiveTest do
   use AlchemistdropsWeb.ConnCase
+
   import Phoenix.LiveViewTest
 
   describe "About page" do

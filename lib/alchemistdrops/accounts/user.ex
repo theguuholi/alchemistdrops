@@ -8,6 +8,7 @@ defmodule Alchemistdrops.Accounts.User do
   """
 
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @user_role_type ~w(user admin student)a

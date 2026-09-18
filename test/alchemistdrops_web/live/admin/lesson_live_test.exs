@@ -1,8 +1,8 @@
 defmodule AlchemistdropsWeb.Admin.LessonLiveTest do
   use AlchemistdropsWeb.ConnCase
 
-  import Phoenix.LiveViewTest
   import Alchemistdrops.CoursesFixtures
+  import Phoenix.LiveViewTest
 
   @create_attrs %{
     title: "New Lesson Title",
@@ -120,7 +120,8 @@ defmodule AlchemistdropsWeb.Admin.LessonLiveTest do
       invalid_id = Ecto.UUID.generate()
 
       assert {:ok, show_view, _html} =
-               live(conn, ~p"/admin/courses/#{course}/lessons/#{invalid_id}/edit")
+               conn
+               |> live(~p"/admin/courses/#{course}/lessons/#{invalid_id}/edit")
                |> follow_redirect(conn, ~p"/admin/courses/#{course}")
 
       assert has_element?(show_view, "#flash-error", "Lesson not found")

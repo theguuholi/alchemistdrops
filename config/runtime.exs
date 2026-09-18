@@ -33,14 +33,6 @@ if config_env() == :prod do
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
-  config :alchemistdrops, Alchemistdrops.Repo,
-    # ssl: true,
-    url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "2"),
-    # For machines with several cores, consider starting multiple pools of `pool_size`
-    # pool_count: 4,
-    socket_options: maybe_ipv6
-
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you
   # want to use a different value for prod and you most likely don't want
@@ -56,7 +48,22 @@ if config_env() == :prod do
   host = System.get_env("PHX_HOST") || "example.com"
   port = String.to_integer(System.get_env("PORT") || "4000")
 
-  config :alchemistdrops, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+  # ## Configuring the mailer
+  #
+  # In production you need to configure the mailer to use a different adapter.
+  # Here is an example configuration for Mailgun:
+  #
+  config :alchemistdrops, Alchemistdrops.Mailer,
+    adapter: Swoosh.Adapters.Brevo,
+    api_key: System.get_env("BREVO_API_KEY")
+
+  config :alchemistdrops, Alchemistdrops.Repo,
+    # ssl: true,
+    url: database_url,
+    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "2"),
+    # For machines with several cores, consider starting multiple pools of `pool_size`
+    # pool_count: 4,
+    socket_options: maybe_ipv6
 
   config :alchemistdrops, AlchemistdropsWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
@@ -79,6 +86,9 @@ if config_env() == :prod do
   #
   # To get SSL working, you will need to add the `https` key
   # to your endpoint configuration:
+  config :alchemistdrops, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+
+  # Stripe configuration
   #
   #     config :alchemistdrops, AlchemistdropsWeb.Endpoint,
   #       https: [
@@ -107,18 +117,6 @@ if config_env() == :prod do
   #
   # Check `Plug.SSL` for all available options in `force_ssl`.
 
-  # ## Configuring the mailer
-  #
-  # In production you need to configure the mailer to use a different adapter.
-  # Here is an example configuration for Mailgun:
-  #
-  config :alchemistdrops, Alchemistdrops.Mailer,
-    adapter: Swoosh.Adapters.Brevo,
-    api_key: System.get_env("BREVO_API_KEY")
-
-  config :swoosh, :api_client, Swoosh.ApiClient.Finch
-
-  # Stripe configuration
   config :alchemistdrops, :stripe,
     secret_key:
       System.get_env("STRIPE_SECRET_KEY") ||
@@ -127,6 +125,8 @@ if config_env() == :prod do
       System.get_env("STRIPE_WEBHOOK_SECRET") ||
         raise("environment variable STRIPE_WEBHOOK_SECRET is missing"),
     http_client: Alchemistdrops.Payments.ReqClient
+
+  config :swoosh, :api_client, Swoosh.ApiClient.Finch
 
   #
   # Most non-SMTP adapters require an API client. Swoosh supports Req, Hackney,

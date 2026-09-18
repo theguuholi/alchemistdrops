@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     environment: GIGALIXIR_USERNAME
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Deploy to Gigalixir
         uses: mhanberg/gigalixir-action@v0.4.3
@@ -36,4 +36,3 @@ jobs:
           GIGALIXIR_APP: ${{ secrets.GIGALIXIR_APP }}
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           MIGRATIONS: false
-

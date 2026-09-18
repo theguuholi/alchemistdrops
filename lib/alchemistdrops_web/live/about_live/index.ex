@@ -168,8 +168,6 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
         {:ok, content} -> content
         _ -> nil
       end
-    else
-      nil
     end
   end
 

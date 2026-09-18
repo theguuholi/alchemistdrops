@@ -1,11 +1,11 @@
 defmodule Alchemistdrops.CoursesTest do
   use Alchemistdrops.DataCase
 
+  import Alchemistdrops.CoursesFixtures
+
   alias Alchemistdrops.Courses
   alias Alchemistdrops.Courses.{Course, Lesson}
   alias Alchemistdrops.Payments.MockHttpClient
-
-  import Alchemistdrops.CoursesFixtures
 
   doctest Alchemistdrops.Courses
 

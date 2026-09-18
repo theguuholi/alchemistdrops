@@ -300,7 +300,9 @@ defmodule Alchemistdrops.Payments do
 
   defp verify_signature(payload, timestamp, signature, secret) do
     signed_payload = "#{timestamp}.#{payload}"
-    expected = :crypto.mac(:hmac, :sha256, secret, signed_payload) |> Base.encode16(case: :lower)
+
+    expected =
+      :hmac |> :crypto.mac(:sha256, secret, signed_payload) |> Base.encode16(case: :lower)
 
     if Plug.Crypto.secure_compare(expected, signature) do
       :ok

@@ -1,7 +1,8 @@
 defmodule AlchemistdropsWeb.HomeLiveTest do
   use AlchemistdropsWeb.ConnCase
-  import Phoenix.LiveViewTest
+
   import Alchemistdrops.PostsFixtures
+  import Phoenix.LiveViewTest
 
   alias Alchemistdrops.Repo
 

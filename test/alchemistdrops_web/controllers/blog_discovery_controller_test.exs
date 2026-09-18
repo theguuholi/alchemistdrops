@@ -10,7 +10,7 @@ defmodule AlchemistdropsWeb.BlogDiscoveryControllerTest do
     conn = get(conn, ~p"/sitemap.xml")
     body = response(conn, 200)
 
-    assert get_resp_header(conn, "content-type") |> hd() =~ "application/xml"
+    assert conn |> get_resp_header("content-type") |> hd() =~ "application/xml"
     assert body =~ "http://localhost:4002/blog/#{published.slug}"
     assert body =~ "http://localhost:4002/courses"
     refute body =~ draft.slug
@@ -23,7 +23,7 @@ defmodule AlchemistdropsWeb.BlogDiscoveryControllerTest do
     conn = get(conn, ~p"/blog/feed.xml")
     body = response(conn, 200)
 
-    assert get_resp_header(conn, "content-type") |> hd() =~ "application/xml"
+    assert conn |> get_resp_header("content-type") |> hd() =~ "application/xml"
     assert body =~ "<feed xmlns=\"http://www.w3.org/2005/Atom\">"
     assert body =~ "Elixir &amp; Phoenix"
     assert body =~ "Fast &lt; reliable"

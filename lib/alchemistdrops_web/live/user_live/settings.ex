@@ -1,9 +1,9 @@
 defmodule AlchemistdropsWeb.UserLive.Settings do
   use AlchemistdropsWeb, :live_view
 
-  on_mount {AlchemistdropsWeb.UserAuth, :require_sudo_mode}
-
   alias Alchemistdrops.Accounts
+
+  on_mount {AlchemistdropsWeb.UserAuth, :require_sudo_mode}
 
   @impl true
   def mount(%{"token" => token}, _session, socket) do

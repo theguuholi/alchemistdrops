@@ -1,9 +1,9 @@
 defmodule Alchemistdrops.MarkdownTest do
   use ExUnit.Case, async: true
 
-  doctest Alchemistdrops.Markdown
-
   alias Alchemistdrops.Markdown
+
+  doctest Alchemistdrops.Markdown
 
   describe "to_html/1" do
     test "renders GFM pipe tables as HTML tables" do

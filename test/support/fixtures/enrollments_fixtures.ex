@@ -28,8 +28,7 @@ defmodule Alchemistdrops.EnrollmentsFixtures do
 
     attrs =
       attrs
-      |> Map.delete(:user)
-      |> Map.delete(:course)
+      |> Map.drop([:user, :course])
       |> Map.put(:user_id, user_id)
       |> Map.put(:course_id, course_id)
       |> Enum.into(%{

@@ -4,9 +4,9 @@ defmodule Alchemistdrops.Payments.ReqClientTest do
   """
   use ExUnit.Case, async: false
 
-  doctest Alchemistdrops.Payments.ReqClient
-
   alias Alchemistdrops.Payments.ReqClient
+
+  doctest Alchemistdrops.Payments.ReqClient
 
   describe "request/1 error handling" do
     test "raises KeyError for missing :method" do
@@ -55,7 +55,7 @@ defmodule Alchemistdrops.Payments.ReqClientTest do
         {:ok, socket} = :gen_tcp.accept(listen_socket)
         {:ok, _request} = :gen_tcp.recv(socket, 0, 5000)
 
-        response = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{\"test\":\"ok\"}"
+        response = ~s(HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n\r\n{"test":"ok"})
         :gen_tcp.send(socket, response)
         :gen_tcp.close(socket)
         send(parent, :request_handled)

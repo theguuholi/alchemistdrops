@@ -7,9 +7,9 @@ defmodule Alchemistdrops.Courses.LessonTest do
   """
   use Alchemistdrops.DataCase
 
-  alias Alchemistdrops.Courses.{Course, Lesson}
-
   import Alchemistdrops.CoursesFixtures
+
+  alias Alchemistdrops.Courses.{Course, Lesson}
 
   doctest Alchemistdrops.Courses.Lesson
 

@@ -1,11 +1,11 @@
 defmodule AlchemistdropsWeb.CourseLive.IndexTest do
   use AlchemistdropsWeb.ConnCase
 
-  import Ecto.Query
-  import Phoenix.LiveViewTest
   import Alchemistdrops.AccountsFixtures
   import Alchemistdrops.CoursesFixtures
   import Alchemistdrops.EnrollmentsFixtures
+  import Ecto.Query
+  import Phoenix.LiveViewTest
 
   alias Alchemistdrops.Courses.Course
   alias Alchemistdrops.Repo

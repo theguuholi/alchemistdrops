@@ -9,6 +9,7 @@ defmodule Alchemistdrops.Enrollments do
   """
 
   import Ecto.Query, warn: false
+
   alias Alchemistdrops.Accounts.User
   alias Alchemistdrops.Courses.{Course, Lesson}
   alias Alchemistdrops.Enrollments.Enrollment

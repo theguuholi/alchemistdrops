@@ -10,6 +10,12 @@
 # We recommend using the bang functions (`insert!`, `update!`
 # and so on) as they will fail if something goes wrong.
 
+alias Alchemistdrops.Accounts.User
+alias Alchemistdrops.Courses.{Course, Lesson}
+alias Alchemistdrops.Enrollments.Enrollment
+alias Alchemistdrops.Payments.Payment
+alias Alchemistdrops.Repo
+
 # Create a sample user
 _user =
   %Alchemistdrops.Accounts.User{
@@ -258,12 +264,6 @@ Alchemistdrops.Repo.insert!(post)
 # Course Feature Seeds
 # ================================================================================
 
-alias Alchemistdrops.Repo
-alias Alchemistdrops.Accounts.User
-alias Alchemistdrops.Courses.{Course, Lesson}
-alias Alchemistdrops.Enrollments.Enrollment
-alias Alchemistdrops.Payments.Payment
-
 # Create additional users with different roles
 _admin_user =
   case Repo.get_by(User, email: "admin@alchemistdrops.com") do
@@ -358,7 +358,7 @@ phoenix_course =
     ## Who This Is For
     Developers with basic Elixir knowledge who want to build web applications.
     """,
-    price: Money.new(14999, :USD),
+    price: Money.new(14_999, :USD),
     published: true,
     thumbnail_url: nil
   }
@@ -392,7 +392,7 @@ unpublished_course =
     title: "Advanced Distributed Systems",
     description: "Coming soon: Master distributed systems with Elixir",
     body: "This course is currently under development.",
-    price: Money.new(19999, :USD),
+    price: Money.new(19_999, :USD),
     published: false
   }
   |> Repo.insert!()

@@ -8,9 +8,9 @@ defmodule Alchemistdrops.PostsTest do
   doctest Alchemistdrops.Posts
 
   describe "posts" do
-    alias Alchemistdrops.Posts.{Category, Tag}
-
     import Alchemistdrops.PostsFixtures
+
+    alias Alchemistdrops.Posts.{Category, Tag}
 
     @invalid_attrs %{title: nil, body: nil, background: nil, views: nil}
 

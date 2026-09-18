@@ -1,8 +1,8 @@
 defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
   use AlchemistdropsWeb.ConnCase
 
-  import Phoenix.LiveViewTest
   import Alchemistdrops.CoursesFixtures
+  import Phoenix.LiveViewTest
 
   @create_attrs %{
     title: "New Course Title",

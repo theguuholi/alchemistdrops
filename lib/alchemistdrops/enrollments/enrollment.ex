@@ -8,6 +8,7 @@ defmodule Alchemistdrops.Enrollments.Enrollment do
   """
 
   use Ecto.Schema
+
   import Ecto.Changeset
 
   @statuses ~w(active completed cancelled)

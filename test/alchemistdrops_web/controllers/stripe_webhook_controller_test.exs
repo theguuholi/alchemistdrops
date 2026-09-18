@@ -169,11 +169,12 @@ defmodule AlchemistdropsWeb.StripeWebhookControllerTest do
       # The generic handler is defensive code for future error types.
       # We test by simulating a JSON decode error directly.
 
-      import Plug.Test
       import Phoenix.ConnTest, only: [json_response: 2]
+      import Plug.Test
 
       conn =
-        conn(:post, "/webhooks/stripe", "{}")
+        :post
+        |> conn("/webhooks/stripe", "{}")
         |> Plug.Conn.assign(:raw_body, "{}")
         |> Plug.Conn.put_req_header("content-type", "application/json")
         |> Plug.Conn.put_req_header(
@@ -206,7 +207,8 @@ defmodule AlchemistdropsWeb.StripeWebhookControllerTest do
         import Plug.Test
 
         conn =
-          conn(:post, "/webhooks/stripe", "{}")
+          :post
+          |> conn("/webhooks/stripe", "{}")
           |> Plug.Conn.assign(:raw_body, "{}")
           |> Plug.Conn.put_req_header("content-type", "application/json")
           |> Plug.Conn.put_req_header("stripe-signature", "t=123,v1=abc")

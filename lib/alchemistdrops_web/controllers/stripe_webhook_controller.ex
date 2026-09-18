@@ -16,7 +16,7 @@ defmodule AlchemistdropsWeb.StripeWebhookController do
   """
   def webhook(conn, _params) do
     payload = conn.assigns[:raw_body]
-    signature = get_req_header(conn, "stripe-signature") |> List.first()
+    signature = conn |> get_req_header("stripe-signature") |> List.first()
     webhook_secret = webhook_secret()
 
     with :ok <- Payments.verify_webhook_signature(payload, signature, webhook_secret),

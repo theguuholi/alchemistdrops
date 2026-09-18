@@ -1,8 +1,8 @@
 defmodule AlchemistdropsWeb.UserAuth do
   use AlchemistdropsWeb, :verified_routes
 
-  import Plug.Conn
   import Phoenix.Controller
+  import Plug.Conn
 
   alias Alchemistdrops.Accounts
   alias Alchemistdrops.Accounts.Scope
@@ -83,8 +83,6 @@ defmodule AlchemistdropsWeb.UserAuth do
 
       if token = conn.cookies[@remember_me_cookie] do
         {token, conn |> put_token_in_session(token) |> put_session(:user_remember_me, true)}
-      else
-        nil
       end
     end
   end

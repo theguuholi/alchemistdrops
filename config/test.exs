@@ -1,7 +1,7 @@
 import Config
 
-# Only in tests, remove the complexity from the password hashing algorithm
-config :bcrypt_elixir, :log_rounds, 1
+# In test we don't send emails
+config :alchemistdrops, Alchemistdrops.Mailer, adapter: Swoosh.Adapters.Test
 
 # Configure your database
 #
@@ -23,11 +23,14 @@ config :alchemistdrops, AlchemistdropsWeb.Endpoint,
   secret_key_base: "yLme5Vmkm6txAa1y2hspQBSuarih2rNEo3xlkiFzjl35/Y3APIvUTWHUD/o1lB2d",
   server: false
 
-# In test we don't send emails
-config :alchemistdrops, Alchemistdrops.Mailer, adapter: Swoosh.Adapters.Test
+# Stripe test configuration
+config :alchemistdrops, :stripe,
+  secret_key: "sk_test_mock",
+  webhook_secret: "whsec_test_mock",
+  http_client: Alchemistdrops.Payments.MockHttpClient
 
-# Disable swoosh api client as it is only required for production adapters
-config :swoosh, :api_client, false
+# Only in tests, remove the complexity from the password hashing algorithm
+config :bcrypt_elixir, :log_rounds, 1
 
 # Print only warnings and errors during test
 config :logger, level: :warning
@@ -39,8 +42,5 @@ config :phoenix, :plug_init_mode, :runtime
 config :phoenix_live_view,
   enable_expensive_runtime_checks: true
 
-# Stripe test configuration
-config :alchemistdrops, :stripe,
-  secret_key: "sk_test_mock",
-  webhook_secret: "whsec_test_mock",
-  http_client: Alchemistdrops.Payments.MockHttpClient
+# Disable swoosh api client as it is only required for production adapters
+config :swoosh, :api_client, false
