@@ -1,6 +1,20 @@
 defmodule Alchemistdrops.Posts.Slug do
-  @moduledoc false
+  @moduledoc """
+  Normalizes post titles into stable, URL-safe slug candidates.
+  """
 
+  @doc """
+  Converts a value to a lowercase ASCII slug and falls back to `"post"`.
+
+  ## Examples
+
+      iex> Alchemistdrops.Posts.Slug.from("Introdução ao Elixir")
+      "introducao-ao-elixir"
+
+      iex> Alchemistdrops.Posts.Slug.from(nil)
+      "post"
+  """
+  @spec from(term()) :: String.t()
   def from(value) when is_binary(value) do
     slug =
       value

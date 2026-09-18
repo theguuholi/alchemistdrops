@@ -20,11 +20,24 @@ defmodule Alchemistdrops.Accounts.Scope do
 
   defstruct user: nil
 
+  @typedoc "Authorization scope derived from the currently authenticated user."
+  @type t :: %__MODULE__{user: User.t() | nil}
+
   @doc """
   Creates a scope for the given user.
 
   Returns nil if no user is given.
+
+  ## Examples
+
+      iex> user = %Alchemistdrops.Accounts.User{email: "reader@example.com"}
+      iex> Alchemistdrops.Accounts.Scope.for_user(user)
+      %Alchemistdrops.Accounts.Scope{user: user}
+
+      iex> Alchemistdrops.Accounts.Scope.for_user(nil)
+      nil
   """
+  @spec for_user(User.t() | nil) :: t() | nil
   def for_user(%User{} = user) do
     %__MODULE__{user: user}
   end

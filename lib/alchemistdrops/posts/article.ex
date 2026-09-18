@@ -8,7 +8,10 @@ defmodule Alchemistdrops.Posts.Article do
 
   @words_per_minute 220
 
+  @typedoc "A rendered level-two or level-three heading used by article navigation."
   @type toc_entry :: %{level: 2 | 3, id: String.t(), label: String.t()}
+
+  @typedoc "Rendered article content and metadata derived from a post."
   @type t :: %{
           html: String.t(),
           toc: [toc_entry()],
@@ -16,6 +19,17 @@ defmodule Alchemistdrops.Posts.Article do
           description: String.t()
         }
 
+  @doc """
+  Builds rendered content, table-of-contents entries, reading time, and description.
+
+  A leading level-one heading matching the post title is removed so the page
+  does not render the title twice.
+
+  ## Examples
+
+      iex> article = Alchemistdrops.Posts.Article.build(%Alchemistdrops.Posts.Post{title: "Elixir", body: "## Types"}); {article.reading_minutes, article.toc}
+      {1, [%{level: 2, id: "types", label: "Types"}]}
+  """
   @spec build(Post.t()) :: t()
   def build(%Post{} = post) do
     body = post.body || ""

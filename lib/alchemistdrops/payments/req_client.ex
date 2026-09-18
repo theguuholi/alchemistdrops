@@ -17,7 +17,20 @@ defmodule Alchemistdrops.Payments.ReqClient do
 
   - `{:ok, %{status: integer, body: map}}` on success
   - `{:error, reason}` on failure
+
+  ## Examples
+
+      iex> try do
+      ...>   Alchemistdrops.Payments.ReqClient.request([])
+      ...> rescue
+      ...>   KeyError -> :missing_required_option
+      ...> end
+      :missing_required_option
   """
+  @typedoc "Normalized response returned to the payments boundary."
+  @type response :: %{status: non_neg_integer(), body: term()}
+
+  @spec request(keyword()) :: {:ok, response()} | {:error, Exception.t()}
   def request(opts) do
     method = Keyword.fetch!(opts, :method)
     url = Keyword.fetch!(opts, :url)

@@ -7,6 +7,8 @@ defmodule Alchemistdrops.CoursesTest do
 
   import Alchemistdrops.CoursesFixtures
 
+  doctest Alchemistdrops.Courses
+
   describe "list_courses/0" do
     test "Scenario: Listing all published courses ordered by title" do
       # Given multiple published courses exist in the database

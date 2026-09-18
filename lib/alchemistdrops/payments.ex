@@ -1,12 +1,10 @@
 defmodule Alchemistdrops.Payments do
   @moduledoc """
-  The Payments context.
+  Owns payment persistence and the Stripe checkout boundary.
 
-  Handles payment processing with Stripe, including:
-  - Creating checkout sessions for course purchases
-  - Recording payment transactions
-  - Processing webhook events
-  - Updating enrollment status on successful payment
+  This context is important because checkout creation, webhook reconciliation,
+  payment state, and enrollment creation must succeed or fail consistently. It
+  also keeps external HTTP behavior injectable so tests never call Stripe.
   """
 
   import Ecto.Query, warn: false
@@ -27,13 +25,15 @@ defmodule Alchemistdrops.Payments do
 
   ## Examples
 
-      iex> create_payment(%{user_id: user_id, course_id: course_id, amount: Money.new(1000, :USD)})
-      {:ok, %Payment{}}
-
-      iex> create_payment(%{})
-      {:error, %Ecto.Changeset{}}
+      iex> user = Alchemistdrops.AccountsFixtures.user_fixture()
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> {:ok, payment} = Alchemistdrops.Payments.create_payment(%{user_id: user.id, course_id: course.id, amount: Money.new(1000, :USD)})
+      iex> {payment.user_id, payment.course_id, payment.status}
+      {user.id, course.id, "pending"}
 
   """
+  @spec create_payment() :: {:ok, Payment.t()} | {:error, Ecto.Changeset.t()}
+  @spec create_payment(map()) :: {:ok, Payment.t()} | {:error, Ecto.Changeset.t()}
   def create_payment(attrs \\ %{}) do
     %Payment{}
     |> Payment.changeset(attrs)
@@ -47,13 +47,12 @@ defmodule Alchemistdrops.Payments do
 
   ## Examples
 
-      iex> get_payment!(123)
-      %Payment{}
-
-      iex> get_payment!(456)
-      ** (Ecto.NoResultsError)
+      iex> payment = Alchemistdrops.PaymentsFixtures.payment_fixture()
+      iex> Alchemistdrops.Payments.get_payment!(payment.id).id == payment.id
+      true
 
   """
+  @spec get_payment!(Ecto.UUID.t()) :: Payment.t()
   def get_payment!(id), do: Repo.get!(Payment, id)
 
   @doc """
@@ -63,13 +62,13 @@ defmodule Alchemistdrops.Payments do
 
   ## Examples
 
-      iex> get_payment_by_checkout_session("cs_test_...")
-      %Payment{}
-
-      iex> get_payment_by_checkout_session("invalid")
-      nil
+      iex> payment = Alchemistdrops.PaymentsFixtures.completed_payment_fixture()
+      iex> found = Alchemistdrops.Payments.get_payment_by_checkout_session(payment.stripe_checkout_session_id)
+      iex> found.id == payment.id
+      true
 
   """
+  @spec get_payment_by_checkout_session(String.t()) :: Payment.t() | nil
   def get_payment_by_checkout_session(session_id) do
     Repo.get_by(Payment, stripe_checkout_session_id: session_id)
   end
@@ -79,13 +78,14 @@ defmodule Alchemistdrops.Payments do
 
   ## Examples
 
-      iex> update_payment(payment, %{status: "completed"})
-      {:ok, %Payment{}}
-
-      iex> update_payment(payment, %{status: "invalid"})
-      {:error, %Ecto.Changeset{}}
+      iex> payment = Alchemistdrops.PaymentsFixtures.payment_fixture()
+      iex> {:ok, updated} = Alchemistdrops.Payments.update_payment(payment, %{status: "completed"})
+      iex> updated.status
+      "completed"
 
   """
+  @spec update_payment(Payment.t(), map()) ::
+          {:ok, Payment.t()} | {:error, Ecto.Changeset.t()}
   def update_payment(%Payment{} = payment, attrs) do
     payment
     |> Payment.changeset(attrs)
@@ -97,10 +97,13 @@ defmodule Alchemistdrops.Payments do
 
   ## Examples
 
-      iex> change_payment(payment)
-      %Ecto.Changeset{data: %Payment{}}
+      iex> changeset = Alchemistdrops.Payments.change_payment(%Alchemistdrops.Payments.Payment{})
+      iex> match?(%Ecto.Changeset{}, changeset)
+      true
 
   """
+  @spec change_payment(Payment.t()) :: Ecto.Changeset.t()
+  @spec change_payment(Payment.t(), map()) :: Ecto.Changeset.t()
   def change_payment(%Payment{} = payment, attrs \\ %{}) do
     Payment.changeset(payment, attrs)
   end
@@ -115,13 +118,15 @@ defmodule Alchemistdrops.Payments do
 
   ## Examples
 
-      iex> create_checkout_session(user, course, "https://example.com/success", "https://example.com/cancel")
-      {:ok, %{payment: %Payment{}, checkout_url: "https://checkout.stripe.com/..."}}
-
-      iex> create_checkout_session(user, free_course, success_url, cancel_url)
+      iex> user = Alchemistdrops.AccountsFixtures.user_fixture()
+      iex> course = Alchemistdrops.CoursesFixtures.free_course_fixture()
+      iex> Alchemistdrops.Payments.create_checkout_session(user, course, "https://example.com/success", "https://example.com/cancel")
       {:error, :course_is_free}
 
   """
+  @spec create_checkout_session(User.t(), Course.t(), String.t(), String.t()) ::
+          {:ok, %{payment: Payment.t(), checkout_url: String.t() | nil}}
+          | {:error, :course_is_free | term()}
   def create_checkout_session(%User{} = user, %Course{} = course, success_url, cancel_url) do
     if price_zero_or_nil?(course.price) do
       {:error, :course_is_free}
@@ -196,13 +201,15 @@ defmodule Alchemistdrops.Payments do
 
   ## Examples
 
-      iex> process_webhook_event("checkout.session.completed", %{"id" => "cs_..."})
-      {:ok, %{payment: %Payment{}, enrollment: %Enrollment{}}}
-
-      iex> process_webhook_event("unknown.event", %{})
+      iex> Alchemistdrops.Payments.process_webhook_event("unknown.event", %{})
       {:ok, :ignored}
 
   """
+  @spec process_webhook_event(String.t(), map()) ::
+          {:ok,
+           :ignored
+           | %{payment: Payment.t(), enrollment: Alchemistdrops.Enrollments.Enrollment.t()}}
+          | {:error, term()}
   def process_webhook_event("checkout.session.completed", %{"id" => session_id} = data) do
     case get_payment_by_checkout_session(session_id) do
       nil ->
@@ -246,13 +253,15 @@ defmodule Alchemistdrops.Payments do
 
   ## Examples
 
-      iex> verify_webhook_signature(payload, signature, secret)
+      iex> payload = ~s({"type":"test"})
+      iex> secret = "whsec_test"
+      iex> signature = Alchemistdrops.PaymentsFixtures.generate_webhook_signature(payload, secret)
+      iex> Alchemistdrops.Payments.verify_webhook_signature(payload, signature, secret)
       :ok
 
-      iex> verify_webhook_signature(payload, "invalid", secret)
-      {:error, :invalid_signature}
-
   """
+  @spec verify_webhook_signature(binary(), String.t() | nil, binary()) ::
+          :ok | {:error, :invalid_signature_format | :timestamp_too_old | :invalid_signature}
   def verify_webhook_signature(payload, signature_header, webhook_secret) do
     with {:ok, %{"t" => timestamp, "v1" => signature}} <-
            parse_signature_header(signature_header),
@@ -326,12 +335,13 @@ defmodule Alchemistdrops.Payments do
 
   ## Examples
 
-      iex> ensure_stripe_product_and_price_for_course(name: "My Course", amount_cents: 9900)
-      {:ok, %{stripe_product_id: "prod_...", stripe_price_id: "price_..."}}
-
-      iex> ensure_stripe_product_and_price_for_course(name: "Free", amount_cents: 0)
+      iex> Alchemistdrops.Payments.ensure_stripe_product_and_price_for_course(name: "Free", amount_cents: 0)
       {:ok, %{}}
   """
+  @spec ensure_stripe_product_and_price_for_course(keyword()) ::
+          {:ok, %{}}
+          | {:ok, %{stripe_product_id: String.t() | nil, stripe_price_id: String.t() | nil}}
+          | {:error, {:request_failed, term()} | {:stripe_error, integer(), term()}}
   def ensure_stripe_product_and_price_for_course(opts) do
     amount = Keyword.get(opts, :amount_cents)
     currency = (Keyword.get(opts, :currency) || "usd") |> String.downcase()

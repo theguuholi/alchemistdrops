@@ -1,6 +1,9 @@
 defmodule Alchemistdrops.Posts.ArticleTest do
   use ExUnit.Case, async: true
 
+  doctest Alchemistdrops.Posts.Article
+  doctest Alchemistdrops.Posts.Slug
+
   alias Alchemistdrops.Posts.{Article, Post}
 
   describe "build/1" do

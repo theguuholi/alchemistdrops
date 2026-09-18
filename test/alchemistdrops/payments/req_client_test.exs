@@ -4,6 +4,8 @@ defmodule Alchemistdrops.Payments.ReqClientTest do
   """
   use ExUnit.Case, async: false
 
+  doctest Alchemistdrops.Payments.ReqClient
+
   alias Alchemistdrops.Payments.ReqClient
 
   describe "request/1 error handling" do

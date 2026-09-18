@@ -10,6 +10,8 @@ defmodule Alchemistdrops.PaymentsTest do
   import Alchemistdrops.CoursesFixtures
   import Alchemistdrops.PaymentsFixtures
 
+  doctest Alchemistdrops.Payments
+
   describe "create_payment/1" do
     test "creates a payment with valid attrs" do
       user = user_fixture()

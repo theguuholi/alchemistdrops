@@ -5,6 +5,8 @@ defmodule Alchemistdrops.PostsTest do
   alias Alchemistdrops.Posts.Post
   alias Alchemistdrops.Repo
 
+  doctest Alchemistdrops.Posts
+
   describe "posts" do
     alias Alchemistdrops.Posts.{Category, Tag}
 

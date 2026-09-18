@@ -1,6 +1,8 @@
 defmodule Alchemistdrops.MarkdownTest do
   use ExUnit.Case, async: true
 
+  doctest Alchemistdrops.Markdown
+
   alias Alchemistdrops.Markdown
 
   describe "to_html/1" do
