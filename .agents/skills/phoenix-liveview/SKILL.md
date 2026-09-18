@@ -14,6 +14,21 @@ Keep socket state deliberate, templates component-driven, and collection/form up
 - Prefer function components. Introduce a LiveComponent only when isolated state, event targeting, or component lifecycle is necessary.
 - Assign only state needed to render or process later events. Do not retain large collections as ordinary assigns when a stream fits the interaction.
 
+## Clean semantic HEEx
+
+- Keep templates readable and shallow. Extract repeated or conceptually independent UI into focused function components instead of accumulating nested markup, inline transformations, or callback logic in HEEx.
+- Use semantic HTML5 landmarks and elements according to meaning: `header`, `nav`, `main`, `section`, `article`, `aside`, `footer`, `form`, `fieldset`, `label`, and `button`. Avoid generic `div` containers when a semantic element fits.
+- Give every navigation region an accessible label and structure links as navigation content, normally with `nav`, `ul`, `li`, and `<.link>`.
+- Use Emmet notation to communicate or plan markup hierarchy, for example `main>section>p{name}`, but always expand it into valid HEEx. Never leave an Emmet abbreviation in a template.
+- Keep IDs unique and purposeful for accessibility, LiveView updates, hooks, and stable tests. Do not add IDs solely to mirror styling structure.
+
+## Mobile-first layout
+
+- Design the smallest viewport first. Base markup and Tailwind classes must work on mobile; add `sm:`, `md:`, and larger breakpoint variants only as progressive enhancements.
+- Start with single-column flow, readable spacing, touch-friendly controls, and no horizontal overflow. Expand into grids, sidebars, or denser navigation only when viewport space permits.
+- Preserve semantic reading order and keyboard navigation across breakpoints; do not use CSS reordering to make desktop structure inaccessible on mobile.
+- Verify forms, navigation, tables or card alternatives, empty states, validation errors, and interactive controls at mobile width before considering the layout complete.
+
 ## Callback responsibility
 
 LiveView is an interface and orchestration layer. Its callbacks call a context/domain function, interpret the result, and return the new socket state. Never implement business rules, authorization policy, domain validation, pricing/calculation logic, state transitions, persistence transactions, or reusable query construction inside a LiveView.

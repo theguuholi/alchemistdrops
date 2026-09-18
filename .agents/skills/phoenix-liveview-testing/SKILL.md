@@ -34,11 +34,7 @@ describe "handle_event/3 - validate" do
     view |> form("#user-form", user: %{email: ""}) |> render_change()
 
     # Then
-    assert has_element?(
-             view,
-             "#user-form [data-error-for='user_email']",
-             "can't be blank"
-           )
+    assert has_element?(view, "#user-email-error", "can't be blank")
   end
 end
 ```
@@ -48,7 +44,7 @@ Describe user-visible behavior, not implementation trivia. Given establishes sta
 ## Assert the right layer
 
 - Rendered state: assert the relevant element appears, changes, or disappears.
-- Validation errors: assert the field's dedicated error element through a stable ID or `data-error-for` contract; never search the full rendered HTML for the message.
+- Validation errors: assert the field's dedicated error element through a stable ID, such as `#user-email-error`; never search the full rendered HTML for the message.
 - Navigation: use redirect, live redirect, patch, or current-path assertions matching the action.
 - Persistence: query the context or database after the event; HTML alone does not prove a write occurred.
 - Rejected actions: verify both the visible outcome and that data did not change.
