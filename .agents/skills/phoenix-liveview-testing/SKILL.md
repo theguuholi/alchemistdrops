@@ -7,6 +7,13 @@ description: Use when writing, reviewing, or debugging Phoenix LiveView tests, H
 
 Test observable behavior through stable DOM contracts and verify persistence or navigation separately from rendered markup.
 
+## Test foundation
+
+- Use the application's `ConnCase`, not `ExUnit.Case` directly, and import `Phoenix.LiveViewTest` plus only the fixture modules the test needs.
+- Use the project's authentication and scope setup helpers. Create scoped records through fixtures with the correct scope; do not bypass the public test setup with direct `Repo.insert!` calls.
+- Put setup that only serves one callback or behavior inside its `describe` block, and return named context values from setup helpers.
+- Match successful mounts as `{:ok, view, _html}`. Discard the initial HTML and make assertions against the current `view`.
+
 ## Build the test around outcomes
 
 - Use `Phoenix.LiveViewTest` for server-rendered interaction and LazyHTML for focused DOM inspection.
@@ -51,6 +58,20 @@ Describe user-visible behavior, not implementation trivia. Given establishes sta
 - Streams: assert inserted/removed row IDs, reset/filter results, empty state, and separately tracked counts.
 - Forms: drive `phx-change` and `phx-submit` through the form element with realistic nested params; test validation errors and successful results.
 - Context delegation: assert the LiveView exposes the context result correctly. Test business rules exhaustively in the context/domain tests rather than duplicating them through every UI path.
+
+## Interactions and navigation
+
+- When a clickable element has a visible label, use `element(view, selector, label)` so the action identifies both its stable target and user-visible control.
+- Do not assert against the HTML returned by `render_click/1`, `render_change/1`, or `render_submit/1`. Perform the action, then assert the resulting `view`, navigation, message, or persisted state.
+- Drive forms through their stable form ID with params matching the actual field namespace.
+- Use `follow_redirect/3` when an action must mount the destination LiveView, `assert_patch/2` for `push_patch`, and `assert_redirect/2` for redirects that do not need to mount the destination.
+
+## State changes and isolation
+
+- For PubSub behavior, broadcast on the exact topic exposed by the context subscription API, render the view, and assert the observable update through stable selectors.
+- To reproduce a race or stale-state case, mount first, change the persisted state through the appropriate fixture/context or a deliberate database update, then perform the user action and verify the outcome.
+- When a test overrides application configuration, capture the complete previous value and restore it with `on_exit/1`.
+- Do not assert internal socket assigns, CSS classes, or context implementation details. Assert DOM contracts and user-visible behavior; cover domain rules in context tests.
 
 ## URL-driven search and filters
 
