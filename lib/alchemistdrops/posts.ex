@@ -12,6 +12,22 @@ defmodule Alchemistdrops.Posts do
   @default_page_size 12
   @max_page_size 50
 
+  @type published_page :: %{
+          posts: [Post.t()],
+          categories: [map()],
+          tags: [map()],
+          selected_category: String.t() | nil,
+          selected_tag: String.t() | nil,
+          current_page: pos_integer(),
+          has_next_page?: boolean()
+        }
+
+  @type published_post_page :: %{
+          post: Post.t(),
+          related_course: struct() | nil,
+          related_posts: [Post.t()]
+        }
+
   @doc """
   Returns the list of published posts ordered by most recent.
 
@@ -58,6 +74,44 @@ defmodule Alchemistdrops.Posts do
     |> limit(^page_size)
     |> offset(^((page - 1) * page_size))
     |> Repo.all()
+  end
+
+  @doc """
+  Returns one public blog page with URL filters normalized against published taxonomy.
+
+  The result includes a one-record lookahead as `has_next_page?`, while `posts`
+  contains at most the requested page size.
+  """
+  @spec list_published_page(map(), keyword()) :: published_page()
+  def list_published_page(params, opts \\ []) when is_map(params) do
+    page_size =
+      Keyword.get(opts, :page_size, @default_page_size)
+      |> positive_integer(1)
+      |> min(@max_page_size)
+
+    categories = list_categories_with_published_counts()
+    tags = list_tags_with_published_counts()
+    category = known_taxonomy_slug(params["category"], categories, :category)
+    tag = known_taxonomy_slug(params["tag"], tags, :tag)
+    page = positive_integer(params["page"], 1)
+
+    posts =
+      list_published_posts(
+        page: page,
+        page_size: page_size + 1,
+        category: category,
+        tag: tag
+      )
+
+    %{
+      posts: Enum.take(posts, page_size),
+      categories: categories,
+      tags: tags,
+      selected_category: category,
+      selected_tag: tag,
+      current_page: page,
+      has_next_page?: length(posts) > page_size
+    }
   end
 
   def list_recent_published_posts(limit) when is_integer(limit) and limit > 0 do
@@ -191,6 +245,26 @@ defmodule Alchemistdrops.Posts do
   end
 
   @doc """
+  Loads the public data for a post detail page by canonical slug or legacy UUID.
+
+  Canonical slugs take precedence even when the slug itself has UUID syntax.
+  """
+  @spec get_published_post_page!(String.t()) :: published_post_page()
+  def get_published_post_page!(identifier) when is_binary(identifier) do
+    post =
+      case get_published_post_by_slug(identifier) do
+        nil -> get_published_post_by_legacy_id!(identifier)
+        post -> post
+      end
+
+    %{
+      post: post,
+      related_course: published_related_course(post.related_course),
+      related_posts: list_related_posts(post, 3)
+    }
+  end
+
+  @doc """
   Creates a post.
 
   ## Examples
@@ -319,6 +393,22 @@ defmodule Alchemistdrops.Posts do
   end
 
   defp maybe_filter_tag(query, _value), do: query
+
+  defp known_taxonomy_slug(nil, _items, _key), do: nil
+
+  defp known_taxonomy_slug(value, items, key) do
+    if Enum.any?(items, &(Map.fetch!(&1, key).slug == value)), do: value
+  end
+
+  defp get_published_post_by_legacy_id!(identifier) do
+    case Ecto.UUID.cast(identifier) do
+      {:ok, id} -> get_published_post_by_id!(id)
+      :error -> get_published_post_by_slug!(identifier)
+    end
+  end
+
+  defp published_related_course(%{published: true} = course), do: course
+  defp published_related_course(_course), do: nil
 
   defp update_changeset(%Post{status: :published} = post, attrs),
     do: Post.publish_changeset(post, attrs)

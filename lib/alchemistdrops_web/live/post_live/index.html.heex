@@ -1,44 +1,59 @@
-<main class="min-h-screen bg-base-100">
-  <div class="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10">
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <section
+    id="blog-index"
+    class="mx-auto min-h-screen max-w-7xl bg-base-100 px-5 py-12 sm:px-8 sm:py-16 lg:px-10"
+    aria-labelledby="blog-title"
+  >
     <header class="max-w-3xl border-b border-base-300 pb-10">
       <p class="mb-4 text-xs font-semibold uppercase tracking-[0.24em] text-primary">
         Field notes
       </p>
-      <h1 class="text-4xl font-bold tracking-tight text-base-content sm:text-6xl">
+      <h1 id="blog-title" class="text-4xl font-bold tracking-tight text-base-content sm:text-6xl">
         Alchemist's Journal
       </h1>
-      <p class="mt-5 max-w-2xl text-lg leading-8 text-base-content/70">
+      <p id="blog-description" class="mt-5 max-w-2xl text-lg leading-8 text-base-content/70">
         Discover insights, tutorials, and stories from the world of alchemy and web development.
       </p>
     </header>
 
     <nav aria-label="Article categories" class="mt-8 flex flex-wrap gap-2">
-      <.link
-        navigate={~p"/blog?#{page_params(nil, @selected_tag, 1)}"}
-        class={["btn btn-sm", is_nil(@selected_category) && "btn-primary"]}
-      >
-        All topics
-      </.link>
-      <.link
-        :for={item <- @categories}
-        navigate={~p"/blog?#{page_params(item.category.slug, @selected_tag, 1)}"}
-        class={["btn btn-sm", @selected_category == item.category.slug && "btn-primary"]}
-      >
-        {item.category.name} <span class="opacity-60">{item.published_count}</span>
-      </.link>
+      <ul class="flex flex-wrap gap-2">
+        <li>
+          <.link
+            id="blog-category-all"
+            patch={~p"/blog?#{page_params(nil, @selected_tag, 1)}"}
+            class={["btn btn-sm", is_nil(@selected_category) && "btn-primary"]}
+          >
+            All topics
+          </.link>
+        </li>
+        <li :for={item <- @categories}>
+          <.link
+            id={"blog-category-#{item.category.slug}"}
+            patch={~p"/blog?#{page_params(item.category.slug, @selected_tag, 1)}"}
+            class={["btn btn-sm", @selected_category == item.category.slug && "btn-primary"]}
+          >
+            {item.category.name} <span class="opacity-60">{item.published_count}</span>
+          </.link>
+        </li>
+      </ul>
     </nav>
 
     <nav :if={@tags != []} aria-label="Article tags" class="mt-4 flex flex-wrap gap-2">
-      <.link
-        :for={item <- @tags}
-        navigate={~p"/blog?#{page_params(@selected_category, item.tag.slug, 1)}"}
-        class={[
-          "rounded-full border border-base-300 px-3 py-1 text-xs transition-colors hover:border-primary hover:text-primary",
-          @selected_tag == item.tag.slug && "border-primary bg-primary/10 text-primary"
-        ]}
-      >
-        {item.tag.name}
-      </.link>
+      <ul class="flex flex-wrap gap-2">
+        <li :for={item <- @tags}>
+          <.link
+            id={"blog-tag-#{item.tag.slug}"}
+            patch={~p"/blog?#{page_params(@selected_category, item.tag.slug, 1)}"}
+            class={[
+              "rounded-full border border-base-300 px-3 py-1 text-xs transition-colors hover:border-primary hover:text-primary",
+              @selected_tag == item.tag.slug && "border-primary bg-primary/10 text-primary"
+            ]}
+          >
+            {item.tag.name}
+          </.link>
+        </li>
+      </ul>
     </nav>
 
     <section id="posts-grid" class="mt-10 grid gap-5 lg:grid-cols-2" aria-label="Articles">
@@ -64,48 +79,67 @@
           <div class="mb-5 flex flex-wrap items-center gap-3 text-xs text-base-content/60">
             <%= if post.category do %>
               <.link
-                navigate={~p"/blog?category=#{post.category.slug}"}
+                id={"post-category-#{post.id}"}
+                patch={~p"/blog?category=#{post.category.slug}"}
                 class="post-category font-semibold uppercase tracking-wider text-primary"
               >
                 {post.category.name}
               </.link>
             <% else %>
-              <span class="post-category font-semibold uppercase tracking-wider text-base-content/50">
+              <span
+                id={"post-category-#{post.id}"}
+                class="post-category font-semibold uppercase tracking-wider text-base-content/50"
+              >
                 Uncategorized
               </span>
             <% end %>
             <span aria-hidden="true">·</span>
-            <time class="post-date" datetime={post.published_at}>
+            <time id={"post-date-#{post.id}"} class="post-date" datetime={post.published_at}>
               {format_date(post.published_at)}
             </time>
             <span aria-hidden="true">·</span>
-            <span class="reading-time">{article_metadata(post).reading_minutes} min read</span>
+            <span id={"post-reading-time-#{post.id}"} class="reading-time">
+              {article_metadata(post).reading_minutes} min read
+            </span>
           </div>
 
-          <h2 class={[
-            "post-title font-bold leading-tight",
-            if(index == 0, do: "text-3xl sm:text-4xl", else: "text-2xl")
-          ]}>
+          <h2
+            id={"post-title-#{post.id}"}
+            class={[
+              "post-title font-bold leading-tight",
+              if(index == 0, do: "text-3xl sm:text-4xl", else: "text-2xl")
+            ]}
+          >
             <.link
+              id={"post-link-#{post.id}"}
               navigate={~p"/blog/#{post.slug}"}
               class="focus:outline-none hover:text-primary"
             >
               {post.title}
             </.link>
           </h2>
-          <p class="post-excerpt mt-4 max-w-3xl leading-7 text-base-content/70 line-clamp-3">
+          <p
+            id={"post-excerpt-#{post.id}"}
+            class="post-excerpt mt-4 max-w-3xl leading-7 text-base-content/70 line-clamp-3"
+          >
             {post.summary}
           </p>
 
           <div class="mt-6 flex items-center justify-between gap-4">
-            <span class="read-more inline-flex items-center gap-2 text-sm font-semibold text-primary">
+            <span
+              id={"post-read-more-#{post.id}"}
+              class="read-more inline-flex items-center gap-2 text-sm font-semibold text-primary"
+            >
               Read article
               <.icon
                 name="hero-arrow-right"
                 class="size-4 transition-transform group-hover:translate-x-1"
               />
             </span>
-            <span class="views inline-flex items-center gap-1 text-xs text-base-content/50">
+            <span
+              id={"post-views-#{post.id}"}
+              class="views inline-flex items-center gap-1 text-xs text-base-content/50"
+            >
               <.icon name="hero-eye" class="size-4" /> {post.views}
             </span>
           </div>
@@ -117,7 +151,7 @@
       <.link
         :if={@current_page > 1}
         id="blog-previous"
-        navigate={~p"/blog?#{page_params(@selected_category, @selected_tag, @current_page - 1)}"}
+        patch={~p"/blog?#{page_params(@selected_category, @selected_tag, @current_page - 1)}"}
         class="btn btn-outline"
       >
         <.icon name="hero-arrow-left" class="size-4" /> Previous
@@ -126,11 +160,11 @@
       <.link
         :if={@has_next_page?}
         id="blog-next"
-        navigate={~p"/blog?#{page_params(@selected_category, @selected_tag, @current_page + 1)}"}
+        patch={~p"/blog?#{page_params(@selected_category, @selected_tag, @current_page + 1)}"}
         class="btn btn-outline"
       >
         Next <.icon name="hero-arrow-right" class="size-4" />
       </.link>
     </nav>
-  </div>
-</main>
+  </section>
+</Layouts.app>
