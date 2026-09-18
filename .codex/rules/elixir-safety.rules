@@ -1,0 +1,106 @@
+# Require an explicit decision before commands that can destroy or roll back data.
+prefix_rule(
+    pattern = ["mix", ["ecto.drop", "ecto.reset", "ecto.rollback"]],
+    decision = "prompt",
+    justification = "Confirm the target environment and database before destructive Ecto operations.",
+    match = [
+        "mix ecto.drop",
+        "mix ecto.reset",
+        "mix ecto.rollback",
+        "mix ecto.rollback --step 2",
+    ],
+    not_match = [
+        "mix ecto.migrate",
+        "mix ecto.create",
+        "mix test",
+    ],
+)
+
+# Apply the same guard when the repository command wrapper is used.
+prefix_rule(
+    pattern = ["rtk", "mix", ["ecto.drop", "ecto.reset", "ecto.rollback"]],
+    decision = "prompt",
+    justification = "Confirm the target environment and database before destructive Ecto operations.",
+    match = [
+        "rtk mix ecto.drop",
+        "rtk mix ecto.reset",
+        "rtk mix ecto.rollback --step 2",
+    ],
+    not_match = [
+        "rtk mix ecto.migrate",
+        "rtk mix test",
+    ],
+)
+
+# Environment-prefixed destructive commands are separate argv prefixes.
+prefix_rule(
+    pattern = ["env", ["MIX_ENV=dev", "MIX_ENV=test", "MIX_ENV=prod"], "mix", ["ecto.drop", "ecto.reset", "ecto.rollback"]],
+    decision = "prompt",
+    justification = "Confirm the explicitly selected Mix environment and database before destructive Ecto operations.",
+    match = [
+        "env MIX_ENV=prod mix ecto.drop",
+        "env MIX_ENV=test mix ecto.reset",
+        "env MIX_ENV=dev mix ecto.rollback",
+    ],
+    not_match = [
+        "env MIX_ENV=test mix test",
+    ],
+)
+
+# `mix do` can hide destructive tasks later in the command sequence.
+prefix_rule(
+    pattern = ["mix", "do"],
+    decision = "prompt",
+    justification = "Review every task in a Mix command sequence before allowing it outside the sandbox.",
+    match = [
+        "mix do ecto.drop, deps.get",
+        "mix do test, ecto.reset",
+    ],
+)
+
+prefix_rule(
+    pattern = ["rtk", "mix", "do"],
+    decision = "prompt",
+    justification = "Review every wrapped Mix task in the sequence before allowing it outside the sandbox.",
+    match = [
+        "rtk mix do ecto.drop, deps.get",
+    ],
+)
+
+# Shell command strings cannot be safely decomposed when they contain exports,
+# substitutions, or other advanced syntax, so review the full command.
+prefix_rule(
+    pattern = [["zsh", "bash", "sh", "/bin/zsh", "/bin/bash", "/bin/sh"], ["-lc", "-c"]],
+    decision = "prompt",
+    justification = "Review shell-wrapped commands because environment assignments and compound syntax can conceal destructive operations.",
+    match = [
+        "zsh -lc 'MIX_ENV=prod mix ecto.drop'",
+        "/bin/zsh -lc 'MIX_ENV=prod mix ecto.drop'",
+        "bash -c 'export MIX_ENV=test; mix ecto.reset'",
+    ],
+)
+
+# Dependency cleanup discards compiled artifacts; option order can vary.
+prefix_rule(
+    pattern = ["mix", "deps.clean"],
+    decision = "prompt",
+    justification = "Confirm the dependency scope and use focused cleanup when possible.",
+    match = [
+        "mix deps.clean decimal",
+        "mix deps.clean --all",
+        "mix deps.clean --unlock --all",
+    ],
+    not_match = [
+        "mix deps.get",
+    ],
+)
+
+prefix_rule(
+    pattern = ["rtk", "mix", "deps.clean"],
+    decision = "prompt",
+    justification = "Confirm the dependency scope and use focused cleanup when possible.",
+    match = [
+        "rtk mix deps.clean --all",
+        "rtk mix deps.clean --unlock --all",
+    ],
+)
