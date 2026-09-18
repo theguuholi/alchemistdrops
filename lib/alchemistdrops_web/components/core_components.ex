@@ -201,7 +201,12 @@ defmodule AlchemistdropsWeb.CoreComponents do
           />{@label}
         </span>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.error
+        :for={{msg, index} <- Enum.with_index(@errors)}
+        id={"#{@id}-error-#{index}"}
+      >
+        {msg}
+      </.error>
     </div>
     """
   end
@@ -222,7 +227,12 @@ defmodule AlchemistdropsWeb.CoreComponents do
           {Phoenix.HTML.Form.options_for_select(@options, @value)}
         </select>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.error
+        :for={{msg, index} <- Enum.with_index(@errors)}
+        id={"#{@id}-error-#{index}"}
+      >
+        {msg}
+      </.error>
     </div>
     """
   end
@@ -242,7 +252,12 @@ defmodule AlchemistdropsWeb.CoreComponents do
           {@rest}
         >{Phoenix.HTML.Form.normalize_value("textarea", @value)}</textarea>
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.error
+        :for={{msg, index} <- Enum.with_index(@errors)}
+        id={"#{@id}-error-#{index}"}
+      >
+        {msg}
+      </.error>
     </div>
     """
   end
@@ -265,15 +280,23 @@ defmodule AlchemistdropsWeb.CoreComponents do
           {@rest}
         />
       </label>
-      <.error :for={msg <- @errors}>{msg}</.error>
+      <.error
+        :for={{msg, index} <- Enum.with_index(@errors)}
+        id={"#{@id}-error-#{index}"}
+      >
+        {msg}
+      </.error>
     </div>
     """
   end
 
   # Helper used by inputs to generate form errors
+  attr :id, :string, default: nil
+  slot :inner_block, required: true
+
   defp error(assigns) do
     ~H"""
-    <p class="mt-1.5 flex gap-2 items-center text-sm text-error">
+    <p id={@id} class="mt-1.5 flex gap-2 items-center text-sm text-error">
       <.icon name="hero-exclamation-circle" class="size-5" />
       {render_slot(@inner_block)}
     </p>

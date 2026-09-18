@@ -1,5 +1,5 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <div class="min-h-screen bg-base-100">
+  <main id="about-page" class="min-h-screen bg-base-100">
     <.hero_section
       profile={@profile}
       linkedin_url={@linkedin_url}
@@ -126,7 +126,7 @@
       >
         Chat with my Digital Twin
       </h2>
-      <%= if @digital_twin_available do %>
+      <%= if @digital_twin_available? do %>
         <div
           class="rounded-2xl overflow-hidden shadow-xl shadow-black/5 bg-base-100/80 backdrop-blur-sm border border-base-300/80 transition-shadow hover:shadow-2xl hover:shadow-black/8"
           id="digital-twin-chat-card"
@@ -140,25 +140,26 @@
                 Ask anything about my career and impact. I'll answer as Gustavo's digital twin.
               </p>
             <% else %>
-              <%= for msg <- @chat_messages do %>
-                <div class={[
+              <div
+                :for={msg <- @chat_messages}
+                class={[
                   "flex",
                   if(msg.role == "user", do: "justify-end", else: "justify-start")
+                ]}
+              >
+                <div class={[
+                  "max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
+                  if(msg.role == "user",
+                    do: "bg-primary text-primary-content rounded-br-md",
+                    else:
+                      "bg-base-200/90 text-base-content border border-base-300/50 rounded-bl-md"
+                  )
                 ]}>
-                  <div class={[
-                    "max-w-[88%] rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm",
-                    if(msg.role == "user",
-                      do: "bg-primary text-primary-content rounded-br-md",
-                      else:
-                        "bg-base-200/90 text-base-content border border-base-300/50 rounded-bl-md"
-                    )
-                  ]}>
-                    <p class="whitespace-pre-wrap">{msg.content}</p>
-                  </div>
+                  <p class="whitespace-pre-wrap">{msg.content}</p>
                 </div>
-              <% end %>
+              </div>
             <% end %>
-            <%= if @chat_loading do %>
+            <%= if @chat_loading? do %>
               <div class="flex justify-start">
                 <div class="rounded-2xl rounded-bl-md px-4 py-3 bg-base-200/90 text-base-content/70 text-sm border border-base-300/50 shadow-sm">
                   <span class="inline-flex items-center gap-2">
@@ -181,12 +182,12 @@
               placeholder="Ask about my career..."
               class="flex-1 min-w-0 rounded-xl border border-base-300 bg-base-100 px-4 py-3 text-sm text-base-content placeholder-base-content/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/50 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               autocomplete="off"
-              disabled={@chat_loading}
+              disabled={@chat_loading?}
             />
             <button
               type="submit"
               class="shrink-0 rounded-xl bg-primary text-primary-content px-4 py-3 text-sm font-medium hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2 min-w-[88px]"
-              disabled={@chat_loading}
+              disabled={@chat_loading?}
               aria-label="Send message"
             >
               <span>Send</span>
@@ -195,7 +196,10 @@
           </form>
         </div>
       <% else %>
-        <div class="rounded-2xl border-2 border-dashed border-base-300 bg-base-200/50 p-8 text-center">
+        <div
+          id="digital-twin-unavailable"
+          class="rounded-2xl border-2 border-dashed border-base-300 bg-base-200/50 p-8 text-center"
+        >
           <p class="text-base-content/70">
             Set
             <code class="px-1.5 py-0.5 rounded-md bg-base-300 text-sm font-mono">
@@ -234,5 +238,5 @@
         </div>
       </div>
     </section>
-  </div>
+  </main>
 </Layouts.app>

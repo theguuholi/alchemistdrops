@@ -95,8 +95,8 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
      |> assign(:linkedin_url, @linkedin_url)
      |> assign(:email, @email)
      |> assign(:chat_messages, [])
-     |> assign(:chat_loading, false)
-     |> assign(:digital_twin_available, digital_twin_available?())}
+     |> assign(:chat_loading?, false)
+     |> assign(:digital_twin_available?, digital_twin_available?())}
   end
 
   @impl true
@@ -112,7 +112,7 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
       socket =
         socket
         |> assign(:chat_messages, messages_after_user)
-        |> assign(:chat_loading, true)
+        |> assign(:chat_loading?, true)
 
       send(self(), :run_digital_twin)
       {:noreply, socket}
@@ -147,7 +147,7 @@ defmodule AlchemistdropsWeb.AboutLive.Index do
           )
       end
 
-    {:noreply, assign(socket, :chat_loading, false)}
+    {:noreply, assign(socket, :chat_loading?, false)}
   end
 
   defp digital_twin_available? do

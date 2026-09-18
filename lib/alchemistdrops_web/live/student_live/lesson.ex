@@ -94,8 +94,8 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
     has_prev = find_prev_lesson(lessons, current_lesson) != nil
 
     socket
-    |> assign(:has_next, has_next)
-    |> assign(:has_prev, has_prev)
+    |> assign(:has_next?, has_next)
+    |> assign(:has_prev?, has_prev)
   end
 
   defp find_next_lesson(lessons, current_lesson) do

@@ -13,25 +13,24 @@ defmodule AlchemistdropsWeb.Admin.EnrollmentLiveTest do
     setup [:register_and_log_in_admin_user]
 
     test "renders page with correct heading", %{conn: conn} do
-      {:ok, view, html} = live(conn, ~p"/admin/enrollments")
+      {:ok, view, _html} = live(conn, ~p"/admin/enrollments")
 
-      assert html =~ "Enrollments"
       assert has_element?(view, "h1", "Enrollments")
     end
 
     test "displays stats", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/admin/enrollments")
+      {:ok, view, _html} = live(conn, ~p"/admin/enrollments")
 
-      assert html =~ "Total"
-      assert html =~ "Active"
-      assert html =~ "Completed"
-      assert html =~ "Cancelled"
+      assert has_element?(view, "#admin-enrollments", "Total")
+      assert has_element?(view, "#admin-enrollments", "Active")
+      assert has_element?(view, "#admin-enrollments", "Completed")
+      assert has_element?(view, "#admin-enrollments", "Cancelled")
     end
 
     test "displays empty state when no enrollments exist", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/admin/enrollments")
+      {:ok, view, _html} = live(conn, ~p"/admin/enrollments")
 
-      assert html =~ "No enrollments yet"
+      assert has_element?(view, "#admin-enrollments", "No enrollments yet")
     end
 
     test "lists all enrollments with user and course data", %{conn: conn} do

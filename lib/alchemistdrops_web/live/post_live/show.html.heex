@@ -1,209 +1,214 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <article id="post-detail" class="post-detail min-h-screen bg-base-100">
-    <nav aria-label="Blog navigation" class="border-b border-base-300 px-5 py-4 sm:px-8 lg:px-10">
-      <.link
-        id="post-back-link"
-        navigate={~p"/blog"}
-        class="back-link inline-flex items-center gap-2 text-sm font-medium text-base-content/60 transition-colors hover:text-primary"
+  <main id="post-page">
+    <article id="post-detail" class="post-detail min-h-screen bg-base-100">
+      <nav
+        aria-label="Blog navigation"
+        class="border-b border-base-300 px-5 py-4 sm:px-8 lg:px-10"
       >
-        <.icon name="hero-arrow-left" class="size-4" /> {@copy.back}
-      </.link>
-    </nav>
+        <.link
+          id="post-back-link"
+          navigate={~p"/blog"}
+          class="back-link inline-flex items-center gap-2 text-sm font-medium text-base-content/60 transition-colors hover:text-primary"
+        >
+          <.icon name="hero-arrow-left" class="size-4" /> {@copy.back}
+        </.link>
+      </nav>
 
-    <header
-      id="post-header"
-      class="post-header border-b border-base-300 px-5 py-12 sm:px-8 sm:py-16 lg:px-10"
-    >
-      <div class="mx-auto max-w-5xl">
-        <%= if @post.category do %>
-          <.link
-            id="post-category-link"
-            navigate={~p"/blog?category=#{@post.category.slug}"}
-            class="text-xs font-semibold uppercase tracking-[0.2em] text-primary"
+      <header
+        id="post-header"
+        class="post-header border-b border-base-300 px-5 py-12 sm:px-8 sm:py-16 lg:px-10"
+      >
+        <div class="mx-auto max-w-5xl">
+          <%= if @post.category do %>
+            <.link
+              id="post-category-link"
+              navigate={~p"/blog?category=#{@post.category.slug}"}
+              class="text-xs font-semibold uppercase tracking-[0.2em] text-primary"
+            >
+              {@post.category.name}
+            </.link>
+          <% else %>
+            <p
+              id="post-category-label"
+              class="text-xs font-semibold uppercase tracking-[0.2em] text-primary"
+            >
+              Uncategorized
+            </p>
+          <% end %>
+          <h1
+            id="post-title"
+            class="post-title mt-5 max-w-4xl text-4xl font-bold leading-[1.08] tracking-tight text-base-content sm:text-6xl"
           >
-            {@post.category.name}
-          </.link>
-        <% else %>
+            {@post.title}
+          </h1>
           <p
-            id="post-category-label"
-            class="text-xs font-semibold uppercase tracking-[0.2em] text-primary"
+            id="post-summary"
+            class="mt-6 max-w-3xl text-lg leading-8 text-base-content/70 sm:text-xl"
           >
-            Uncategorized
+            {@post.summary}
           </p>
-        <% end %>
-        <h1
-          id="post-title"
-          class="post-title mt-5 max-w-4xl text-4xl font-bold leading-[1.08] tracking-tight text-base-content sm:text-6xl"
-        >
-          {@post.title}
-        </h1>
-        <p
-          id="post-summary"
-          class="mt-6 max-w-3xl text-lg leading-8 text-base-content/70 sm:text-xl"
-        >
-          {@post.summary}
-        </p>
 
-        <div class="post-meta mt-7 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-base-content/60">
-          <span>{@copy.author}</span>
-          <time id="post-published-at" class="post-date" datetime={@post.published_at}>
-            {format_date(@post.published_at)}
-          </time>
-          <span id="post-reading-time" class="reading-time">
-            {@article.reading_minutes} {@copy.minute}
-          </span>
-          <span id="post-views" class="post-views inline-flex items-center gap-1.5">
-            <.icon name="hero-eye" class="size-4" /> {@post.views} views
-          </span>
-        </div>
+          <div class="post-meta mt-7 flex flex-wrap items-center gap-x-5 gap-y-3 text-sm text-base-content/60">
+            <span>{@copy.author}</span>
+            <time id="post-published-at" class="post-date" datetime={@post.published_at}>
+              {format_date(@post.published_at)}
+            </time>
+            <span id="post-reading-time" class="reading-time">
+              {@article.reading_minutes} {@copy.minute}
+            </span>
+            <span id="post-views" class="post-views inline-flex items-center gap-1.5">
+              <.icon name="hero-eye" class="size-4" /> {@post.views} views
+            </span>
+          </div>
 
-        <nav :if={@post.tags != []} aria-label="Article tags" class="mt-6">
-          <ul class="flex flex-wrap gap-2">
-            <li :for={tag <- @post.tags}>
-              <.link
-                id={"post-tag-#{tag.slug}"}
-                navigate={~p"/blog?tag=#{tag.slug}"}
-                class="rounded-full border border-base-300 px-3 py-1 text-xs hover:border-primary hover:text-primary"
-              >
-                {tag.name}
-              </.link>
-            </li>
-          </ul>
-        </nav>
-
-        <img
-          :if={@post.cover_image_url}
-          id="post-cover-image"
-          src={@post.cover_image_url}
-          alt={@post.cover_image_alt}
-          class="mt-10 aspect-[16/8] w-full rounded-2xl border border-base-300 object-cover"
-        />
-      </div>
-    </header>
-
-    <section id="post-body" class="post-body px-5 py-10 sm:px-8 sm:py-14 lg:px-10">
-      <div class="mx-auto max-w-7xl">
-        <div :if={@article.toc != []} id="article-mobile-toc" class="mb-8 lg:hidden">
-          <details class="rounded-xl border border-base-300 bg-base-200/50 p-4">
-            <summary class="cursor-pointer font-semibold">{@copy.outline}</summary>
-            <ol class="mt-4 space-y-2 text-sm">
-              <li :for={entry <- @article.toc} class={entry.level == 3 && "pl-4"}>
-                <a href={"##{entry.id}"} class="text-base-content/70 hover:text-primary">
-                  {entry.label}
-                </a>
+          <nav :if={@post.tags != []} aria-label="Article tags" class="mt-6">
+            <ul class="flex flex-wrap gap-2">
+              <li :for={tag <- @post.tags}>
+                <.link
+                  id={"post-tag-#{tag.slug}"}
+                  navigate={~p"/blog?tag=#{tag.slug}"}
+                  class="rounded-full border border-base-300 px-3 py-1 text-xs hover:border-primary hover:text-primary"
+                >
+                  {tag.name}
+                </.link>
               </li>
-            </ol>
-          </details>
+            </ul>
+          </nav>
+
+          <img
+            :if={@post.cover_image_url}
+            id="post-cover-image"
+            src={@post.cover_image_url}
+            alt={@post.cover_image_alt}
+            class="mt-10 aspect-[16/8] w-full rounded-2xl border border-base-300 object-cover"
+          />
         </div>
+      </header>
 
-        <div class="post-content-grid lg:grid lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-12 xl:gap-16">
-          <article
-            id="post-article"
-            class="prose max-w-none"
-            phx-hook="Mermaid"
-            phx-update="ignore"
-          >
-            {@article_html}
-          </article>
-
-          <aside :if={@article.toc != []} id="article-toc" class="hidden lg:block">
-            <div class="sticky top-8 border-l border-base-300 pl-5">
-              <p class="text-xs font-semibold uppercase tracking-[0.18em] text-base-content/50">
-                {@copy.outline}
-              </p>
+      <section id="post-body" class="post-body px-5 py-10 sm:px-8 sm:py-14 lg:px-10">
+        <div class="mx-auto max-w-7xl">
+          <div :if={@article.toc != []} id="article-mobile-toc" class="mb-8 lg:hidden">
+            <details class="rounded-xl border border-base-300 bg-base-200/50 p-4">
+              <summary class="cursor-pointer font-semibold">{@copy.outline}</summary>
               <ol class="mt-4 space-y-2 text-sm">
                 <li :for={entry <- @article.toc} class={entry.level == 3 && "pl-4"}>
-                  <a
-                    href={"##{entry.id}"}
-                    class="text-base-content/65 transition-colors hover:text-primary"
-                  >
+                  <a href={"##{entry.id}"} class="text-base-content/70 hover:text-primary">
                     {entry.label}
                   </a>
                 </li>
               </ol>
-            </div>
-          </aside>
-        </div>
-      </div>
-    </section>
+            </details>
+          </div>
 
-    <section
-      :if={@related_course}
-      id="related-course"
-      class="mx-auto my-8 max-w-5xl px-5 sm:px-8"
-    >
-      <div class="grid gap-6 rounded-2xl border border-primary/30 bg-primary/5 p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">
-        <div>
-          <p class="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-            {@copy.course_eyebrow}
-          </p>
-          <h2 class="mt-2 text-2xl font-bold">{@related_course.title}</h2>
-          <p class="mt-2 max-w-2xl text-base-content/70">{@related_course.description}</p>
-        </div>
-        <.link navigate={~p"/courses/#{@related_course}"} class="btn btn-primary">
-          {@copy.course_action} <.icon name="hero-arrow-right" class="size-4" />
-        </.link>
-      </div>
-    </section>
-
-    <section
-      :if={@related_posts != []}
-      id="related-articles"
-      class="mx-auto max-w-5xl px-5 py-12 sm:px-8"
-    >
-      <h2 class="text-2xl font-bold">{@copy.related}</h2>
-      <div class="mt-6 grid gap-4 md:grid-cols-3">
-        <article
-          :for={post <- @related_posts}
-          id={"related-post-#{post.id}"}
-          class="rounded-xl border border-base-300 p-5"
-        >
-          <p class="text-xs font-semibold uppercase tracking-wider text-primary">
-            {if post.category, do: post.category.name, else: "Uncategorized"}
-          </p>
-          <h3 class="mt-2 font-semibold leading-snug">
-            <.link
-              id={"related-post-link-#{post.id}"}
-              navigate={~p"/blog/#{post.slug}"}
-              class="hover:text-primary"
+          <div class="post-content-grid lg:grid lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-12 xl:gap-16">
+            <article
+              id="post-article"
+              class="prose max-w-none"
+              phx-hook="Mermaid"
+              phx-update="ignore"
             >
-              {post.title}
-            </.link>
-          </h3>
-        </article>
-      </div>
-    </section>
+              {@article_html}
+            </article>
 
-    <footer
-      id="post-footer"
-      class="post-footer border-t border-base-300 px-5 py-8 sm:px-8 lg:px-10"
-    >
-      <div class="mx-auto flex max-w-5xl flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div class="flex items-center gap-3">
-          <img
-            src={~p"/images/gustavo.webp"}
-            alt="Gustavo Oliveira"
-            class="size-11 rounded-full object-cover"
-          />
-          <div>
-            <p class="font-semibold">Gustavo Oliveira</p>
-            <time
-              id="post-updated-at"
-              datetime={@post.updated_at}
-              class="last-updated text-sm text-base-content/60"
-            >
-              {@copy.updated}: {format_date(@post.updated_at)}
-            </time>
+            <aside :if={@article.toc != []} id="article-toc" class="hidden lg:block">
+              <div class="sticky top-8 border-l border-base-300 pl-5">
+                <p class="text-xs font-semibold uppercase tracking-[0.18em] text-base-content/50">
+                  {@copy.outline}
+                </p>
+                <ol class="mt-4 space-y-2 text-sm">
+                  <li :for={entry <- @article.toc} class={entry.level == 3 && "pl-4"}>
+                    <a
+                      href={"##{entry.id}"}
+                      class="text-base-content/65 transition-colors hover:text-primary"
+                    >
+                      {entry.label}
+                    </a>
+                  </li>
+                </ol>
+              </div>
+            </aside>
           </div>
         </div>
-        <.link
-          id="post-footer-back-link"
-          navigate={~p"/blog"}
-          class="view-all-link btn btn-outline"
-        >
-          {@copy.back}
-        </.link>
-      </div>
-    </footer>
-  </article>
+      </section>
+
+      <section
+        :if={@related_course}
+        id="related-course"
+        class="mx-auto my-8 max-w-5xl px-5 sm:px-8"
+      >
+        <div class="grid gap-6 rounded-2xl border border-primary/30 bg-primary/5 p-6 sm:grid-cols-[1fr_auto] sm:items-center sm:p-8">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+              {@copy.course_eyebrow}
+            </p>
+            <h2 class="mt-2 text-2xl font-bold">{@related_course.title}</h2>
+            <p class="mt-2 max-w-2xl text-base-content/70">{@related_course.description}</p>
+          </div>
+          <.link navigate={~p"/courses/#{@related_course}"} class="btn btn-primary">
+            {@copy.course_action} <.icon name="hero-arrow-right" class="size-4" />
+          </.link>
+        </div>
+      </section>
+
+      <section
+        :if={@related_posts != []}
+        id="related-articles"
+        class="mx-auto max-w-5xl px-5 py-12 sm:px-8"
+      >
+        <h2 class="text-2xl font-bold">{@copy.related}</h2>
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
+          <article
+            :for={post <- @related_posts}
+            id={"related-post-#{post.id}"}
+            class="rounded-xl border border-base-300 p-5"
+          >
+            <p class="text-xs font-semibold uppercase tracking-wider text-primary">
+              {if post.category, do: post.category.name, else: "Uncategorized"}
+            </p>
+            <h3 class="mt-2 font-semibold leading-snug">
+              <.link
+                id={"related-post-link-#{post.id}"}
+                navigate={~p"/blog/#{post.slug}"}
+                class="hover:text-primary"
+              >
+                {post.title}
+              </.link>
+            </h3>
+          </article>
+        </div>
+      </section>
+
+      <footer
+        id="post-footer"
+        class="post-footer border-t border-base-300 px-5 py-8 sm:px-8 lg:px-10"
+      >
+        <div class="mx-auto flex max-w-5xl flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div class="flex items-center gap-3">
+            <img
+              src={~p"/images/gustavo.webp"}
+              alt="Gustavo Oliveira"
+              class="size-11 rounded-full object-cover"
+            />
+            <div>
+              <p class="font-semibold">Gustavo Oliveira</p>
+              <time
+                id="post-updated-at"
+                datetime={@post.updated_at}
+                class="last-updated text-sm text-base-content/60"
+              >
+                {@copy.updated}: {format_date(@post.updated_at)}
+              </time>
+            </div>
+          </div>
+          <.link
+            id="post-footer-back-link"
+            navigate={~p"/blog"}
+            class="view-all-link btn btn-outline"
+          >
+            {@copy.back}
+          </.link>
+        </div>
+      </footer>
+    </article>
+  </main>
 </Layouts.app>

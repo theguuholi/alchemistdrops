@@ -80,7 +80,7 @@
         <footer class="bg-base-100 border-t border-base-300 px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
             <%!-- Previous Button --%>
-            <%= if @has_prev do %>
+            <%= if @has_prev? do %>
               <button
                 id="prev-lesson"
                 phx-click="prev_lesson"
@@ -110,7 +110,7 @@
             </div>
 
             <%!-- Next Button --%>
-            <%= if @has_next do %>
+            <%= if @has_next? do %>
               <button
                 id="next-lesson"
                 phx-click="next_lesson"
@@ -149,53 +149,53 @@
 
           <%!-- Lessons List --%>
           <nav class="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2">
-            <%= for {lesson, index} <- Enum.with_index(@lessons) do %>
-              <button
-                phx-click="select_lesson"
-                phx-value-id={lesson.id}
-                class={[
-                  "w-full text-left p-3 sm:p-4 rounded-lg transition-all duration-200",
-                  lesson.id == @current_lesson.id && "bg-primary text-primary-content shadow-md",
-                  lesson.id != @current_lesson.id && "bg-base-200 hover:bg-base-300"
-                ]}
-              >
-                <div class="flex items-start">
-                  <span class={[
-                    "flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm mr-3",
-                    lesson.id == @current_lesson.id &&
-                      "bg-primary-content/20 text-primary-content",
-                    lesson.id != @current_lesson.id && "bg-primary/20 text-primary"
+            <button
+              :for={{lesson, index} <- Enum.with_index(@lessons)}
+              id={"lesson-navigation-#{lesson.id}"}
+              phx-click="select_lesson"
+              phx-value-id={lesson.id}
+              class={[
+                "w-full text-left p-3 sm:p-4 rounded-lg transition-all duration-200",
+                lesson.id == @current_lesson.id && "bg-primary text-primary-content shadow-md",
+                lesson.id != @current_lesson.id && "bg-base-200 hover:bg-base-300"
+              ]}
+            >
+              <div class="flex items-start">
+                <span class={[
+                  "flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm mr-3",
+                  lesson.id == @current_lesson.id &&
+                    "bg-primary-content/20 text-primary-content",
+                  lesson.id != @current_lesson.id && "bg-primary/20 text-primary"
+                ]}>
+                  {index + 1}
+                </span>
+                <div class="flex-1 min-w-0">
+                  <p class={[
+                    "font-medium text-sm truncate",
+                    lesson.id == @current_lesson.id && "text-primary-content",
+                    lesson.id != @current_lesson.id && "text-base-content"
                   ]}>
-                    {index + 1}
-                  </span>
-                  <div class="flex-1 min-w-0">
+                    {lesson.title}
+                  </p>
+                  <%= if lesson.duration do %>
                     <p class={[
-                      "font-medium text-sm truncate",
-                      lesson.id == @current_lesson.id && "text-primary-content",
-                      lesson.id != @current_lesson.id && "text-base-content"
+                      "text-xs mt-1 flex items-center gap-1",
+                      lesson.id == @current_lesson.id && "text-primary-content/80",
+                      lesson.id != @current_lesson.id && "text-base-content/60"
                     ]}>
-                      {lesson.title}
+                      <.icon name="hero-clock" class="w-3 h-3" />
+                      {format_duration(lesson.duration)}
                     </p>
-                    <%= if lesson.duration do %>
-                      <p class={[
-                        "text-xs mt-1 flex items-center gap-1",
-                        lesson.id == @current_lesson.id && "text-primary-content/80",
-                        lesson.id != @current_lesson.id && "text-base-content/60"
-                      ]}>
-                        <.icon name="hero-clock" class="w-3 h-3" />
-                        {format_duration(lesson.duration)}
-                      </p>
-                    <% end %>
-                  </div>
-                  <%= if lesson.id == @current_lesson.id do %>
-                    <.icon
-                      name="hero-play-circle"
-                      class="w-5 h-5 text-primary-content flex-shrink-0 ml-2"
-                    />
                   <% end %>
                 </div>
-              </button>
-            <% end %>
+                <%= if lesson.id == @current_lesson.id do %>
+                  <.icon
+                    name="hero-play-circle"
+                    class="w-5 h-5 text-primary-content flex-shrink-0 ml-2"
+                  />
+                <% end %>
+              </div>
+            </button>
           </nav>
         </div>
       </aside>

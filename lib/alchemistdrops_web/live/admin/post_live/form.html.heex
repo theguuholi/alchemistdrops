@@ -1,0 +1,198 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <main id="admin-post-form">
+    <.header>
+      {@page_title}
+      <:subtitle>Create, organize, and publish the article when it is ready.</:subtitle>
+      <:actions>
+        <span class={["badge", @post.status == :published && "badge-success"]}>
+          {status_label(@post)}
+        </span>
+        <.link
+          :if={@post.status == :published}
+          id="public-post-link"
+          navigate={~p"/blog/#{@post.slug}"}
+          class="btn btn-sm btn-ghost"
+        >
+          View article <.icon name="hero-arrow-up-right" class="size-4" />
+        </.link>
+      </:actions>
+    </.header>
+
+    <section class="grid grid-cols-1 gap-6 xl:grid-cols-2 xl:gap-8" aria-label="Post editor">
+      <div class="min-w-0">
+        <.form for={@form} id="post-form" phx-change="validate" phx-submit="save">
+          <div class="space-y-6">
+            <section class="rounded-2xl border border-base-300 bg-base-100 p-5">
+              <h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-base-content/60">
+                Content
+              </h2>
+              <.input field={@form[:title]} type="text" label="Title" />
+              <.input
+                field={@form[:summary]}
+                type="textarea"
+                label="Summary"
+                rows="3"
+                maxlength="240"
+              />
+              <.input
+                field={@form[:body]}
+                id="post-form_body"
+                type="textarea"
+                label="Body (Markdown)"
+                rows="18"
+                phx-debounce="200"
+                class="w-full textarea min-h-[420px] font-mono text-sm resize-y"
+                placeholder="Write your post in Markdown..."
+              />
+            </section>
+
+            <section class="rounded-2xl border border-base-300 bg-base-100 p-5">
+              <h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-base-content/60">
+                Organization
+              </h2>
+              <.input
+                field={@form[:category_name]}
+                id="post-category"
+                type="text"
+                label="Primary category"
+                list="post-category-options"
+                placeholder="Choose or create a category"
+              />
+              <p
+                :for={{msg, index} <- Enum.with_index(form_errors(@form, :category_id))}
+                id={"post-category-error-#{index}"}
+                class="-mt-1 mb-2 flex items-center gap-2 text-sm text-error"
+              >
+                <.icon name="hero-exclamation-circle" class="size-5" /> {msg}
+              </p>
+              <datalist id="post-category-options">
+                <option :for={category <- @categories} value={category.name}></option>
+              </datalist>
+              <.input
+                field={@form[:tag_names]}
+                id="post-tags"
+                type="text"
+                label="Tags"
+                placeholder="Elixir, LiveView, OTP"
+              />
+              <p
+                :for={{msg, index} <- Enum.with_index(form_errors(@form, :tags))}
+                id={"post-tags-error-#{index}"}
+                class="-mt-1 mb-2 flex items-center gap-2 text-sm text-error"
+              >
+                <.icon name="hero-exclamation-circle" class="size-5" /> {msg}
+              </p>
+              <p class="-mt-1 mb-3 text-xs text-base-content/60">
+                Up to five comma-separated tags.
+              </p>
+              <.input
+                field={@form[:language]}
+                type="select"
+                label="Language"
+                options={[{"English", :en}, {"Português (Brasil)", :pt_br}]}
+              />
+            </section>
+
+            <section class="rounded-2xl border border-base-300 bg-base-100 p-5">
+              <h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-base-content/60">
+                Conversion
+              </h2>
+              <.input
+                field={@form[:related_course_id]}
+                id="post-related-course"
+                type="select"
+                label="Related course (optional)"
+                prompt="No related course"
+                options={Enum.map(@courses, &{&1.title, &1.id})}
+              />
+            </section>
+
+            <section class="rounded-2xl border border-base-300 bg-base-100 p-5">
+              <h2 class="mb-4 text-sm font-semibold uppercase tracking-wider text-base-content/60">
+                Search and sharing
+              </h2>
+              <.input field={@form[:seo_title]} type="text" label="SEO title" maxlength="60" />
+              <.input
+                field={@form[:seo_description]}
+                type="textarea"
+                label="SEO description"
+                rows="3"
+                maxlength="160"
+              />
+              <.input field={@form[:cover_image_url]} type="url" label="Cover image URL" />
+              <.input field={@form[:cover_image_alt]} type="text" label="Cover image alt text" />
+              <section
+                id="seo-preview"
+                class="mt-4 rounded-xl border border-base-300 bg-base-200/50 p-4"
+                aria-label="Search preview"
+              >
+                <p class="text-xs uppercase tracking-wider text-base-content/50">
+                  Search preview
+                </p>
+                <p class="mt-2 font-semibold text-primary">{seo_preview_title(@form)}</p>
+                <p class="mt-1 text-sm text-base-content/70">{seo_preview_description(@form)}</p>
+              </section>
+            </section>
+
+            <details class="rounded-2xl border border-base-300 bg-base-100 p-5">
+              <summary class="cursor-pointer font-medium">Advanced appearance</summary>
+              <div class="mt-4 grid gap-4 sm:grid-cols-2">
+                <.input field={@form[:background]} type="text" label="Background" />
+                <.input field={@form[:views]} type="number" label="Views" />
+              </div>
+            </details>
+          </div>
+
+          <footer class="mt-6 flex flex-wrap gap-3">
+            <.button
+              id="save-draft"
+              name="intent"
+              value="draft"
+              phx-disable-with="Saving..."
+              variant="primary"
+            >
+              {if @post.status == :published, do: "Save changes", else: "Save draft"}
+            </.button>
+            <.button
+              :if={@post.status == :draft}
+              id="publish-post"
+              name="intent"
+              value="publish"
+              phx-disable-with="Publishing..."
+            >
+              Publish article
+            </.button>
+            <.button
+              :if={@post.status == :published}
+              id="unpublish-post"
+              type="button"
+              phx-click="unpublish"
+              data-confirm="Return this article to draft?"
+            >
+              Unpublish
+            </.button>
+            <.button navigate={return_path(@return_to, @post)}>Cancel</.button>
+          </footer>
+        </.form>
+      </div>
+
+      <aside class="min-w-0 flex flex-col" aria-label="Post preview">
+        <header class="label mb-1 flex items-center gap-2">
+          <.icon name="hero-eye" class="w-4 h-4 text-base-content/60" /> Preview
+        </header>
+        <section
+          id="post-preview"
+          class="flex-1 min-h-[420px] rounded-lg border border-base-300 overflow-auto bg-base-100"
+        >
+          <article
+            id="preview-article"
+            class="max-w-3xl prose px-6 py-8 sm:px-8 sm:py-10"
+            phx-hook="Mermaid"
+          >
+            {@preview_html}
+          </article>
+        </section>
+      </aside>
+    </section>
+  </main>
+</Layouts.app>

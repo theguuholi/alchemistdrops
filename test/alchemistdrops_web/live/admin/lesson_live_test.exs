@@ -61,10 +61,10 @@ defmodule AlchemistdropsWeb.Admin.LessonLiveTest do
 
     test "renders new lesson form", %{conn: conn} do
       course = course_fixture()
-      {:ok, view, html} = live(conn, ~p"/admin/courses/#{course}/lessons/new")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}/lessons/new")
 
-      assert html =~ "New Lesson"
-      assert html =~ course.title
+      assert has_element?(view, "#admin-lesson-form", "New Lesson")
+      assert has_element?(view, "#admin-lesson-form", course.title)
       assert has_element?(view, "#lesson-form")
     end
 
@@ -72,25 +72,24 @@ defmodule AlchemistdropsWeb.Admin.LessonLiveTest do
       course = course_fixture()
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}/lessons/new")
 
-      html =
-        view
-        |> form("#lesson-form", lesson: @invalid_attrs)
-        |> render_change()
+      view
+      |> form("#lesson-form", lesson: @invalid_attrs)
+      |> render_change()
 
-      assert html =~ "can&#39;t be blank"
+      assert has_element?(view, "#lesson_title-error-0", "can't be blank")
     end
 
     test "saves new lesson and redirects to course show", %{conn: conn} do
       course = course_fixture()
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}/lessons/new")
 
-      assert {:ok, show_view, html} =
+      assert {:ok, show_view, _html} =
                view
                |> form("#lesson-form", lesson: @create_attrs)
                |> render_submit()
                |> follow_redirect(conn, ~p"/admin/courses/#{course}")
 
-      assert html =~ "Lesson created successfully"
+      assert has_element?(show_view, "#flash-info", "Lesson created successfully")
       assert has_element?(show_view, "td", "New Lesson Title")
     end
 
@@ -98,12 +97,11 @@ defmodule AlchemistdropsWeb.Admin.LessonLiveTest do
       course = course_fixture()
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}/lessons/new")
 
-      html =
-        view
-        |> form("#lesson-form", lesson: @invalid_attrs)
-        |> render_submit()
+      view
+      |> form("#lesson-form", lesson: @invalid_attrs)
+      |> render_submit()
 
-      assert html =~ "can&#39;t be blank"
+      assert has_element?(view, "#lesson_title-error-0", "can't be blank")
       assert has_element?(view, "#lesson-form")
     end
 
@@ -121,30 +119,29 @@ defmodule AlchemistdropsWeb.Admin.LessonLiveTest do
     test "redirects when lesson not found in course", %{conn: conn, course: course} do
       invalid_id = Ecto.UUID.generate()
 
-      assert {:ok, _view, html} =
+      assert {:ok, show_view, _html} =
                live(conn, ~p"/admin/courses/#{course}/lessons/#{invalid_id}/edit")
                |> follow_redirect(conn, ~p"/admin/courses/#{course}")
 
-      assert html =~ "Lesson not found"
+      assert has_element?(show_view, "#flash-error", "Lesson not found")
     end
 
     test "renders edit lesson form", %{conn: conn, course: course, lesson: lesson} do
-      {:ok, view, html} = live(conn, ~p"/admin/courses/#{course}/lessons/#{lesson}/edit")
+      {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}/lessons/#{lesson}/edit")
 
-      assert html =~ "Edit Lesson"
-      assert html =~ course.title
+      assert has_element?(view, "#admin-lesson-form", "Edit Lesson")
+      assert has_element?(view, "#admin-lesson-form", course.title)
       assert has_element?(view, "#lesson-form")
     end
 
     test "validates form on change", %{conn: conn, course: course, lesson: lesson} do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}/lessons/#{lesson}/edit")
 
-      html =
-        view
-        |> form("#lesson-form", lesson: @invalid_attrs)
-        |> render_change()
+      view
+      |> form("#lesson-form", lesson: @invalid_attrs)
+      |> render_change()
 
-      assert html =~ "can&#39;t be blank"
+      assert has_element?(view, "#lesson_title-error-0", "can't be blank")
     end
 
     test "updates lesson and redirects to course show", %{
@@ -154,13 +151,13 @@ defmodule AlchemistdropsWeb.Admin.LessonLiveTest do
     } do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}/lessons/#{lesson}/edit")
 
-      assert {:ok, show_view, html} =
+      assert {:ok, show_view, _html} =
                view
                |> form("#lesson-form", lesson: @update_attrs)
                |> render_submit()
                |> follow_redirect(conn, ~p"/admin/courses/#{course}")
 
-      assert html =~ "Lesson updated successfully"
+      assert has_element?(show_view, "#flash-info", "Lesson updated successfully")
       assert has_element?(show_view, "td", "Updated Lesson Title")
     end
 
@@ -171,12 +168,11 @@ defmodule AlchemistdropsWeb.Admin.LessonLiveTest do
     } do
       {:ok, view, _html} = live(conn, ~p"/admin/courses/#{course}/lessons/#{lesson}/edit")
 
-      html =
-        view
-        |> form("#lesson-form", lesson: @invalid_attrs)
-        |> render_submit()
+      view
+      |> form("#lesson-form", lesson: @invalid_attrs)
+      |> render_submit()
 
-      assert html =~ "can&#39;t be blank"
+      assert has_element?(view, "#lesson_title-error-0", "can't be blank")
       assert has_element?(view, "#lesson-form")
     end
   end

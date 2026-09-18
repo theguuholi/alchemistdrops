@@ -52,7 +52,7 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
     {:noreply,
      socket
      |> put_flash(:info, "Successfully enrolled!")
-     |> assign(:enrolled, true)}
+     |> assign(:enrolled?, true)}
   end
 
   @impl true
@@ -80,7 +80,7 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
           {:noreply,
            socket
            |> put_flash(:error, "This course is free. Use Enroll Now instead.")
-           |> assign(:enrolled, false)}
+           |> assign(:enrolled?, false)}
 
         {:error, {:stripe_error, _status, body}} ->
           message =
@@ -116,7 +116,7 @@ defmodule AlchemistdropsWeb.CourseLive.Show do
         false
       end
 
-    assign(socket, :enrolled, enrolled)
+    assign(socket, :enrolled?, enrolled)
   end
 
   defp load_lessons(socket) do

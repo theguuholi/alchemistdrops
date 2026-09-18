@@ -6,67 +6,6 @@ defmodule AlchemistdropsWeb.UserLive.Settings do
   alias Alchemistdrops.Accounts
 
   @impl true
-  def render(assigns) do
-    ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <div class="text-center">
-        <.header>
-          Account Settings
-          <:subtitle>Manage your account email address and password settings</:subtitle>
-        </.header>
-      </div>
-
-      <.form for={@email_form} id="email_form" phx-submit="update_email" phx-change="validate_email">
-        <.input
-          field={@email_form[:email]}
-          type="email"
-          label="Email"
-          autocomplete="username"
-          required
-        />
-        <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
-      </.form>
-
-      <div class="divider" />
-
-      <.form
-        for={@password_form}
-        id="password_form"
-        action={~p"/users/update-password"}
-        method="post"
-        phx-change="validate_password"
-        phx-submit="update_password"
-        phx-trigger-action={@trigger_submit}
-      >
-        <input
-          name={@password_form[:email].name}
-          type="hidden"
-          id="hidden_user_email"
-          autocomplete="username"
-          value={@current_email}
-        />
-        <.input
-          field={@password_form[:password]}
-          type="password"
-          label="New password"
-          autocomplete="new-password"
-          required
-        />
-        <.input
-          field={@password_form[:password_confirmation]}
-          type="password"
-          label="Confirm new password"
-          autocomplete="new-password"
-        />
-        <.button variant="primary" phx-disable-with="Saving...">
-          Save Password
-        </.button>
-      </.form>
-    </Layouts.app>
-    """
-  end
-
-  @impl true
   def mount(%{"token" => token}, _session, socket) do
     socket =
       case Accounts.update_user_email(socket.assigns.current_scope.user, token) do
@@ -87,10 +26,11 @@ defmodule AlchemistdropsWeb.UserLive.Settings do
 
     socket =
       socket
+      |> assign(:page_title, "Account Settings")
       |> assign(:current_email, user.email)
       |> assign(:email_form, to_form(email_changeset))
       |> assign(:password_form, to_form(password_changeset))
-      |> assign(:trigger_submit, false)
+      |> assign(:trigger_submit?, false)
 
     {:ok, socket}
   end
@@ -148,7 +88,7 @@ defmodule AlchemistdropsWeb.UserLive.Settings do
 
     case Accounts.change_user_password(user, user_params) do
       %{valid?: true} = changeset ->
-        {:noreply, assign(socket, trigger_submit: true, password_form: to_form(changeset))}
+        {:noreply, assign(socket, trigger_submit?: true, password_form: to_form(changeset))}
 
       changeset ->
         {:noreply, assign(socket, password_form: to_form(changeset, action: :insert))}

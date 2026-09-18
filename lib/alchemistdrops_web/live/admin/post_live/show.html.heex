@@ -1,0 +1,23 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <main id="admin-post-show">
+    <.header>
+      Post {@post.id}
+      <:subtitle>This is a post record from your database.</:subtitle>
+      <:actions>
+        <.button navigate={~p"/admin/posts"} aria-label="Back to posts">
+          <.icon name="hero-arrow-left" />
+        </.button>
+        <.button variant="primary" navigate={~p"/admin/posts/#{@post}/edit?return_to=show"}>
+          <.icon name="hero-pencil-square" /> Edit post
+        </.button>
+      </:actions>
+    </.header>
+
+    <.list>
+      <:item title="Background">{@post.background}</:item>
+      <:item title="Title">{@post.title}</:item>
+      <:item title="Body">{@post.body}</:item>
+      <:item title="Views">{@post.views}</:item>
+    </.list>
+  </main>
+</Layouts.app>

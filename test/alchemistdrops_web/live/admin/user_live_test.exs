@@ -11,19 +11,18 @@ defmodule AlchemistdropsWeb.Admin.UserLiveTest do
     setup [:register_and_log_in_admin_user]
 
     test "renders page with correct heading", %{conn: conn} do
-      {:ok, view, html} = live(conn, ~p"/admin/users")
+      {:ok, view, _html} = live(conn, ~p"/admin/users")
 
-      assert html =~ "Users"
       assert has_element?(view, "h1", "Users")
     end
 
     test "displays stats", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/admin/users")
+      {:ok, view, _html} = live(conn, ~p"/admin/users")
 
-      assert html =~ "Total"
-      assert html =~ "Admins"
-      assert html =~ "Confirmed"
-      assert html =~ "Pending"
+      assert has_element?(view, "#admin-users", "Total")
+      assert has_element?(view, "#admin-users", "Admins")
+      assert has_element?(view, "#admin-users", "Confirmed")
+      assert has_element?(view, "#admin-users", "Pending")
     end
 
     test "lists all users with correct data", %{conn: conn, user: admin_user} do
@@ -87,7 +86,7 @@ defmodule AlchemistdropsWeb.Admin.UserLiveTest do
       |> element("#users-#{regular_user.id} button", "Make Admin")
       |> render_click()
 
-      assert render(view) =~ "is now an admin"
+      assert has_element?(view, "#flash-info", "is now an admin")
       assert has_element?(view, "#users-#{regular_user.id} .badge-warning", "Admin")
     end
 
@@ -100,7 +99,7 @@ defmodule AlchemistdropsWeb.Admin.UserLiveTest do
       |> element("#users-#{admin_to_demote.id} button", "Remove Admin")
       |> render_click()
 
-      assert render(view) =~ "Admin role removed"
+      assert has_element?(view, "#flash-info", "Admin role removed")
       assert has_element?(view, "#users-#{admin_to_demote.id} .badge-ghost", "User")
     end
 

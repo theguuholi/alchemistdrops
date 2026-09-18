@@ -1,67 +1,69 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <h1 class="text-2xl font-bold">Users</h1>
-  <p class="text-base-content/60 text-sm mb-6">Manage platform users and permissions</p>
+  <main id="admin-users">
+    <h1 class="text-2xl font-bold">Users</h1>
+    <p class="text-base-content/60 text-sm mb-6">Manage platform users and permissions</p>
 
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6">
-    <div class="bg-base-200 rounded p-3">
-      <div class="text-xs uppercase text-base-content/60">Total</div>
-      <div class="text-xl font-bold">{@total_count}</div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6">
+      <div class="bg-base-200 rounded p-3">
+        <div class="text-xs uppercase text-base-content/60">Total</div>
+        <div class="text-xl font-bold">{@total_count}</div>
+      </div>
+      <div class="bg-base-200 rounded p-3">
+        <div class="text-xs uppercase text-base-content/60">Admins</div>
+        <div class="text-xl font-bold text-warning">{@admin_count}</div>
+      </div>
+      <div class="bg-base-200 rounded p-3">
+        <div class="text-xs uppercase text-base-content/60">Confirmed</div>
+        <div class="text-xl font-bold text-success">{@confirmed_count}</div>
+      </div>
+      <div class="bg-base-200 rounded p-3">
+        <div class="text-xs uppercase text-base-content/60">Pending</div>
+        <div class="text-xl font-bold text-info">{@pending_count}</div>
+      </div>
     </div>
-    <div class="bg-base-200 rounded p-3">
-      <div class="text-xs uppercase text-base-content/60">Admins</div>
-      <div class="text-xl font-bold text-warning">{@admin_count}</div>
-    </div>
-    <div class="bg-base-200 rounded p-3">
-      <div class="text-xs uppercase text-base-content/60">Confirmed</div>
-      <div class="text-xl font-bold text-success">{@confirmed_count}</div>
-    </div>
-    <div class="bg-base-200 rounded p-3">
-      <div class="text-xs uppercase text-base-content/60">Pending</div>
-      <div class="text-xl font-bold text-info">{@pending_count}</div>
-    </div>
-  </div>
 
-  <%= if @users_empty? do %>
-    <p class="text-center py-12 text-base-content/60">No users yet</p>
-  <% else %>
-    <.table id="users-table" rows={@streams.users}>
-      <:col :let={{_id, user}} label="User">
-        <span class="truncate">{user.email}</span>
-      </:col>
-      <:col :let={{_id, user}} label="Role">
-        <span class={["badge badge-sm", role_badge_class(user.role)]}>
-          {user.role |> to_string() |> String.capitalize()}
-        </span>
-      </:col>
-      <:col :let={{_id, user}} label="Status">
-        <%= if user.confirmed_at do %>
-          <span class="badge badge-success badge-sm">Confirmed</span>
-        <% else %>
-          <span class="badge badge-ghost badge-sm">Pending</span>
-        <% end %>
-      </:col>
-      <:col :let={{_id, user}} label="Joined">
-        <span class="text-sm text-base-content/70">{format_date(user.inserted_at)}</span>
-      </:col>
-      <:action :let={{_id, user}}>
-        <%= if user.role == :admin do %>
-          <button
-            phx-click="remove_admin"
-            phx-value-id={user.id}
-            class="btn btn-xs btn-error btn-outline"
-          >
-            Remove Admin
-          </button>
-        <% else %>
-          <button
-            phx-click="make_admin"
-            phx-value-id={user.id}
-            class="btn btn-xs btn-warning btn-outline"
-          >
-            Make Admin
-          </button>
-        <% end %>
-      </:action>
-    </.table>
-  <% end %>
+    <%= if @users_empty? do %>
+      <p class="text-center py-12 text-base-content/60">No users yet</p>
+    <% else %>
+      <.table id="users-table" rows={@streams.users}>
+        <:col :let={{_id, user}} label="User">
+          <span class="truncate">{user.email}</span>
+        </:col>
+        <:col :let={{_id, user}} label="Role">
+          <span class={["badge badge-sm", role_badge_class(user.role)]}>
+            {user.role |> to_string() |> String.capitalize()}
+          </span>
+        </:col>
+        <:col :let={{_id, user}} label="Status">
+          <%= if user.confirmed_at do %>
+            <span class="badge badge-success badge-sm">Confirmed</span>
+          <% else %>
+            <span class="badge badge-ghost badge-sm">Pending</span>
+          <% end %>
+        </:col>
+        <:col :let={{_id, user}} label="Joined">
+          <span class="text-sm text-base-content/70">{format_date(user.inserted_at)}</span>
+        </:col>
+        <:action :let={{_id, user}}>
+          <%= if user.role == :admin do %>
+            <button
+              phx-click="remove_admin"
+              phx-value-id={user.id}
+              class="btn btn-xs btn-error btn-outline"
+            >
+              Remove Admin
+            </button>
+          <% else %>
+            <button
+              phx-click="make_admin"
+              phx-value-id={user.id}
+              class="btn btn-xs btn-warning btn-outline"
+            >
+              Make Admin
+            </button>
+          <% end %>
+        </:action>
+      </.table>
+    <% end %>
+  </main>
 </Layouts.app>
