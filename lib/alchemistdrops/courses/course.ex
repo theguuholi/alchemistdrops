@@ -13,20 +13,56 @@ defmodule Alchemistdrops.Courses.Course do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
+  @typedoc "Database identifier for the course. Nil before persistence."
+  @type id :: Ecto.UUID.t() | nil
+
+  @typedoc "Course title shown in the catalog. Nil before validation."
+  @type title :: String.t() | nil
+
+  @typedoc "Short course summary. Nil before validation."
+  @type description :: String.t() | nil
+
+  @typedoc "Long-form course content. Nil when it has not been provided."
+  @type body :: String.t() | nil
+
+  @typedoc "Course price. Nil when the course has no configured price."
+  @type price :: Money.t() | nil
+
+  @typedoc "Stripe product identifier. Nil before the course is synchronized with Stripe."
+  @type stripe_product_id :: String.t() | nil
+
+  @typedoc "Stripe price identifier. Nil before the course is synchronized with Stripe."
+  @type stripe_price_id :: String.t() | nil
+
+  @typedoc "Whether the Stripe price is recurring."
+  @type price_recurring :: boolean()
+
+  @typedoc "Whether the course is visible in the public catalog."
+  @type published :: boolean()
+
+  @typedoc "Course thumbnail URL. Nil when no custom thumbnail has been provided."
+  @type thumbnail_url :: String.t() | nil
+
+  @typedoc "Timestamp when the course was persisted. Nil before persistence."
+  @type inserted_at :: DateTime.t() | nil
+
+  @typedoc "Timestamp when the course was last updated. Nil before persistence."
+  @type updated_at :: DateTime.t() | nil
+
   @typedoc "A course before or after persistence."
   @type t :: %__MODULE__{
-          id: Ecto.UUID.t() | nil,
-          title: String.t() | nil,
-          description: String.t() | nil,
-          body: String.t() | nil,
-          price: Money.t() | nil,
-          stripe_product_id: String.t() | nil,
-          stripe_price_id: String.t() | nil,
-          price_recurring: boolean(),
-          published: boolean(),
-          thumbnail_url: String.t() | nil,
-          inserted_at: DateTime.t() | nil,
-          updated_at: DateTime.t() | nil
+          id: id(),
+          title: title(),
+          description: description(),
+          body: body(),
+          price: price(),
+          stripe_product_id: stripe_product_id(),
+          stripe_price_id: stripe_price_id(),
+          price_recurring: price_recurring(),
+          published: published(),
+          thumbnail_url: thumbnail_url(),
+          inserted_at: inserted_at(),
+          updated_at: updated_at()
         }
 
   schema "courses" do
