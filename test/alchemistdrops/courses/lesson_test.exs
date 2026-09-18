@@ -11,6 +11,8 @@ defmodule Alchemistdrops.Courses.LessonTest do
 
   import Alchemistdrops.CoursesFixtures
 
+  doctest Alchemistdrops.Courses.Lesson
+
   setup do
     # Given a course exists in the system
     course =

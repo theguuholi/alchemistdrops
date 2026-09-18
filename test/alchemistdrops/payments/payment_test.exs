@@ -12,6 +12,8 @@ defmodule Alchemistdrops.Payments.PaymentTest do
   import Alchemistdrops.AccountsFixtures
   import Alchemistdrops.CoursesFixtures
 
+  doctest Alchemistdrops.Payments.Payment
+
   setup do
     # Given a user and course exist in the system
     user = user_fixture()

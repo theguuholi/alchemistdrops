@@ -1,9 +1,34 @@
 defmodule Alchemistdrops.Courses.Course do
+  @moduledoc """
+  Represents a course offered through AlchemistDrops.
+
+  A course owns its lessons and acts as the purchasable and enrollable learning
+  unit. Its changeset protects the title and monetary invariants used by the
+  catalog and checkout flows.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
+
+  @typedoc "A course before or after persistence."
+  @type t :: %__MODULE__{
+          id: Ecto.UUID.t() | nil,
+          title: String.t() | nil,
+          description: String.t() | nil,
+          body: String.t() | nil,
+          price: Money.t() | nil,
+          stripe_product_id: String.t() | nil,
+          stripe_price_id: String.t() | nil,
+          price_recurring: boolean(),
+          published: boolean(),
+          thumbnail_url: String.t() | nil,
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
+        }
+
   schema "courses" do
     field :title, :string
     field :description, :string
@@ -22,7 +47,19 @@ defmodule Alchemistdrops.Courses.Course do
     timestamps(type: :utc_datetime)
   end
 
-  @doc false
+  @doc """
+  Builds a course changeset and validates its catalog fields.
+
+  ## Examples
+
+      iex> changeset = Alchemistdrops.Courses.Course.changeset(%Alchemistdrops.Courses.Course{}, %{title: "  Elixir  ", description: "OTP"})
+      iex> {changeset.valid?, Ecto.Changeset.get_change(changeset, :title)}
+      {true, "Elixir"}
+
+      iex> Alchemistdrops.Courses.Course.changeset(%Alchemistdrops.Courses.Course{}, %{title: "", description: ""}).valid?
+      false
+  """
+  @spec changeset(t() | Ecto.Changeset.t(), map()) :: Ecto.Changeset.t()
   def changeset(course, attrs) do
     course
     |> cast(attrs, [

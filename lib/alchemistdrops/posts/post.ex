@@ -1,4 +1,12 @@
 defmodule Alchemistdrops.Posts.Post do
+  @moduledoc """
+  Represents an editorial article throughout its draft and published lifecycle.
+
+  Posts own the content, SEO metadata, taxonomy, publication state, and optional
+  course relationship rendered by the public blog. Separate draft and publish
+  changesets keep incomplete editorial work private until it is ready.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -7,6 +15,13 @@ defmodule Alchemistdrops.Posts.Post do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
+  @typedoc "Editorial publication state of a post."
+  @type status :: :draft | :published
+
+  @typedoc "Language used by article content and localized public copy."
+  @type language :: :en | :pt_br
+
+  @typedoc "A post before or after persistence."
   @type t :: %__MODULE__{
           id: Ecto.UUID.t() | nil,
           background: String.t() | nil,
@@ -14,14 +29,14 @@ defmodule Alchemistdrops.Posts.Post do
           slug: String.t() | nil,
           body: String.t() | nil,
           views: integer() | nil,
-          status: :draft | :published,
+          status: status(),
           published_at: DateTime.t() | nil,
           summary: String.t() | nil,
           seo_title: String.t() | nil,
           seo_description: String.t() | nil,
           cover_image_url: String.t() | nil,
           cover_image_alt: String.t() | nil,
-          language: :en | :pt_br,
+          language: language(),
           inserted_at: DateTime.t() | nil,
           updated_at: DateTime.t() | nil
         }
@@ -52,9 +67,31 @@ defmodule Alchemistdrops.Posts.Post do
     timestamps(type: :utc_datetime)
   end
 
-  @doc false
+  @doc """
+  Builds the default draft changeset.
+
+  This is equivalent to `draft_changeset/2` and does not require publish-only
+  content such as the body, summary, or category.
+
+  ## Examples
+
+      iex> changeset = Alchemistdrops.Posts.Post.changeset(%Alchemistdrops.Posts.Post{}, %{title: "Hello OTP"})
+      iex> {changeset.valid?, Ecto.Changeset.get_change(changeset, :slug)}
+      {true, "hello-otp"}
+  """
+  @spec changeset(t(), map()) :: Ecto.Changeset.t()
   def changeset(post, attrs), do: draft_changeset(post, attrs)
 
+  @doc """
+  Builds a draft changeset with generated slug and editorial metadata validation.
+
+  ## Examples
+
+      iex> changeset = Alchemistdrops.Posts.Post.draft_changeset(%Alchemistdrops.Posts.Post{}, %{title: "Draft Article"})
+      iex> {Ecto.Changeset.get_field(changeset, :status), Ecto.Changeset.get_change(changeset, :slug)}
+      {:draft, "draft-article"}
+  """
+  @spec draft_changeset(t(), map()) :: Ecto.Changeset.t()
   def draft_changeset(post, attrs) do
     post
     |> cast(attrs, [
@@ -85,6 +122,20 @@ defmodule Alchemistdrops.Posts.Post do
     |> unique_constraint(:slug)
   end
 
+  @doc """
+  Builds a publish changeset and requires complete body, summary, and category data.
+
+  ## Examples
+
+      iex> attrs = %{title: "Published Article", body: "Body", summary: "Summary", category_name: "Elixir"}
+      iex> changeset = Alchemistdrops.Posts.Post.publish_changeset(%Alchemistdrops.Posts.Post{}, attrs)
+      iex> {changeset.valid?, Ecto.Changeset.get_field(changeset, :status)}
+      {true, :published}
+
+      iex> Alchemistdrops.Posts.Post.publish_changeset(%Alchemistdrops.Posts.Post{}, %{title: "Incomplete"}).valid?
+      false
+  """
+  @spec publish_changeset(t(), map()) :: Ecto.Changeset.t()
   def publish_changeset(post, attrs) do
     post
     |> draft_changeset(put_status(attrs, :published))

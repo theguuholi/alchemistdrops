@@ -11,6 +11,8 @@ defmodule Alchemistdrops.Enrollments.EnrollmentTest do
   alias Alchemistdrops.Courses.Course
   alias Alchemistdrops.Enrollments.Enrollment
 
+  doctest Alchemistdrops.Enrollments.Enrollment
+
   setup do
     # Given a user exists in the system
     user =
