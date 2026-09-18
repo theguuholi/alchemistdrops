@@ -7,15 +7,15 @@ defmodule AlchemistdropsWeb.HomeLiveTest do
 
   describe "HomeLive" do
     test "renders home page successfully", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/")
-      assert html =~ "Master Elixir at Your Own Pace"
+      {:ok, view, _html} = live(conn, ~p"/")
+      assert has_element?(view, "#home-page", "Master Elixir at Your Own Pace")
     end
 
     test "displays hero section with main heading", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/")
+      {:ok, view, _html} = live(conn, ~p"/")
 
-      assert html =~ "Master Elixir at Your Own Pace with Real-World Projects"
-      assert html =~ "Learn Elixir, Phoenix, and LiveView"
+      assert has_element?(view, "#home-page header h1", "Master Elixir at Your Own Pace")
+      assert has_element?(view, "#home-page header p", "Learn Elixir, Phoenix, and LiveView")
     end
 
     test "shows logo image", %{conn: conn} do
@@ -32,21 +32,21 @@ defmodule AlchemistdropsWeb.HomeLiveTest do
     end
 
     test "renders Why Choose Elixir section", %{conn: conn} do
-      {:ok, view, html} = live(conn, ~p"/")
+      {:ok, view, _html} = live(conn, ~p"/")
 
-      assert html =~ "Why Choose Elixir?"
+      assert has_element?(view, "#why-elixir", "Why Choose Elixir?")
       assert has_element?(view, "h3", "Scalable & Fast")
       assert has_element?(view, "h3", "Functional & Elegant")
       assert has_element?(view, "h3", "Reliable & Fault-Tolerant")
     end
 
     test "displays course features section", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/")
+      {:ok, view, _html} = live(conn, ~p"/")
 
-      assert html =~ "Why Choose This Course?"
-      assert html =~ "Flexible Learning at Your Own Pace"
-      assert html =~ "Real-World Examples and Practical Skills"
-      assert html =~ "Learn LiveView with Test-Driven Development"
+      assert has_element?(view, "#course", "Why Choose This Course?")
+      assert has_element?(view, "#course", "Flexible Learning at Your Own Pace")
+      assert has_element?(view, "#course", "Real-World Examples and Practical Skills")
+      assert has_element?(view, "#course", "Learn LiveView with Test-Driven Development")
     end
 
     test "shows What You'll Learn section with learning items", %{conn: conn} do
@@ -61,24 +61,24 @@ defmodule AlchemistdropsWeb.HomeLiveTest do
     end
 
     test "displays instructor section with bio", %{conn: conn} do
-      {:ok, view, html} = live(conn, ~p"/")
+      {:ok, view, _html} = live(conn, ~p"/")
 
-      assert html =~ "About the Instructor"
-      assert html =~ "Gustavo Oliveira"
-      assert html =~ "Brazilian software engineer and educator"
+      assert has_element?(view, "#instructor", "About the Instructor")
+      assert has_element?(view, "#instructor", "Gustavo Oliveira")
+      assert has_element?(view, "#instructor", "Brazilian software engineer and educator")
       assert has_element?(view, "img[alt='Gustavo Oliveira - Elixir Instructor']")
     end
 
     test "renders pricing section with both plans", %{conn: conn} do
-      {:ok, view, html} = live(conn, ~p"/")
+      {:ok, view, _html} = live(conn, ~p"/")
 
-      assert html =~ "Flexible Pricing Plans"
-      assert html =~ "Monthly Plan"
-      assert html =~ "$9"
-      assert html =~ "Yearly Plan"
-      assert html =~ "$53"
-      assert html =~ "Save $55"
-      assert html =~ "Best Value"
+      assert has_element?(view, "#pricing", "Flexible Pricing Plans")
+      assert has_element?(view, "#pricing", "Monthly Plan")
+      assert has_element?(view, "#pricing", "$9")
+      assert has_element?(view, "#pricing", "Yearly Plan")
+      assert has_element?(view, "#pricing", "$53")
+      assert has_element?(view, "#pricing", "Save $55")
+      assert has_element?(view, "#pricing", "Best Value")
 
       assert has_element?(
                view,
@@ -94,29 +94,29 @@ defmodule AlchemistdropsWeb.HomeLiveTest do
     end
 
     test "shows pricing features list", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/")
+      {:ok, view, _html} = live(conn, ~p"/")
 
-      assert html =~ "Full access to all course content"
-      assert html =~ "Access to private Elixir community"
-      assert html =~ "Downloadable resources and guides"
-      assert html =~ "Priority support"
+      assert has_element?(view, "#pricing", "Full access to all course content")
+      assert has_element?(view, "#pricing", "Access to private Elixir community")
+      assert has_element?(view, "#pricing", "Downloadable resources and guides")
+      assert has_element?(view, "#pricing", "Priority support")
     end
 
     test "displays FAQ section", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/")
+      {:ok, view, _html} = live(conn, ~p"/")
 
-      assert html =~ "Frequently Asked Questions"
-      assert html =~ "What exactly is Alchemistdrops?"
-      assert html =~ "Are the classes hands-on?"
-      assert html =~ "How long will I have access to the course?"
-      assert html =~ "How does the support work?"
+      assert has_element?(view, "#faq", "Frequently Asked Questions")
+      assert has_element?(view, "#faq", "What exactly is Alchemistdrops?")
+      assert has_element?(view, "#faq", "Are the classes hands-on?")
+      assert has_element?(view, "#faq", "How long will I have access to the course?")
+      assert has_element?(view, "#faq", "How does the support work?")
     end
 
     test "renders final CTA section", %{conn: conn} do
-      {:ok, view, html} = live(conn, ~p"/")
+      {:ok, view, _html} = live(conn, ~p"/")
 
-      assert html =~ "Ready to Take the Next Step in Your Elixir Journey?"
-      assert html =~ "Build real-world projects and join a thriving community"
+      assert has_element?(view, "#home-page", "Ready to Take the Next Step")
+      assert has_element?(view, "#home-page", "Build real-world projects and join")
       assert has_element?(view, "a[href='#pricing']", "Start Learning Today")
     end
 
@@ -133,17 +133,15 @@ defmodule AlchemistdropsWeb.HomeLiveTest do
     end
 
     test "external links have proper security attributes", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/")
+      {:ok, view, _html} = live(conn, ~p"/")
 
-      # Check Stripe links have target and rel attributes
-      assert html =~ ~s(target="_blank")
-      assert html =~ ~s(rel="noopener noreferrer")
+      assert has_element?(view, "#pricing a[target='_blank'][rel='noopener noreferrer']")
     end
 
     test "images have lazy loading attributes", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/")
+      {:ok, view, _html} = live(conn, ~p"/")
 
-      assert html =~ ~s(loading="lazy")
+      assert has_element?(view, "img[loading='lazy']")
     end
 
     test "all images have alt text for accessibility", %{conn: conn} do
@@ -186,18 +184,22 @@ defmodule AlchemistdropsWeb.HomeLiveTest do
     test "page title is set correctly", %{conn: conn} do
       {:ok, _view, html} = live(conn, ~p"/")
 
-      assert html =~ "Master Elixir - Alchemistdrops"
+      document = LazyHTML.from_document(html)
+      assert LazyHTML.text(LazyHTML.query(document, "title")) =~ "Master Elixir - Alchemistdrops"
     end
 
     test "shows exactly the three most recent published articles", %{conn: conn} do
       Enum.each(1..4, fn number -> post_fixture(%{title: "Recent article #{number}"}) end)
       draft_post_fixture(%{title: "Homepage draft"})
 
-      {:ok, view, html} = live(conn, ~p"/")
+      {:ok, view, _html} = live(conn, ~p"/")
 
       recent_html = view |> element("#recent-articles") |> render()
-      assert length(Regex.scan(~r/<article\b/, recent_html)) == 3
-      refute html =~ "Homepage draft"
+
+      assert recent_html |> LazyHTML.from_fragment() |> LazyHTML.query("article") |> Enum.count() ==
+               3
+
+      refute has_element?(view, "#recent-articles", "Homepage draft")
       assert has_element?(view, "#recent-articles a[href='/blog']", "View all articles")
     end
 

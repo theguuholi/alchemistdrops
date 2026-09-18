@@ -1,4 +1,11 @@
 defmodule Alchemistdrops.Accounts.UserNotifier do
+  @moduledoc """
+  Delivers account lifecycle emails through the application mailer.
+
+  Keeping message construction here gives the Accounts context one delivery
+  boundary for email changes, confirmations, and magic-link sign-ins.
+  """
+
   import Swoosh.Email
 
   alias Alchemistdrops.Accounts.User
@@ -20,7 +27,16 @@ defmodule Alchemistdrops.Accounts.UserNotifier do
 
   @doc """
   Deliver instructions to update a user email.
+
+  ## Examples
+
+      iex> user = %Alchemistdrops.Accounts.User{email: "reader@example.com"}
+      iex> {:ok, email} = Alchemistdrops.Accounts.UserNotifier.deliver_update_email_instructions(user, "https://example.com/update")
+      iex> {email.subject, email.to}
+      {"Update email instructions", [{"", "reader@example.com"}]}
   """
+  @spec deliver_update_email_instructions(User.t(), String.t()) ::
+          {:ok, Swoosh.Email.t()} | {:error, term()}
   def deliver_update_email_instructions(user, url) do
     deliver(user.email, "Update email instructions", """
 
@@ -40,7 +56,19 @@ defmodule Alchemistdrops.Accounts.UserNotifier do
 
   @doc """
   Deliver instructions to log in with a magic link.
+
+  Unconfirmed users receive confirmation instructions; confirmed users receive
+  the regular login message.
+
+  ## Examples
+
+      iex> user = %Alchemistdrops.Accounts.User{email: "reader@example.com", confirmed_at: nil}
+      iex> {:ok, email} = Alchemistdrops.Accounts.UserNotifier.deliver_login_instructions(user, "https://example.com/login")
+      iex> email.subject
+      "Confirmation instructions"
   """
+  @spec deliver_login_instructions(User.t(), String.t()) ::
+          {:ok, Swoosh.Email.t()} | {:error, term()}
   def deliver_login_instructions(user, url) do
     case user do
       %User{confirmed_at: nil} -> deliver_confirmation_instructions(user, url)

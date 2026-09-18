@@ -1,102 +1,104 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <.header>
-    {@course.title}
-    <:subtitle>
-      <span class={[
-        "badge",
-        if(@course.published, do: "badge-success", else: "badge-warning")
-      ]}>
-        {if @course.published, do: "Published", else: "Draft"}
-      </span>
-    </:subtitle>
-    <:actions>
-      <.button navigate={~p"/admin/courses/#{@course}/edit?return_to=show"}>
-        Edit Course
-      </.button>
-    </:actions>
-  </.header>
+  <main id="admin-course-show">
+    <.header>
+      {@course.title}
+      <:subtitle>
+        <span class={[
+          "badge",
+          if(@course.published, do: "badge-success", else: "badge-warning")
+        ]}>
+          {if @course.published, do: "Published", else: "Draft"}
+        </span>
+      </:subtitle>
+      <:actions>
+        <.button navigate={~p"/admin/courses/#{@course}/edit?return_to=show"}>
+          Edit Course
+        </.button>
+      </:actions>
+    </.header>
 
-  <.list>
-    <:item title="Description">{@course.description}</:item>
-    <:item title="Price">
-      <%= if price_free?(@course.price) do %>
-        <span class="text-success font-medium">Free</span>
-      <% else %>
-        {format_price(@course.price)}
-      <% end %>
-    </:item>
-    <:item title="Thumbnail">
-      <%= if @course.thumbnail_url do %>
-        <a href={@course.thumbnail_url} target="_blank" class="link link-primary truncate">
-          {@course.thumbnail_url}
-        </a>
-      <% else %>
-        <span class="text-base-content/50">Not set</span>
-      <% end %>
-    </:item>
-  </.list>
+    <.list>
+      <:item title="Description">{@course.description}</:item>
+      <:item title="Price">
+        <%= if price_free?(@course.price) do %>
+          <span class="text-success font-medium">Free</span>
+        <% else %>
+          {format_price(@course.price)}
+        <% end %>
+      </:item>
+      <:item title="Thumbnail">
+        <%= if @course.thumbnail_url do %>
+          <a href={@course.thumbnail_url} target="_blank" class="link link-primary truncate">
+            {@course.thumbnail_url}
+          </a>
+        <% else %>
+          <span class="text-base-content/50">Not set</span>
+        <% end %>
+      </:item>
+    </.list>
 
-  <section class="mt-8" aria-labelledby="lessons-heading">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-      <h2 id="lessons-heading" class="text-lg font-semibold">
-        Lessons ({@lessons_count})
-      </h2>
-      <.button variant="primary" navigate={~p"/admin/courses/#{@course}/lessons/new"}>
-        <.icon name="hero-plus" class="w-4 h-4" /> Add Lesson
-      </.button>
+    <section class="mt-8" aria-labelledby="lessons-heading">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+        <h2 id="lessons-heading" class="text-lg font-semibold">
+          Lessons ({@lessons_count})
+        </h2>
+        <.button variant="primary" navigate={~p"/admin/courses/#{@course}/lessons/new"}>
+          <.icon name="hero-plus" class="w-4 h-4" /> Add Lesson
+        </.button>
+      </div>
+
+      <%= if @lessons_empty? do %>
+        <p id="no-lessons" class="text-center py-8 text-base-content/60 bg-base-200 rounded">
+          No lessons yet. Add your first lesson to get started.
+        </p>
+      <% else %>
+        <.table id="lessons-table" rows={@streams.lessons}>
+          <:col :let={{_id, lesson}} label="#">
+            <span class="font-mono text-sm">{lesson.order + 1}</span>
+          </:col>
+          <:col :let={{_id, lesson}} label="Title">
+            <span class="font-medium">{lesson.title}</span>
+          </:col>
+          <:col :let={{_id, lesson}} label="Duration">
+            <%= if lesson.duration do %>
+              {lesson.duration} min
+            <% else %>
+              <span class="text-base-content/50">—</span>
+            <% end %>
+          </:col>
+          <:col :let={{_id, lesson}} label="Status">
+            <span class={[
+              "badge badge-sm",
+              if(lesson.published, do: "badge-success", else: "badge-warning")
+            ]}>
+              {if lesson.published, do: "Published", else: "Draft"}
+            </span>
+          </:col>
+          <:action :let={{_id, lesson}}>
+            <.link
+              navigate={~p"/admin/courses/#{@course}/lessons/#{lesson}/edit"}
+              class="link link-primary"
+            >
+              Edit
+            </.link>
+          </:action>
+          <:action :let={{id, lesson}}>
+            <.link
+              phx-click={JS.push("delete_lesson", value: %{id: lesson.id}) |> hide("##{id}")}
+              data-confirm="Are you sure you want to delete this lesson?"
+              class="link link-error"
+            >
+              Delete
+            </.link>
+          </:action>
+        </.table>
+      <% end %>
+    </section>
+
+    <div class="mt-8">
+      <.link navigate={~p"/admin/courses"} class="text-sm font-semibold hover:underline">
+        <.icon name="hero-arrow-left" class="w-4 h-4" /> Back to courses
+      </.link>
     </div>
-
-    <%= if @lessons_empty? do %>
-      <p id="no-lessons" class="text-center py-8 text-base-content/60 bg-base-200 rounded">
-        No lessons yet. Add your first lesson to get started.
-      </p>
-    <% else %>
-      <.table id="lessons-table" rows={@streams.lessons}>
-        <:col :let={{_id, lesson}} label="#">
-          <span class="font-mono text-sm">{lesson.order + 1}</span>
-        </:col>
-        <:col :let={{_id, lesson}} label="Title">
-          <span class="font-medium">{lesson.title}</span>
-        </:col>
-        <:col :let={{_id, lesson}} label="Duration">
-          <%= if lesson.duration do %>
-            {lesson.duration} min
-          <% else %>
-            <span class="text-base-content/50">—</span>
-          <% end %>
-        </:col>
-        <:col :let={{_id, lesson}} label="Status">
-          <span class={[
-            "badge badge-sm",
-            if(lesson.published, do: "badge-success", else: "badge-warning")
-          ]}>
-            {if lesson.published, do: "Published", else: "Draft"}
-          </span>
-        </:col>
-        <:action :let={{_id, lesson}}>
-          <.link
-            navigate={~p"/admin/courses/#{@course}/lessons/#{lesson}/edit"}
-            class="link link-primary"
-          >
-            Edit
-          </.link>
-        </:action>
-        <:action :let={{id, lesson}}>
-          <.link
-            phx-click={JS.push("delete_lesson", value: %{id: lesson.id}) |> hide("##{id}")}
-            data-confirm="Are you sure you want to delete this lesson?"
-            class="link link-error"
-          >
-            Delete
-          </.link>
-        </:action>
-      </.table>
-    <% end %>
-  </section>
-
-  <div class="mt-8">
-    <.link navigate={~p"/admin/courses"} class="text-sm font-semibold hover:underline">
-      <.icon name="hero-arrow-left" class="w-4 h-4" /> Back to courses
-    </.link>
-  </div>
+  </main>
 </Layouts.app>

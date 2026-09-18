@@ -1,44 +1,46 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <h1 class="text-2xl font-bold">Enrollments</h1>
-  <p class="text-base-content/60 text-sm mb-6">Manage student enrollments across all courses</p>
+  <main id="admin-enrollments">
+    <h1 class="text-2xl font-bold">Enrollments</h1>
+    <p class="text-base-content/60 text-sm mb-6">Manage student enrollments across all courses</p>
 
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6">
-    <div class="bg-base-200 rounded p-3">
-      <div class="text-xs uppercase text-base-content/60">Total</div>
-      <div class="text-xl font-bold">{@total_count}</div>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 mb-6">
+      <div class="bg-base-200 rounded p-3">
+        <div class="text-xs uppercase text-base-content/60">Total</div>
+        <div class="text-xl font-bold">{@total_count}</div>
+      </div>
+      <div class="bg-base-200 rounded p-3">
+        <div class="text-xs uppercase text-base-content/60">Active</div>
+        <div class="text-xl font-bold text-success">{@active_count}</div>
+      </div>
+      <div class="bg-base-200 rounded p-3">
+        <div class="text-xs uppercase text-base-content/60">Completed</div>
+        <div class="text-xl font-bold text-info">{@completed_count}</div>
+      </div>
+      <div class="bg-base-200 rounded p-3">
+        <div class="text-xs uppercase text-base-content/60">Cancelled</div>
+        <div class="text-xl font-bold text-error">{@cancelled_count}</div>
+      </div>
     </div>
-    <div class="bg-base-200 rounded p-3">
-      <div class="text-xs uppercase text-base-content/60">Active</div>
-      <div class="text-xl font-bold text-success">{@active_count}</div>
-    </div>
-    <div class="bg-base-200 rounded p-3">
-      <div class="text-xs uppercase text-base-content/60">Completed</div>
-      <div class="text-xl font-bold text-info">{@completed_count}</div>
-    </div>
-    <div class="bg-base-200 rounded p-3">
-      <div class="text-xs uppercase text-base-content/60">Cancelled</div>
-      <div class="text-xl font-bold text-error">{@cancelled_count}</div>
-    </div>
-  </div>
 
-  <%= if @enrollments_empty? do %>
-    <p class="text-center py-12 text-base-content/60">No enrollments yet</p>
-  <% else %>
-    <.table id="enrollments-table" rows={@streams.enrollments}>
-      <:col :let={{_id, enrollment}} label="Student">
-        <span class="truncate">{enrollment.user.email}</span>
-      </:col>
-      <:col :let={{_id, enrollment}} label="Course">
-        <span class="truncate font-medium">{enrollment.course.title}</span>
-      </:col>
-      <:col :let={{_id, enrollment}} label="Status">
-        <span class={["badge badge-sm", status_badge_class(enrollment.status)]}>
-          {String.capitalize(enrollment.status)}
-        </span>
-      </:col>
-      <:col :let={{_id, enrollment}} label="Enrolled">
-        <span class="text-sm text-base-content/70">{format_date(enrollment.inserted_at)}</span>
-      </:col>
-    </.table>
-  <% end %>
+    <%= if @enrollments_empty? do %>
+      <p class="text-center py-12 text-base-content/60">No enrollments yet</p>
+    <% else %>
+      <.table id="enrollments-table" rows={@streams.enrollments}>
+        <:col :let={{_id, enrollment}} label="Student">
+          <span class="truncate">{enrollment.user.email}</span>
+        </:col>
+        <:col :let={{_id, enrollment}} label="Course">
+          <span class="truncate font-medium">{enrollment.course.title}</span>
+        </:col>
+        <:col :let={{_id, enrollment}} label="Status">
+          <span class={["badge badge-sm", status_badge_class(enrollment.status)]}>
+            {String.capitalize(enrollment.status)}
+          </span>
+        </:col>
+        <:col :let={{_id, enrollment}} label="Enrolled">
+          <span class="text-sm text-base-content/70">{format_date(enrollment.inserted_at)}</span>
+        </:col>
+      </.table>
+    <% end %>
+  </main>
 </Layouts.app>

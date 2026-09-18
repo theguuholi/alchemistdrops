@@ -1,5 +1,5 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <div class="space-y-4 sm:space-y-6 max-w-6xl mx-auto">
+  <main id="course-page" class="space-y-4 sm:space-y-6 max-w-6xl mx-auto">
     <%!-- Back Button --%>
     <.link
       navigate={~p"/courses"}
@@ -61,7 +61,7 @@
           <div class="mt-auto">
             <%= cond do %>
               <%!-- Logged in and enrolled --%>
-              <% @enrolled && Map.has_key?(@current_scope || %{}, :user) -> %>
+              <% @enrolled? && Map.has_key?(@current_scope || %{}, :user) -> %>
                 <div class="space-y-3">
                   <div class="alert alert-success">
                     <.icon name="hero-check-circle" class="w-6 h-6" />
@@ -78,7 +78,7 @@
                 </div>
 
                 <%!-- Logged in, not enrolled, free course --%>
-              <% !@enrolled && Map.has_key?(@current_scope || %{}, :user) && price_free?(@course.price) -> %>
+              <% !@enrolled? && Map.has_key?(@current_scope || %{}, :user) && price_free?(@course.price) -> %>
                 <button
                   id="enroll-button"
                   phx-click="enroll_free"
@@ -88,7 +88,7 @@
                 </button>
 
                 <%!-- Logged in, not enrolled, paid course --%>
-              <% !@enrolled && Map.has_key?(@current_scope || %{}, :user) && !price_free?(@course.price) -> %>
+              <% !@enrolled? && Map.has_key?(@current_scope || %{}, :user) && !price_free?(@course.price) -> %>
                 <div class="space-y-2">
                   <button
                     id="purchase-button"
@@ -152,29 +152,31 @@
               </p>
             <% else %>
               <ol class="space-y-2 mt-3 sm:mt-4">
-                <%= for lesson <- @lessons do %>
-                  <li class="flex items-start p-2 sm:p-3 rounded-lg hover:bg-base-200 transition-colors">
-                    <span class="badge badge-primary badge-xs sm:badge-sm mr-2 sm:mr-3 mt-0.5">
-                      {lesson.order}
-                    </span>
-                    <div class="flex-1 min-w-0">
-                      <p class="text-xs sm:text-sm font-medium text-base-content truncate">
-                        {lesson.title}
+                <li
+                  :for={lesson <- @lessons}
+                  id={"course-lesson-#{lesson.id}"}
+                  class="flex items-start p-2 sm:p-3 rounded-lg hover:bg-base-200 transition-colors"
+                >
+                  <span class="badge badge-primary badge-xs sm:badge-sm mr-2 sm:mr-3 mt-0.5">
+                    {lesson.order}
+                  </span>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-base-content truncate">
+                      {lesson.title}
+                    </p>
+                    <%= if lesson.duration do %>
+                      <p class="text-xs text-base-content/60 flex items-center gap-1 mt-1">
+                        <.icon name="hero-clock" class="w-3 h-3" />
+                        {format_duration(lesson.duration)}
                       </p>
-                      <%= if lesson.duration do %>
-                        <p class="text-xs text-base-content/60 flex items-center gap-1 mt-1">
-                          <.icon name="hero-clock" class="w-3 h-3" />
-                          {format_duration(lesson.duration)}
-                        </p>
-                      <% end %>
-                    </div>
-                  </li>
-                <% end %>
+                    <% end %>
+                  </div>
+                </li>
               </ol>
             <% end %>
           </div>
         </section>
       </div>
     </div>
-  </div>
+  </main>
 </Layouts.app>

@@ -4,12 +4,12 @@ defmodule AlchemistdropsWeb.UserLive.RegistrationTest do
   import Phoenix.LiveViewTest
   import Alchemistdrops.AccountsFixtures
 
-  describe "Registration page" do
+  describe "mount/3" do
     test "renders registration page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/users/register")
+      {:ok, view, _html} = live(conn, ~p"/users/register")
 
-      assert html =~ "Register"
-      assert html =~ "Log in"
+      assert has_element?(view, "#registration-page h1", "Register")
+      assert has_element?(view, "#registration-page a", "Log in")
     end
 
     test "redirects if already logged in", %{conn: conn} do
@@ -25,29 +25,27 @@ defmodule AlchemistdropsWeb.UserLive.RegistrationTest do
     test "renders errors for invalid data", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/users/register")
 
-      result =
-        lv
-        |> element("#registration_form")
-        |> render_change(user: %{"email" => "with spaces"})
+      lv
+      |> element("#registration_form")
+      |> render_change(user: %{"email" => "with spaces"})
 
-      assert result =~ "Register"
-      assert result =~ "must have the @ sign and no spaces"
+      assert has_element?(lv, "#registration-page h1", "Register")
+      assert has_element?(lv, "#user_email-error-0", "must have the @ sign")
     end
   end
 
-  describe "register user" do
+  describe "handle_event/3 - save" do
     test "creates account but does not log in", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/users/register")
 
       email = unique_user_email()
       form = form(lv, "#registration_form", user: valid_user_attributes(email: email))
 
-      {:ok, _lv, html} =
+      {:ok, login_view, _html} =
         render_submit(form)
         |> follow_redirect(conn, ~p"/users/log-in")
 
-      assert html =~
-               ~r/An email was sent to .*, please access it to confirm your account/
+      assert has_element?(login_view, "#flash-info", "An email was sent to #{email}")
     end
 
     test "renders errors for duplicated email", %{conn: conn} do
@@ -55,14 +53,11 @@ defmodule AlchemistdropsWeb.UserLive.RegistrationTest do
 
       user = user_fixture(%{email: "test@email.com"})
 
-      result =
-        lv
-        |> form("#registration_form",
-          user: %{"email" => user.email}
-        )
-        |> render_submit()
+      lv
+      |> form("#registration_form", user: %{"email" => user.email})
+      |> render_submit()
 
-      assert result =~ "has already been taken"
+      assert has_element?(lv, "#user_email-error-0", "has already been taken")
     end
   end
 
@@ -70,13 +65,13 @@ defmodule AlchemistdropsWeb.UserLive.RegistrationTest do
     test "redirects to login page when the Log in button is clicked", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/users/register")
 
-      {:ok, _login_live, login_html} =
+      {:ok, login_live, _html} =
         lv
         |> element("main a", "Log in")
         |> render_click()
         |> follow_redirect(conn, ~p"/users/log-in")
 
-      assert login_html =~ "Log in"
+      assert has_element?(login_live, "#login-page h1", "Log in")
     end
   end
 end

@@ -29,12 +29,6 @@ defmodule AlchemistdropsWeb.Router do
     get "/blog/feed.xml", BlogDiscoveryController, :feed
   end
 
-  scope "/", AlchemistdropsWeb do
-    pipe_through :browser
-
-    live "/", HomeLive.Index, :index
-  end
-
   # Stripe webhook endpoint
   scope "/webhooks", AlchemistdropsWeb do
     pipe_through :stripe_webhook
@@ -80,6 +74,7 @@ defmodule AlchemistdropsWeb.Router do
 
     live_session :current_user,
       on_mount: [{AlchemistdropsWeb.UserAuth, :mount_current_scope}] do
+      live "/", HomeLive.Index, :index
       live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new

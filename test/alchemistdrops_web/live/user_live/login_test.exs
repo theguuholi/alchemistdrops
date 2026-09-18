@@ -6,11 +6,11 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
 
   describe "login page" do
     test "renders login page", %{conn: conn} do
-      {:ok, _lv, html} = live(conn, ~p"/users/log-in")
+      {:ok, view, _html} = live(conn, ~p"/users/log-in")
 
-      assert html =~ "Log in"
-      assert html =~ "Register"
-      assert html =~ "Log in with email"
+      assert has_element?(view, "#login-page h1", "Log in")
+      assert has_element?(view, "#login-page a", "Sign up")
+      assert has_element?(view, "#login_form_magic button", "Log in with email")
     end
   end
 
@@ -20,12 +20,12 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
 
       {:ok, lv, _html} = live(conn, ~p"/users/log-in")
 
-      {:ok, _lv, html} =
+      {:ok, login_view, _html} =
         form(lv, "#login_form_magic", user: %{email: user.email})
         |> render_submit()
         |> follow_redirect(conn, ~p"/users/log-in")
 
-      assert html =~ "If your email is in our system"
+      assert has_element?(login_view, "#flash-info", "If your email is in our system")
 
       assert Alchemistdrops.Repo.get_by!(Alchemistdrops.Accounts.UserToken, user_id: user.id).context ==
                "login"
@@ -34,12 +34,12 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
     test "does not disclose if user is registered", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/users/log-in")
 
-      {:ok, _lv, html} =
+      {:ok, login_view, _html} =
         form(lv, "#login_form_magic", user: %{email: "idonotexist@example.com"})
         |> render_submit()
         |> follow_redirect(conn, ~p"/users/log-in")
 
-      assert html =~ "If your email is in our system"
+      assert has_element?(login_view, "#flash-info", "If your email is in our system")
     end
   end
 
@@ -79,13 +79,13 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
     test "redirects to registration page when the Register button is clicked", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/users/log-in")
 
-      {:ok, _login_live, login_html} =
+      {:ok, registration_live, _html} =
         lv
         |> element("main a", "Sign up")
         |> render_click()
         |> follow_redirect(conn, ~p"/users/register")
 
-      assert login_html =~ "Register"
+      assert has_element?(registration_live, "#registration-page h1", "Register")
     end
   end
 
@@ -96,14 +96,12 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
     end
 
     test "shows login page with email filled in", %{conn: conn, user: user} do
-      {:ok, _lv, html} = live(conn, ~p"/users/log-in")
+      {:ok, view, _html} = live(conn, ~p"/users/log-in")
 
-      assert html =~ "You need to reauthenticate"
-      refute html =~ "Register"
-      assert html =~ "Log in with email"
-
-      assert html =~
-               ~s(<input type="email" name="user[email]" id="login_form_magic_email" value="#{user.email}")
+      assert has_element?(view, "#login-page", "You need to reauthenticate")
+      refute has_element?(view, "#login-page a", "Sign up")
+      assert has_element?(view, "#login_form_magic button", "Log in with email")
+      assert has_element?(view, "#login_form_magic_email[value='#{user.email}']")
     end
   end
 
@@ -111,13 +109,13 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
     test "shows same message but no token created", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/users/log-in")
 
-      {:ok, _lv, html} =
+      {:ok, login_view, _html} =
         form(lv, "#login_form_magic", user: %{email: "nonexistent@example.com"})
         |> render_submit()
         |> follow_redirect(conn, ~p"/users/log-in")
 
       # Same message to prevent email enumeration
-      assert html =~ "If your email is in our system"
+      assert has_element?(login_view, "#flash-info", "If your email is in our system")
 
       # No token should be created for non-existent user
       assert Alchemistdrops.Repo.all(Alchemistdrops.Accounts.UserToken) == []
@@ -131,9 +129,9 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
       Application.put_env(:alchemistdrops, Alchemistdrops.Mailer, adapter: Swoosh.Adapters.Local)
 
       try do
-        {:ok, _lv, html} = live(conn, ~p"/users/log-in")
-        assert html =~ "local mail adapter"
-        assert html =~ "/dev/mailbox"
+        {:ok, view, _html} = live(conn, ~p"/users/log-in")
+        assert has_element?(view, "#local-mail-notice", "local mail adapter")
+        assert has_element?(view, "#local-mail-notice a[href='/dev/mailbox']")
       after
         Application.put_env(:alchemistdrops, Alchemistdrops.Mailer, original_config)
       end

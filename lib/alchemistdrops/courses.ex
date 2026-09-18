@@ -1,11 +1,10 @@
 defmodule Alchemistdrops.Courses do
   @moduledoc """
-  The Courses context.
+  Owns the course catalog and its ordered lesson curriculum.
 
-  Handles all operations related to courses and lessons including:
-  - Course CRUD operations
-  - Lesson CRUD operations
-  - Lesson ordering
+  This boundary matters because publication visibility, Stripe association,
+  lesson ownership, and curriculum ordering must remain consistent regardless
+  of which controller, LiveView, or background process performs the operation.
   """
 
   import Ecto.Query, warn: false
@@ -20,10 +19,12 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> list_courses()
-      [%Course{}, ...]
+      iex> course = Alchemistdrops.CoursesFixtures.published_course_fixture()
+      iex> Enum.map(Alchemistdrops.Courses.list_courses(), & &1.id)
+      [course.id]
 
   """
+  @spec list_courses() :: [Course.t()]
   def list_courses do
     Course
     |> where([c], c.published == true)
@@ -37,10 +38,12 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> list_published_courses()
-      [%Course{}, ...]
+      iex> course = Alchemistdrops.CoursesFixtures.published_course_fixture()
+      iex> Enum.map(Alchemistdrops.Courses.list_published_courses(), & &1.id)
+      [course.id]
 
   """
+  @spec list_published_courses() :: [Course.t()]
   def list_published_courses do
     list_courses()
   end
@@ -51,10 +54,12 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> list_all_courses()
-      [%Course{}, ...]
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> Enum.map(Alchemistdrops.Courses.list_all_courses(), & &1.id)
+      [course.id]
 
   """
+  @spec list_all_courses() :: [Course.t()]
   def list_all_courses do
     Course
     |> order_by([c], asc: c.title)
@@ -66,10 +71,12 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> count_courses()
-      10
+      iex> _course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> Alchemistdrops.Courses.count_courses()
+      1
 
   """
+  @spec count_courses() :: non_neg_integer()
   def count_courses do
     Repo.aggregate(Course, :count)
   end
@@ -81,13 +88,12 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> get_course!(123)
-      %Course{}
-
-      iex> get_course!(456)
-      ** (Ecto.NoResultsError)
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> Alchemistdrops.Courses.get_course!(course.id).id == course.id
+      true
 
   """
+  @spec get_course!(Ecto.UUID.t()) :: Course.t()
   def get_course!(id) do
     Course
     |> Repo.get!(id)
@@ -101,10 +107,14 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> get_course_with_lessons!(123)
-      %Course{lessons: [%Lesson{}, ...]}
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> lesson = Alchemistdrops.CoursesFixtures.lesson_fixture(%{course: course})
+      iex> loaded = Alchemistdrops.Courses.get_course_with_lessons!(course.id)
+      iex> Enum.map(loaded.lessons, & &1.id)
+      [lesson.id]
 
   """
+  @spec get_course_with_lessons!(Ecto.UUID.t()) :: Course.t()
   def get_course_with_lessons!(id) do
     Course
     |> Repo.get!(id)
@@ -116,13 +126,17 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> create_course(%{field: value})
-      {:ok, %Course{}}
+      iex> {:ok, course} = Alchemistdrops.Courses.create_course(%{title: "Elixir", description: "OTP"})
+      iex> course.title
+      "Elixir"
 
-      iex> create_course(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+      iex> {:error, changeset} = Alchemistdrops.Courses.create_course(%{})
+      iex> changeset.valid?
+      false
 
   """
+  @spec create_course() :: {:ok, Course.t()} | {:error, Ecto.Changeset.t()}
+  @spec create_course(map() | keyword()) :: {:ok, Course.t()} | {:error, Ecto.Changeset.t()}
   def create_course(attrs \\ %{}) do
     attrs = normalize_attrs(attrs)
     changeset = %Course{} |> Course.changeset(attrs)
@@ -149,13 +163,14 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> update_course(course, %{field: new_value})
-      {:ok, %Course{}}
-
-      iex> update_course(course, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> {:ok, updated} = Alchemistdrops.Courses.update_course(course, %{title: "Updated"})
+      iex> updated.title
+      "Updated"
 
   """
+  @spec update_course(Course.t(), map() | keyword()) ::
+          {:ok, Course.t()} | {:error, Ecto.Changeset.t()}
   def update_course(%Course{} = course, attrs) do
     attrs = normalize_attrs(attrs)
     changeset = course |> Course.changeset(attrs)
@@ -182,13 +197,13 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> delete_course(course)
-      {:ok, %Course{}}
-
-      iex> delete_course(course)
-      {:error, %Ecto.Changeset{}}
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> {:ok, deleted} = Alchemistdrops.Courses.delete_course(course)
+      iex> deleted.id == course.id
+      true
 
   """
+  @spec delete_course(Course.t()) :: {:ok, Course.t()} | {:error, Ecto.Changeset.t()}
   def delete_course(%Course{} = course) do
     Repo.delete(course)
   end
@@ -198,10 +213,13 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> change_course(course)
-      %Ecto.Changeset{data: %Course{}}
+      iex> changeset = Alchemistdrops.Courses.change_course(%Alchemistdrops.Courses.Course{})
+      iex> match?(%Ecto.Changeset{}, changeset)
+      true
 
   """
+  @spec change_course(Course.t()) :: Ecto.Changeset.t()
+  @spec change_course(Course.t(), map()) :: Ecto.Changeset.t()
   def change_course(%Course{} = course, attrs \\ %{}) do
     Course.changeset(course, attrs)
   end
@@ -224,19 +242,15 @@ defmodule Alchemistdrops.Courses do
 
   defp price_from_changeset(changeset) do
     Ecto.Changeset.get_change(changeset, :price) ||
-      (changeset.data && Map.get(changeset.data, :price))
+      Map.get(changeset.data, :price)
   end
 
   defp attr_or_course(attrs, key, course) when is_atom(key) do
-    get_attr(attrs, key) || get_attr(attrs, to_string(key)) ||
-      (course && Map.get(course, key))
+    get_attr(attrs, key) || (course && Map.get(course, key))
   end
 
   defp get_attr(attrs, key) when is_atom(key),
     do: Map.get(attrs, key) || Map.get(attrs, to_string(key))
-
-  defp get_attr(attrs, key) when is_binary(key),
-    do: Map.get(attrs, key) || Map.get(attrs, String.to_atom(key))
 
   defp price_to_cents(%Money{amount: amount}), do: amount
   defp price_to_cents(nil), do: nil
@@ -276,13 +290,14 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> list_course_lessons(course_id)
-      [%Lesson{}, ...]
-
-      iex> list_course_lessons(course_id, only_published: true)
-      [%Lesson{}, ...]
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> lesson = Alchemistdrops.CoursesFixtures.lesson_fixture(%{course: course})
+      iex> Enum.map(Alchemistdrops.Courses.list_course_lessons(course.id), & &1.id)
+      [lesson.id]
 
   """
+  @spec list_course_lessons(Ecto.UUID.t()) :: [Lesson.t()]
+  @spec list_course_lessons(Ecto.UUID.t(), keyword()) :: [Lesson.t()]
   def list_course_lessons(course_id, opts \\ []) do
     query =
       Lesson
@@ -306,13 +321,14 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> create_lesson(course, %{field: value})
-      {:ok, %Lesson{}}
-
-      iex> create_lesson(course, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> {:ok, lesson} = Alchemistdrops.Courses.create_lesson(course, %{title: "First lesson"})
+      iex> {lesson.course_id == course.id, lesson.order}
+      {true, 0}
 
   """
+  @spec create_lesson(Course.t()) :: {:ok, Lesson.t()} | {:error, Ecto.Changeset.t()}
+  @spec create_lesson(Course.t(), map()) :: {:ok, Lesson.t()} | {:error, Ecto.Changeset.t()}
   def create_lesson(%Course{} = course, attrs \\ %{}) do
     attrs =
       attrs
@@ -357,13 +373,13 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> update_lesson(lesson, %{field: new_value})
-      {:ok, %Lesson{}}
-
-      iex> update_lesson(lesson, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+      iex> lesson = Alchemistdrops.CoursesFixtures.lesson_fixture()
+      iex> {:ok, updated} = Alchemistdrops.Courses.update_lesson(lesson, %{title: "Updated lesson"})
+      iex> updated.title
+      "Updated lesson"
 
   """
+  @spec update_lesson(Lesson.t(), map()) :: {:ok, Lesson.t()} | {:error, Ecto.Changeset.t()}
   def update_lesson(%Lesson{} = lesson, attrs) do
     lesson
     |> Lesson.changeset(attrs)
@@ -375,13 +391,13 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> delete_lesson(lesson)
-      {:ok, %Lesson{}}
-
-      iex> delete_lesson(lesson)
-      {:error, %Ecto.Changeset{}}
+      iex> lesson = Alchemistdrops.CoursesFixtures.lesson_fixture()
+      iex> {:ok, deleted} = Alchemistdrops.Courses.delete_lesson(lesson)
+      iex> deleted.id == lesson.id
+      true
 
   """
+  @spec delete_lesson(Lesson.t()) :: {:ok, Lesson.t()} | {:error, Ecto.Changeset.t()}
   def delete_lesson(%Lesson{} = lesson) do
     Repo.delete(lesson)
   end
@@ -391,10 +407,13 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> change_lesson(lesson)
-      %Ecto.Changeset{data: %Lesson{}}
+      iex> changeset = Alchemistdrops.Courses.change_lesson(%Alchemistdrops.Courses.Lesson{})
+      iex> match?(%Ecto.Changeset{}, changeset)
+      true
 
   """
+  @spec change_lesson(Lesson.t()) :: Ecto.Changeset.t()
+  @spec change_lesson(Lesson.t(), map()) :: Ecto.Changeset.t()
   def change_lesson(%Lesson{} = lesson, attrs \\ %{}) do
     Lesson.changeset(lesson, attrs)
   end
@@ -407,13 +426,16 @@ defmodule Alchemistdrops.Courses do
 
   ## Examples
 
-      iex> reorder_lessons(course, [id3, id1, id2])
-      {:ok, [%Lesson{}, ...]}
-
-      iex> reorder_lessons(course, [invalid_id])
-      {:error, :invalid_lessons}
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> first = Alchemistdrops.CoursesFixtures.lesson_fixture(%{course: course, order: 0})
+      iex> second = Alchemistdrops.CoursesFixtures.lesson_fixture(%{course: course, order: 1})
+      iex> {:ok, reordered} = Alchemistdrops.Courses.reorder_lessons(course, [second.id, first.id])
+      iex> Enum.map(reordered, &{&1.id, &1.order})
+      [{second.id, 0}, {first.id, 1}]
 
   """
+  @spec reorder_lessons(Course.t(), [Ecto.UUID.t()]) ::
+          {:ok, [Lesson.t()]} | {:error, :invalid_lessons}
   def reorder_lessons(%Course{} = course, lesson_ids) when is_list(lesson_ids) do
     # Fetch all lessons for this course
     course_lessons =

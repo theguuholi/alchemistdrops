@@ -1,383 +1,385 @@
-<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-16">
-  <%!-- Hero Section --%>
-  <header class="text-center space-y-6 py-12">
-    <div class="flex justify-center mb-8">
-      <img
-        src={~p"/images/logo.svg"}
-        alt="Alchemistdrops Logo"
-        class="w-24 h-24 sm:w-32 sm:h-32"
-      />
-    </div>
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <main id="home-page" class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 space-y-16">
+    <%!-- Hero Section --%>
+    <header class="text-center space-y-6 py-12">
+      <div class="flex justify-center mb-8">
+        <img
+          src={~p"/images/logo.svg"}
+          alt="Alchemistdrops Logo"
+          class="w-24 h-24 sm:w-32 sm:h-32"
+        />
+      </div>
 
-    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-balance leading-tight">
-      Master Elixir at Your Own Pace with Real-World Projects
-    </h1>
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-balance leading-tight">
+        Master Elixir at Your Own Pace with Real-World Projects
+      </h1>
 
-    <p class="text-lg sm:text-xl font-light text-base-content/80 max-w-3xl mx-auto">
-      Learn Elixir, Phoenix, and LiveView with hands-on examples and projects tailored for developers like you.
-    </p>
-
-    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-      <a
-        href="#pricing"
-        class="btn btn-primary btn-lg w-full sm:w-auto text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
-        aria-label="View pricing plans"
-      >
-        Start Learning Today
-      </a>
-      <a
-        href="#course"
-        class="btn btn-outline btn-lg w-full sm:w-auto text-lg font-semibold"
-        aria-label="Explore course details"
-      >
-        Explore Course Details
-      </a>
-    </div>
-  </header>
-
-  <%!-- Why Choose Elixir Section --%>
-  <section class="bg-base-200 rounded-2xl p-8 sm:p-12 space-y-8" aria-labelledby="why-elixir">
-    <div class="text-center space-y-4">
-      <h2 id="why-elixir" class="text-3xl sm:text-4xl font-bold">
-        Why Choose Elixir?
-      </h2>
-      <p class="text-lg font-light text-base-content/80 max-w-2xl mx-auto">
-        Discover the power of Elixir for scalable, reliable, and maintainable applications.
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <article class="bg-base-100 rounded-xl p-6 space-y-3 shadow-md hover:shadow-xl transition-shadow">
-        <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
-          <.icon name="hero-rocket-launch" class="w-7 h-7 text-primary" />
-        </div>
-        <h3 class="text-xl font-semibold">Scalable & Fast</h3>
-        <p class="text-base-content/70">
-          Built on the BEAM VM, Elixir handles millions of connections with low latency.
-        </p>
-      </article>
-
-      <article class="bg-base-100 rounded-xl p-6 space-y-3 shadow-md hover:shadow-xl transition-shadow">
-        <div class="w-12 h-12 bg-secondary/20 rounded-lg flex items-center justify-center">
-          <.icon name="hero-code-bracket" class="w-7 h-7 text-secondary" />
-        </div>
-        <h3 class="text-xl font-semibold">Functional & Elegant</h3>
-        <p class="text-base-content/70">
-          Write clean, maintainable code with powerful functional programming patterns.
-        </p>
-      </article>
-
-      <article class="bg-base-100 rounded-xl p-6 space-y-3 shadow-md hover:shadow-xl transition-shadow">
-        <div class="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center">
-          <.icon name="hero-shield-check" class="w-7 h-7 text-accent" />
-        </div>
-        <h3 class="text-xl font-semibold">Reliable & Fault-Tolerant</h3>
-        <p class="text-base-content/70">
-          Build systems that recover gracefully from errors and run 24/7.
-        </p>
-      </article>
-    </div>
-  </section>
-
-  <%!-- Course Features Section --%>
-  <section id="course" class="space-y-8" aria-labelledby="course-features">
-    <div class="text-center space-y-4">
-      <h2 id="course-features" class="text-3xl sm:text-4xl font-bold">
-        Why Choose This Course?
-      </h2>
       <p class="text-lg sm:text-xl font-light text-base-content/80 max-w-3xl mx-auto">
-        Unlock flexibility, real-world skills, and the confidence to build anything with Elixir.
+        Learn Elixir, Phoenix, and LiveView with hands-on examples and projects tailored for developers like you.
       </p>
-    </div>
 
-    <.feature_course
-      image={~p"/images/todoapp.png"}
-      image_alt="Flexible learning with project-based examples"
-      title="Flexible Learning at Your Own Pace"
-      description="Whether you're new to Elixir or looking to sharpen your skills, this course lets you choose your learning path—no need to follow a fixed sequence. Pick the episodes that match your interests and level."
-    />
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
+        <a
+          href="#pricing"
+          class="btn btn-primary btn-lg w-full sm:w-auto text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+          aria-label="View pricing plans"
+        >
+          Start Learning Today
+        </a>
+        <a
+          href="#course"
+          class="btn btn-outline btn-lg w-full sm:w-auto text-lg font-semibold"
+          aria-label="Explore course details"
+        >
+          Explore Course Details
+        </a>
+      </div>
+    </header>
 
-    <.feature_course
-      image={~p"/images/foodtruck.gif"}
-      image_alt="Real-world Elixir project examples"
-      title="Real-World Examples and Practical Skills"
-      description="From creating LiveView apps to understanding advanced Phoenix concepts, you'll gain the confidence to build anything with Elixir. Learn through practical examples and projects that reflect real-world scenarios."
-      reversed={true}
-    />
+    <%!-- Why Choose Elixir Section --%>
+    <section class="bg-base-200 rounded-2xl p-8 sm:p-12 space-y-8" aria-labelledby="why-elixir">
+      <div class="text-center space-y-4">
+        <h2 id="why-elixir" class="text-3xl sm:text-4xl font-bold">
+          Why Choose Elixir?
+        </h2>
+        <p class="text-lg font-light text-base-content/80 max-w-2xl mx-auto">
+          Discover the power of Elixir for scalable, reliable, and maintainable applications.
+        </p>
+      </div>
 
-    <.feature_course
-      image={~p"/images/feedapp.gif"}
-      image_alt="Test-driven LiveView development"
-      title="Learn LiveView with Test-Driven Development"
-      description="Master LiveView while building craft code with comprehensive testing. Create a fantastic portfolio that showcases your skills to potential employers and build production-ready applications."
-    />
-  </section>
-
-  <%!-- What You'll Learn Section --%>
-  <section id="what-youll-learn" class="space-y-8" aria-labelledby="what-learn">
-    <div class="text-center space-y-4">
-      <h2 id="what-learn" class="text-3xl sm:text-4xl font-bold">
-        What You'll Learn
-      </h2>
-      <p class="text-lg sm:text-xl font-light text-base-content/80">
-        Master essential Elixir and Phoenix skills through hands-on learning.
-      </p>
-    </div>
-
-    <ul class="grid sm:grid-cols-2 gap-6">
-      <li
-        :for={item <- @learn_items}
-        class="flex gap-4 bg-base-200 rounded-xl p-6 hover:bg-base-300 transition-colors"
-      >
-        <div class="flex-shrink-0">
-          <.icon name="hero-check-circle" class="w-8 h-8 text-primary" />
-        </div>
-        <div class="space-y-2">
-          <h3 class="text-lg font-semibold">
-            {item.title}
-          </h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <article class="bg-base-100 rounded-xl p-6 space-y-3 shadow-md hover:shadow-xl transition-shadow">
+          <div class="w-12 h-12 bg-primary/20 rounded-lg flex items-center justify-center">
+            <.icon name="hero-rocket-launch" class="w-7 h-7 text-primary" />
+          </div>
+          <h3 class="text-xl font-semibold">Scalable & Fast</h3>
           <p class="text-base-content/70">
-            {item.description}
+            Built on the BEAM VM, Elixir handles millions of connections with low latency.
+          </p>
+        </article>
+
+        <article class="bg-base-100 rounded-xl p-6 space-y-3 shadow-md hover:shadow-xl transition-shadow">
+          <div class="w-12 h-12 bg-secondary/20 rounded-lg flex items-center justify-center">
+            <.icon name="hero-code-bracket" class="w-7 h-7 text-secondary" />
+          </div>
+          <h3 class="text-xl font-semibold">Functional & Elegant</h3>
+          <p class="text-base-content/70">
+            Write clean, maintainable code with powerful functional programming patterns.
+          </p>
+        </article>
+
+        <article class="bg-base-100 rounded-xl p-6 space-y-3 shadow-md hover:shadow-xl transition-shadow">
+          <div class="w-12 h-12 bg-accent/20 rounded-lg flex items-center justify-center">
+            <.icon name="hero-shield-check" class="w-7 h-7 text-accent" />
+          </div>
+          <h3 class="text-xl font-semibold">Reliable & Fault-Tolerant</h3>
+          <p class="text-base-content/70">
+            Build systems that recover gracefully from errors and run 24/7.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <%!-- Course Features Section --%>
+    <section id="course" class="space-y-8" aria-labelledby="course-features">
+      <div class="text-center space-y-4">
+        <h2 id="course-features" class="text-3xl sm:text-4xl font-bold">
+          Why Choose This Course?
+        </h2>
+        <p class="text-lg sm:text-xl font-light text-base-content/80 max-w-3xl mx-auto">
+          Unlock flexibility, real-world skills, and the confidence to build anything with Elixir.
+        </p>
+      </div>
+
+      <.feature_course
+        image={~p"/images/todoapp.png"}
+        image_alt="Flexible learning with project-based examples"
+        title="Flexible Learning at Your Own Pace"
+        description="Whether you're new to Elixir or looking to sharpen your skills, this course lets you choose your learning path—no need to follow a fixed sequence. Pick the episodes that match your interests and level."
+      />
+
+      <.feature_course
+        image={~p"/images/foodtruck.gif"}
+        image_alt="Real-world Elixir project examples"
+        title="Real-World Examples and Practical Skills"
+        description="From creating LiveView apps to understanding advanced Phoenix concepts, you'll gain the confidence to build anything with Elixir. Learn through practical examples and projects that reflect real-world scenarios."
+        reversed={true}
+      />
+
+      <.feature_course
+        image={~p"/images/feedapp.gif"}
+        image_alt="Test-driven LiveView development"
+        title="Learn LiveView with Test-Driven Development"
+        description="Master LiveView while building craft code with comprehensive testing. Create a fantastic portfolio that showcases your skills to potential employers and build production-ready applications."
+      />
+    </section>
+
+    <%!-- What You'll Learn Section --%>
+    <section id="what-youll-learn" class="space-y-8" aria-labelledby="what-learn">
+      <div class="text-center space-y-4">
+        <h2 id="what-learn" class="text-3xl sm:text-4xl font-bold">
+          What You'll Learn
+        </h2>
+        <p class="text-lg sm:text-xl font-light text-base-content/80">
+          Master essential Elixir and Phoenix skills through hands-on learning.
+        </p>
+      </div>
+
+      <ul class="grid sm:grid-cols-2 gap-6">
+        <li
+          :for={item <- @learn_items}
+          class="flex gap-4 bg-base-200 rounded-xl p-6 hover:bg-base-300 transition-colors"
+        >
+          <div class="flex-shrink-0">
+            <.icon name="hero-check-circle" class="w-8 h-8 text-primary" />
+          </div>
+          <div class="space-y-2">
+            <h3 class="text-lg font-semibold">
+              {item.title}
+            </h3>
+            <p class="text-base-content/70">
+              {item.description}
+            </p>
+          </div>
+        </li>
+      </ul>
+    </section>
+
+    <%!-- Instructor Section --%>
+    <section
+      id="instructor"
+      class="bg-base-200 rounded-2xl p-8 sm:p-12 space-y-8"
+      aria-labelledby="instructor-title"
+    >
+      <div class="text-center space-y-4">
+        <h2 id="instructor-title" class="text-3xl sm:text-4xl font-bold">
+          About the Instructor
+        </h2>
+        <p class="text-lg font-light text-base-content/80">
+          Get to know the expert guiding your Elixir journey
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-8 items-start">
+        <div class="md:col-span-1 flex justify-center">
+          <div class="relative group">
+            <div class="absolute -inset-1 bg-gradient-to-br from-sky-400 via-cyan-400 to-blue-500 rounded-full blur-sm group-hover:blur-md transition-all duration-300 opacity-75">
+            </div>
+            <div class="relative">
+              <img
+                src={~p"/images/gustavo.webp"}
+                alt="Gustavo Oliveira - Elixir Instructor"
+                class="w-48 h-48 rounded-full object-cover ring-4 ring-cyan-400 shadow-2xl"
+                width="192"
+                height="192"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="md:col-span-2 space-y-4 text-base-content/90 leading-relaxed">
+          <h3 class="text-2xl font-semibold">
+            Introducing Gustavo Oliveira, Your Elixir Alchemy Mentor
+          </h3>
+          <p>
+            Gustavo Oliveira is a passionate Brazilian software engineer and educator with over a decade of professional experience. Known for his expertise in Elixir, Phoenix, and LiveView, Gustavo has worked with clients worldwide, delivering high-quality, scalable solutions and empowering developers to elevate their craft.
+          </p>
+          <p>
+            Enthralled by the simplicity and power of Elixir, Gustavo turned his passion into a mission: to teach and inspire developers. He runs thriving YouTube channels where he shares in-depth tutorials, real-world project guides, and practical tips for developers of all levels.
+          </p>
+          <p>
+            Join Gustavo and a vibrant community of Elixir enthusiasts to transform your skills, build remarkable projects, and become a true alchemist in the world of web development.
           </p>
         </div>
-      </li>
-    </ul>
-  </section>
+      </div>
+    </section>
 
-  <%!-- Instructor Section --%>
-  <section
-    id="instructor"
-    class="bg-base-200 rounded-2xl p-8 sm:p-12 space-y-8"
-    aria-labelledby="instructor-title"
-  >
-    <div class="text-center space-y-4">
-      <h2 id="instructor-title" class="text-3xl sm:text-4xl font-bold">
-        About the Instructor
-      </h2>
-      <p class="text-lg font-light text-base-content/80">
-        Get to know the expert guiding your Elixir journey
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-3 gap-8 items-start">
-      <div class="md:col-span-1 flex justify-center">
-        <div class="relative group">
-          <div class="absolute -inset-1 bg-gradient-to-br from-sky-400 via-cyan-400 to-blue-500 rounded-full blur-sm group-hover:blur-md transition-all duration-300 opacity-75">
-          </div>
-          <div class="relative">
-            <img
-              src={~p"/images/gustavo.webp"}
-              alt="Gustavo Oliveira - Elixir Instructor"
-              class="w-48 h-48 rounded-full object-cover ring-4 ring-cyan-400 shadow-2xl"
-              width="192"
-              height="192"
-              loading="lazy"
-            />
-          </div>
+    <section id="recent-articles" class="space-y-8" aria-labelledby="recent-articles-title">
+      <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+            From the journal
+          </p>
+          <h2 id="recent-articles-title" class="mt-2 text-3xl font-bold sm:text-4xl">
+            Recent articles
+          </h2>
         </div>
+        <.link
+          navigate={~p"/blog"}
+          class="inline-flex items-center gap-2 font-semibold text-primary"
+        >
+          View all articles <.icon name="hero-arrow-right" class="size-4" />
+        </.link>
       </div>
 
-      <div class="md:col-span-2 space-y-4 text-base-content/90 leading-relaxed">
-        <h3 class="text-2xl font-semibold">
-          Introducing Gustavo Oliveira, Your Elixir Alchemy Mentor
-        </h3>
-        <p>
-          Gustavo Oliveira is a passionate Brazilian software engineer and educator with over a decade of professional experience. Known for his expertise in Elixir, Phoenix, and LiveView, Gustavo has worked with clients worldwide, delivering high-quality, scalable solutions and empowering developers to elevate their craft.
-        </p>
-        <p>
-          Enthralled by the simplicity and power of Elixir, Gustavo turned his passion into a mission: to teach and inspire developers. He runs thriving YouTube channels where he shares in-depth tutorials, real-world project guides, and practical tips for developers of all levels.
-        </p>
-        <p>
-          Join Gustavo and a vibrant community of Elixir enthusiasts to transform your skills, build remarkable projects, and become a true alchemist in the world of web development.
-        </p>
+      <div class="grid gap-5 md:grid-cols-3">
+        <article
+          :for={post <- @recent_posts}
+          class="group relative rounded-2xl border border-base-300 bg-base-100 p-6 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
+        >
+          <p class="text-xs font-semibold uppercase tracking-wider text-primary">
+            {if post.category, do: post.category.name, else: "Uncategorized"}
+          </p>
+          <h3 class="mt-3 text-xl font-bold leading-snug">
+            <.link navigate={~p"/blog/#{post.slug}"} class="after:absolute after:inset-0">
+              {post.title}
+            </.link>
+          </h3>
+          <p class="mt-3 line-clamp-3 text-sm leading-6 text-base-content/70">{post.summary}</p>
+          <p class="mt-5 text-xs text-base-content/50">
+            {format_post_date(post.published_at)} · {reading_minutes(post)} min read
+          </p>
+        </article>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <section id="recent-articles" class="space-y-8" aria-labelledby="recent-articles-title">
-    <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
-      <div>
-        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-          From the journal
-        </p>
-        <h2 id="recent-articles-title" class="mt-2 text-3xl font-bold sm:text-4xl">
-          Recent articles
+    <%!-- Pricing Section --%>
+    <section id="pricing" class="space-y-8" aria-labelledby="pricing-title">
+      <div class="text-center space-y-4">
+        <h2 id="pricing-title" class="text-3xl sm:text-4xl font-bold">
+          Flexible Pricing Plans
         </h2>
+        <p class="text-lg font-light text-base-content/80">
+          Choose the plan that works best for you and get access to all course features.
+        </p>
       </div>
-      <.link
-        navigate={~p"/blog"}
-        class="inline-flex items-center gap-2 font-semibold text-primary"
-      >
-        View all articles <.icon name="hero-arrow-right" class="size-4" />
-      </.link>
-    </div>
 
-    <div class="grid gap-5 md:grid-cols-3">
-      <article
-        :for={post <- @recent_posts}
-        class="group relative rounded-2xl border border-base-300 bg-base-100 p-6 transition-all hover:-translate-y-0.5 hover:border-primary/50 hover:shadow-lg"
-      >
-        <p class="text-xs font-semibold uppercase tracking-wider text-primary">
-          {if post.category, do: post.category.name, else: "Uncategorized"}
-        </p>
-        <h3 class="mt-3 text-xl font-bold leading-snug">
-          <.link navigate={~p"/blog/#{post.slug}"} class="after:absolute after:inset-0">
-            {post.title}
-          </.link>
-        </h3>
-        <p class="mt-3 line-clamp-3 text-sm leading-6 text-base-content/70">{post.summary}</p>
-        <p class="mt-5 text-xs text-base-content/50">
-          {format_post_date(post.published_at)} · {reading_minutes(post)} min read
-        </p>
-      </article>
-    </div>
-  </section>
-
-  <%!-- Pricing Section --%>
-  <section id="pricing" class="space-y-8" aria-labelledby="pricing-title">
-    <div class="text-center space-y-4">
-      <h2 id="pricing-title" class="text-3xl sm:text-4xl font-bold">
-        Flexible Pricing Plans
-      </h2>
-      <p class="text-lg font-light text-base-content/80">
-        Choose the plan that works best for you and get access to all course features.
-      </p>
-    </div>
-
-    <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-      <%!-- Monthly Plan --%>
-      <article class="bg-base-200 rounded-2xl p-8 space-y-6 shadow-lg hover:shadow-2xl transition-shadow border-2 border-transparent hover:border-primary">
-        <div class="space-y-2">
-          <h3 class="text-2xl font-bold">Monthly Plan</h3>
-          <div class="flex items-baseline gap-2">
-            <span class="text-5xl font-bold text-primary">$9</span>
-            <span class="text-base-content/60">/month</span>
+      <div class="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+        <%!-- Monthly Plan --%>
+        <article class="bg-base-200 rounded-2xl p-8 space-y-6 shadow-lg hover:shadow-2xl transition-shadow border-2 border-transparent hover:border-primary">
+          <div class="space-y-2">
+            <h3 class="text-2xl font-bold">Monthly Plan</h3>
+            <div class="flex items-baseline gap-2">
+              <span class="text-5xl font-bold text-primary">$9</span>
+              <span class="text-base-content/60">/month</span>
+            </div>
+            <p class="text-sm text-base-content/60">Billed monthly</p>
           </div>
-          <p class="text-sm text-base-content/60">Billed monthly</p>
-        </div>
 
-        <ul class="space-y-3">
-          <li class="flex gap-3">
-            <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
-            <span>Full access to all course content</span>
-          </li>
-          <li class="flex gap-3">
-            <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
-            <span>Access to private Elixir community</span>
-          </li>
-          <li class="flex gap-3">
-            <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
-            <span>Downloadable resources and guides</span>
-          </li>
-        </ul>
+          <ul class="space-y-3">
+            <li class="flex gap-3">
+              <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
+              <span>Full access to all course content</span>
+            </li>
+            <li class="flex gap-3">
+              <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
+              <span>Access to private Elixir community</span>
+            </li>
+            <li class="flex gap-3">
+              <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
+              <span>Downloadable resources and guides</span>
+            </li>
+          </ul>
 
-        <a
-          href="https://buy.stripe.com/fZe8xxbJHcnT6wU8wW"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="btn btn-primary btn-block btn-lg"
-          aria-label="Subscribe monthly for $10"
-        >
-          Subscribe Monthly
-        </a>
-      </article>
+          <a
+            href="https://buy.stripe.com/fZe8xxbJHcnT6wU8wW"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-primary btn-block btn-lg"
+            aria-label="Subscribe monthly for $10"
+          >
+            Subscribe Monthly
+          </a>
+        </article>
 
-      <%!-- Yearly Plan --%>
-      <article class="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl p-8 space-y-6 shadow-lg hover:shadow-2xl transition-shadow border-2 border-primary relative">
-        <div class="absolute -top-4 left-1/2 -translate-x-1/2">
-          <span class="bg-primary text-primary-content px-4 py-1 rounded-full text-sm font-semibold">
-            Best Value
-          </span>
-        </div>
-
-        <div class="space-y-2">
-          <h3 class="text-2xl font-bold">Yearly Plan</h3>
-          <div class="flex items-baseline gap-2">
-            <span class="text-5xl font-bold text-primary">$53</span>
-            <span class="text-base-content/60">/year</span>
+        <%!-- Yearly Plan --%>
+        <article class="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl p-8 space-y-6 shadow-lg hover:shadow-2xl transition-shadow border-2 border-primary relative">
+          <div class="absolute -top-4 left-1/2 -translate-x-1/2">
+            <span class="bg-primary text-primary-content px-4 py-1 rounded-full text-sm font-semibold">
+              Best Value
+            </span>
           </div>
-          <p class="text-sm font-semibold text-secondary">Save $55 per year!</p>
-        </div>
 
-        <ul class="space-y-3">
-          <li class="flex gap-3">
-            <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
-            <span>Full access to all course content</span>
-          </li>
-          <li class="flex gap-3">
-            <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
-            <span>Access to private Elixir community</span>
-          </li>
-          <li class="flex gap-3">
-            <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
-            <span>Downloadable resources and guides</span>
-          </li>
-          <li class="flex gap-3">
-            <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
-            <span class="font-semibold">Priority support</span>
-          </li>
-        </ul>
+          <div class="space-y-2">
+            <h3 class="text-2xl font-bold">Yearly Plan</h3>
+            <div class="flex items-baseline gap-2">
+              <span class="text-5xl font-bold text-primary">$53</span>
+              <span class="text-base-content/60">/year</span>
+            </div>
+            <p class="text-sm font-semibold text-secondary">Save $55 per year!</p>
+          </div>
 
-        <a
-          href="https://buy.stripe.com/5kAeVVdRPew13kIdRi"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="btn btn-primary btn-block btn-lg"
-          aria-label="Subscribe yearly for $79"
-        >
-          Subscribe Yearly
-        </a>
-      </article>
-    </div>
+          <ul class="space-y-3">
+            <li class="flex gap-3">
+              <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
+              <span>Full access to all course content</span>
+            </li>
+            <li class="flex gap-3">
+              <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
+              <span>Access to private Elixir community</span>
+            </li>
+            <li class="flex gap-3">
+              <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
+              <span>Downloadable resources and guides</span>
+            </li>
+            <li class="flex gap-3">
+              <.icon name="hero-check" class="w-6 h-6 text-primary flex-shrink-0" />
+              <span class="font-semibold">Priority support</span>
+            </li>
+          </ul>
 
-    <div class="bg-accent/10 rounded-xl p-6 text-center max-w-3xl mx-auto">
-      <h3 class="text-xl font-semibold mb-2">Bonus Included</h3>
-      <p class="text-base-content/80">
-        Get access to a private Elixir community for networking, collaboration, and support from fellow learners.
-      </p>
-    </div>
-  </section>
+          <a
+            href="https://buy.stripe.com/5kAeVVdRPew13kIdRi"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-primary btn-block btn-lg"
+            aria-label="Subscribe yearly for $79"
+          >
+            Subscribe Yearly
+          </a>
+        </article>
+      </div>
 
-  <%!-- FAQ Section --%>
-  <section id="faq" class="space-y-8" aria-labelledby="faq-title">
-    <div class="text-center space-y-4">
-      <h2 id="faq-title" class="text-3xl sm:text-4xl font-bold">
-        Frequently Asked Questions
-      </h2>
-      <p class="text-lg font-light text-base-content/80">
-        Everything you need to know about the course
-      </p>
-    </div>
-
-    <div class="max-w-4xl mx-auto space-y-4">
-      <details
-        :for={faq <- @faq_items}
-        class="bg-base-200 rounded-xl p-6 hover:bg-base-300 transition-colors group"
-      >
-        <summary class="text-lg font-semibold cursor-pointer flex items-center justify-between">
-          <span>{faq.title}</span>
-          <.icon
-            name="hero-chevron-down"
-            class="w-5 h-5 transition-transform group-open:rotate-180"
-          />
-        </summary>
-        <p class="mt-4 text-base-content/70 leading-relaxed">
-          {faq.description}
+      <div class="bg-accent/10 rounded-xl p-6 text-center max-w-3xl mx-auto">
+        <h3 class="text-xl font-semibold mb-2">Bonus Included</h3>
+        <p class="text-base-content/80">
+          Get access to a private Elixir community for networking, collaboration, and support from fellow learners.
         </p>
-      </details>
-    </div>
-  </section>
+      </div>
+    </section>
 
-  <%!-- Final CTA Section --%>
-  <section class="bg-gradient-to-br from-primary to-secondary rounded-2xl p-8 sm:p-12 text-center space-y-6 text-primary-content">
-    <h2 class="text-3xl sm:text-4xl font-bold">
-      Ready to Take the Next Step in Your Elixir Journey?
-    </h2>
-    <p class="text-lg sm:text-xl font-light opacity-90 max-w-2xl mx-auto">
-      Build real-world projects and join a thriving community of Elixir developers!
-    </p>
-    <a href="#pricing" class="btn btn-lg bg-base-100 text-primary hover:bg-base-200 border-none">
-      Start Learning Today
-    </a>
-  </section>
-</div>
+    <%!-- FAQ Section --%>
+    <section id="faq" class="space-y-8" aria-labelledby="faq-title">
+      <div class="text-center space-y-4">
+        <h2 id="faq-title" class="text-3xl sm:text-4xl font-bold">
+          Frequently Asked Questions
+        </h2>
+        <p class="text-lg font-light text-base-content/80">
+          Everything you need to know about the course
+        </p>
+      </div>
+
+      <div class="max-w-4xl mx-auto space-y-4">
+        <details
+          :for={faq <- @faq_items}
+          class="bg-base-200 rounded-xl p-6 hover:bg-base-300 transition-colors group"
+        >
+          <summary class="text-lg font-semibold cursor-pointer flex items-center justify-between">
+            <span>{faq.title}</span>
+            <.icon
+              name="hero-chevron-down"
+              class="w-5 h-5 transition-transform group-open:rotate-180"
+            />
+          </summary>
+          <p class="mt-4 text-base-content/70 leading-relaxed">
+            {faq.description}
+          </p>
+        </details>
+      </div>
+    </section>
+
+    <%!-- Final CTA Section --%>
+    <section class="bg-gradient-to-br from-primary to-secondary rounded-2xl p-8 sm:p-12 text-center space-y-6 text-primary-content">
+      <h2 class="text-3xl sm:text-4xl font-bold">
+        Ready to Take the Next Step in Your Elixir Journey?
+      </h2>
+      <p class="text-lg sm:text-xl font-light opacity-90 max-w-2xl mx-auto">
+        Build real-world projects and join a thriving community of Elixir developers!
+      </p>
+      <a href="#pricing" class="btn btn-lg bg-base-100 text-primary hover:bg-base-200 border-none">
+        Start Learning Today
+      </a>
+    </section>
+  </main>
+</Layouts.app>

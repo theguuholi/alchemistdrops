@@ -1,12 +1,11 @@
 defmodule Alchemistdrops.Enrollments do
   @moduledoc """
-  The Enrollments context.
+  Owns course access granted to users through enrollments.
 
-  Handles all operations related to user enrollments in courses including:
-  - Enrolling users in courses
-  - Checking enrollment status
-  - Access control for courses and lessons
-  - Managing enrollment lifecycle
+  This boundary is important because paid, free, and administrative access must
+  use the same enrollment lifecycle rules in every UI and background process.
+  Callers use it to enroll learners, authorize course content, and transition
+  enrollments without duplicating access policy.
   """
 
   import Ecto.Query, warn: false
@@ -27,16 +26,17 @@ defmodule Alchemistdrops.Enrollments do
 
   ## Examples
 
-      iex> enroll_user(user, course)
-      {:ok, %Enrollment{}}
-
-      iex> enroll_user(user_id, course_id)
-      {:ok, %Enrollment{}}
-
-      iex> enroll_user(user, course)
-      {:error, %Ecto.Changeset{}}
+      iex> user = Alchemistdrops.AccountsFixtures.user_fixture()
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> {:ok, enrollment} = Alchemistdrops.Enrollments.enroll_user(user, course)
+      iex> {enrollment.user_id, enrollment.course_id, enrollment.status}
+      {user.id, course.id, "active"}
 
   """
+  @spec enroll_user(Ecto.UUID.t(), Ecto.UUID.t()) ::
+          {:ok, Enrollment.t()} | {:error, Ecto.Changeset.t()}
+  @spec enroll_user(User.t(), Course.t() | map()) ::
+          {:ok, Enrollment.t()} | {:error, Ecto.Changeset.t()}
   def enroll_user(user_id, course_id) when is_binary(user_id) and is_binary(course_id) do
     %Enrollment{}
     |> Enrollment.changeset(%{
@@ -66,13 +66,15 @@ defmodule Alchemistdrops.Enrollments do
 
   ## Examples
 
-      iex> user_enrolled?(user, course)
+      iex> user = Alchemistdrops.AccountsFixtures.user_fixture()
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> {:ok, _enrollment} = Alchemistdrops.Enrollments.enroll_user(user, course)
+      iex> Alchemistdrops.Enrollments.user_enrolled?(user, course)
       true
 
-      iex> user_enrolled?(user_id, course_id)
-      false
-
   """
+  @spec user_enrolled?(Ecto.UUID.t(), Ecto.UUID.t()) :: boolean()
+  @spec user_enrolled?(User.t(), Course.t()) :: boolean()
   def user_enrolled?(user_id, course_id) when is_binary(user_id) and is_binary(course_id) do
     query =
       from e in Enrollment,
@@ -97,13 +99,13 @@ defmodule Alchemistdrops.Enrollments do
 
   ## Examples
 
-      iex> can_access_course?(user, course)
+      iex> user = Alchemistdrops.AccountsFixtures.user_fixture()
+      iex> course = Alchemistdrops.CoursesFixtures.free_course_fixture()
+      iex> Alchemistdrops.Enrollments.can_access_course?(user, course)
       true
 
-      iex> can_access_course?(user, course)
-      false
-
   """
+  @spec can_access_course?(User.t(), Course.t()) :: boolean()
   def can_access_course?(%User{role: :admin}, _course), do: true
 
   def can_access_course?(%User{} = user, %Course{price: price} = course) do
@@ -126,13 +128,14 @@ defmodule Alchemistdrops.Enrollments do
 
   ## Examples
 
-      iex> can_access_lesson?(user, lesson)
+      iex> user = Alchemistdrops.AccountsFixtures.user_fixture()
+      iex> course = Alchemistdrops.CoursesFixtures.free_course_fixture()
+      iex> lesson = Alchemistdrops.CoursesFixtures.lesson_fixture(%{course: course})
+      iex> Alchemistdrops.Enrollments.can_access_lesson?(user, lesson)
       true
 
-      iex> can_access_lesson?(user, lesson)
-      false
-
   """
+  @spec can_access_lesson?(User.t(), Lesson.t()) :: boolean()
   def can_access_lesson?(%User{} = user, %Lesson{} = lesson) do
     course = Repo.get!(Course, lesson.course_id)
     can_access_course?(user, course)
@@ -146,10 +149,14 @@ defmodule Alchemistdrops.Enrollments do
 
   ## Examples
 
-      iex> list_user_enrollments(user)
-      [%Enrollment{}, ...]
+      iex> user = Alchemistdrops.AccountsFixtures.user_fixture()
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> {:ok, enrollment} = Alchemistdrops.Enrollments.enroll_user(user, course)
+      iex> Enum.map(Alchemistdrops.Enrollments.list_user_enrollments(user), & &1.id)
+      [enrollment.id]
 
   """
+  @spec list_user_enrollments(User.t()) :: [Enrollment.t()]
   def list_user_enrollments(%User{} = user) do
     Enrollment
     |> where([e], e.user_id == ^user.id)
@@ -166,10 +173,14 @@ defmodule Alchemistdrops.Enrollments do
 
   ## Examples
 
-      iex> list_course_enrollments(course)
-      [%Enrollment{}, ...]
+      iex> user = Alchemistdrops.AccountsFixtures.user_fixture()
+      iex> course = Alchemistdrops.CoursesFixtures.course_fixture()
+      iex> {:ok, enrollment} = Alchemistdrops.Enrollments.enroll_user(user, course)
+      iex> Enum.map(Alchemistdrops.Enrollments.list_course_enrollments(course), & &1.id)
+      [enrollment.id]
 
   """
+  @spec list_course_enrollments(Course.t()) :: [Enrollment.t()]
   def list_course_enrollments(%Course{} = course) do
     Enrollment
     |> where([e], e.course_id == ^course.id)
@@ -184,13 +195,12 @@ defmodule Alchemistdrops.Enrollments do
 
   ## Examples
 
-      iex> get_enrollment!(123)
-      %Enrollment{}
-
-      iex> get_enrollment!(456)
-      ** (Ecto.NoResultsError)
+      iex> enrollment = Alchemistdrops.EnrollmentsFixtures.enrollment_fixture()
+      iex> Alchemistdrops.Enrollments.get_enrollment!(enrollment.id).id == enrollment.id
+      true
 
   """
+  @spec get_enrollment!(Ecto.UUID.t()) :: Enrollment.t()
   def get_enrollment!(id), do: Repo.get!(Enrollment, id)
 
   @doc """
@@ -200,13 +210,14 @@ defmodule Alchemistdrops.Enrollments do
 
   ## Examples
 
-      iex> complete_enrollment(enrollment)
-      {:ok, %Enrollment{}}
-
-      iex> complete_enrollment(enrollment)
-      {:error, %Ecto.Changeset{}}
+      iex> enrollment = Alchemistdrops.EnrollmentsFixtures.enrollment_fixture()
+      iex> {:ok, completed} = Alchemistdrops.Enrollments.complete_enrollment(enrollment)
+      iex> {completed.status, is_struct(completed.completed_at, DateTime)}
+      {"completed", true}
 
   """
+  @spec complete_enrollment(Enrollment.t()) ::
+          {:ok, Enrollment.t()} | {:error, Ecto.Changeset.t()}
   def complete_enrollment(%Enrollment{} = enrollment) do
     enrollment
     |> Enrollment.changeset(%{
@@ -223,13 +234,14 @@ defmodule Alchemistdrops.Enrollments do
 
   ## Examples
 
-      iex> cancel_enrollment(enrollment)
-      {:ok, %Enrollment{}}
-
-      iex> cancel_enrollment(enrollment)
-      {:error, %Ecto.Changeset{}}
+      iex> enrollment = Alchemistdrops.EnrollmentsFixtures.enrollment_fixture()
+      iex> {:ok, cancelled} = Alchemistdrops.Enrollments.cancel_enrollment(enrollment)
+      iex> cancelled.status
+      "cancelled"
 
   """
+  @spec cancel_enrollment(Enrollment.t()) ::
+          {:ok, Enrollment.t()} | {:error, Ecto.Changeset.t()}
   def cancel_enrollment(%Enrollment{} = enrollment) do
     enrollment
     |> Enrollment.changeset(%{status: "cancelled"})
@@ -241,10 +253,13 @@ defmodule Alchemistdrops.Enrollments do
 
   ## Examples
 
-      iex> change_enrollment(enrollment)
-      %Ecto.Changeset{data: %Enrollment{}}
+      iex> changeset = Alchemistdrops.Enrollments.change_enrollment(%Alchemistdrops.Enrollments.Enrollment{})
+      iex> match?(%Ecto.Changeset{}, changeset)
+      true
 
   """
+  @spec change_enrollment(Enrollment.t()) :: Ecto.Changeset.t()
+  @spec change_enrollment(Enrollment.t(), map()) :: Ecto.Changeset.t()
   def change_enrollment(%Enrollment{} = enrollment, attrs \\ %{}) do
     Enrollment.changeset(enrollment, attrs)
   end
@@ -254,10 +269,12 @@ defmodule Alchemistdrops.Enrollments do
 
   ## Examples
 
-      iex> count_enrollments()
-      42
+      iex> _enrollment = Alchemistdrops.EnrollmentsFixtures.enrollment_fixture()
+      iex> Alchemistdrops.Enrollments.count_enrollments()
+      1
 
   """
+  @spec count_enrollments() :: non_neg_integer()
   def count_enrollments do
     Repo.aggregate(Enrollment, :count)
   end
@@ -269,10 +286,13 @@ defmodule Alchemistdrops.Enrollments do
 
   ## Examples
 
-      iex> list_enrollments_with_details()
-      [%Enrollment{user: %User{}, course: %Course{}}, ...]
+      iex> enrollment = Alchemistdrops.EnrollmentsFixtures.enrollment_fixture()
+      iex> [loaded] = Alchemistdrops.Enrollments.list_enrollments_with_details()
+      iex> {loaded.id == enrollment.id, Ecto.assoc_loaded?(loaded.user), Ecto.assoc_loaded?(loaded.course)}
+      {true, true, true}
 
   """
+  @spec list_enrollments_with_details() :: [Enrollment.t()]
   def list_enrollments_with_details do
     Enrollment
     |> order_by([e], desc: e.inserted_at)

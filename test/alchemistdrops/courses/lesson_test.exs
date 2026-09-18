@@ -11,6 +11,8 @@ defmodule Alchemistdrops.Courses.LessonTest do
 
   import Alchemistdrops.CoursesFixtures
 
+  doctest Alchemistdrops.Courses.Lesson
+
   setup do
     # Given a course exists in the system
     course =
@@ -196,7 +198,7 @@ defmodule Alchemistdrops.Courses.LessonTest do
       changeset = Lesson.changeset(%Lesson{}, attrs)
 
       # Then the title should be trimmed
-      assert Ecto.Changeset.get_change(changeset, :title) == "Test Lesson"
+      assert changeset.changes.title == "Test Lesson"
     end
 
     test "Scenario: Title exceeds maximum length", %{course: course} do
@@ -250,12 +252,12 @@ defmodule Alchemistdrops.Courses.LessonTest do
       assert changeset.valid?
 
       # And all fields should be set correctly
-      assert Ecto.Changeset.get_change(changeset, :description) == "Lesson description"
-      assert Ecto.Changeset.get_change(changeset, :content) == "Full lesson content"
-      assert Ecto.Changeset.get_change(changeset, :order) == 5
-      assert Ecto.Changeset.get_change(changeset, :duration) == 30
-      assert Ecto.Changeset.get_change(changeset, :video_url) == "https://example.com/video.mp4"
-      assert Ecto.Changeset.get_change(changeset, :published) == true
+      assert changeset.changes.description == "Lesson description"
+      assert changeset.changes.content == "Full lesson content"
+      assert changeset.changes.order == 5
+      assert changeset.changes.duration == 30
+      assert changeset.changes.video_url == "https://example.com/video.mp4"
+      assert changeset.changes.published == true
     end
 
     test "Scenario: Foreign key constraint is enforced on insert" do
@@ -312,7 +314,7 @@ defmodule Alchemistdrops.Courses.LessonTest do
       assert changeset.valid?
 
       # And published should be true
-      assert Ecto.Changeset.get_change(changeset, :published) == true
+      assert changeset.changes.published == true
     end
 
     test "Scenario: Large order values are accepted", %{course: course} do

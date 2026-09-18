@@ -1,52 +1,54 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <.header>
-    {@page_title}
-    <:subtitle>
-      Course: <span class="font-medium">{@course.title}</span>
-    </:subtitle>
-  </.header>
+  <main id="admin-lesson-form">
+    <.header>
+      {@page_title}
+      <:subtitle>
+        Course: <span class="font-medium">{@course.title}</span>
+      </:subtitle>
+    </.header>
 
-  <.form for={@form} id="lesson-form" phx-change="validate" phx-submit="save" class="space-y-4">
-    <.input field={@form[:title]} type="text" label="Title" placeholder="Enter lesson title" />
+    <.form for={@form} id="lesson-form" phx-change="validate" phx-submit="save" class="space-y-4">
+      <.input field={@form[:title]} type="text" label="Title" placeholder="Enter lesson title" />
 
-    <.input
-      field={@form[:description]}
-      type="textarea"
-      label="Description"
-      placeholder="Brief description of this lesson"
-    />
-
-    <.input
-      field={@form[:content]}
-      type="textarea"
-      label="Content"
-      placeholder="Full lesson content (supports markdown)"
-    />
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <.input
-        field={@form[:duration]}
-        type="number"
-        label="Duration (minutes)"
-        placeholder="e.g. 30"
-        min="1"
+        field={@form[:description]}
+        type="textarea"
+        label="Description"
+        placeholder="Brief description of this lesson"
       />
 
       <.input
-        field={@form[:video_url]}
-        type="text"
-        label="Video URL"
-        placeholder="https://..."
+        field={@form[:content]}
+        type="textarea"
+        label="Content"
+        placeholder="Full lesson content (supports markdown)"
       />
-    </div>
 
-    <.input field={@form[:order]} type="number" label="Order" min="0" />
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <.input
+          field={@form[:duration]}
+          type="number"
+          label="Duration (minutes)"
+          placeholder="e.g. 30"
+          min="1"
+        />
 
-    <.input field={@form[:published]} type="checkbox" label="Published" />
+        <.input
+          field={@form[:video_url]}
+          type="text"
+          label="Video URL"
+          placeholder="https://..."
+        />
+      </div>
 
-    <footer class="flex flex-col sm:flex-row gap-2 pt-4">
-      <.button phx-disable-with="Saving..." variant="primary">Save Lesson</.button>
-      <.button type="button" navigate={~p"/admin/courses/#{@course}"}>Cancel</.button>
-    </footer>
-  </.form>
+      <.input field={@form[:order]} type="number" label="Order" min="0" />
+
+      <.input field={@form[:published]} type="checkbox" label="Published" />
+
+      <footer class="flex flex-col sm:flex-row gap-2 pt-4">
+        <.button phx-disable-with="Saving..." variant="primary">Save Lesson</.button>
+        <.button type="button" navigate={~p"/admin/courses/#{@course}"}>Cancel</.button>
+      </footer>
+    </.form>
+  </main>
 </Layouts.app>

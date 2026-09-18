@@ -12,6 +12,8 @@ defmodule Alchemistdrops.Payments.PaymentTest do
   import Alchemistdrops.AccountsFixtures
   import Alchemistdrops.CoursesFixtures
 
+  doctest Alchemistdrops.Payments.Payment
+
   setup do
     # Given a user and course exist in the system
     user = user_fixture()
@@ -317,7 +319,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       assert changeset.valid?
 
       # And the Stripe payment intent ID should be stored
-      assert Ecto.Changeset.get_change(changeset, :stripe_payment_intent_id) == "pi_1234567890"
+      assert changeset.changes.stripe_payment_intent_id == "pi_1234567890"
     end
 
     test "Scenario: Stripe checkout session ID can be stored", %{user: user, course: course} do
@@ -336,8 +338,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       assert changeset.valid?
 
       # And the Stripe checkout session ID should be stored
-      assert Ecto.Changeset.get_change(changeset, :stripe_checkout_session_id) ==
-               "cs_test_1234567890"
+      assert changeset.changes.stripe_checkout_session_id == "cs_test_1234567890"
     end
 
     test "Scenario: Completed payment with all Stripe fields", %{user: user, course: course} do
@@ -359,11 +360,10 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       assert changeset.valid?
 
       # And all Stripe-related fields should be present
-      assert Ecto.Changeset.get_change(changeset, :status) == "completed"
-      assert Ecto.Changeset.get_change(changeset, :stripe_payment_intent_id) == "pi_completed_123"
+      assert changeset.changes.status == "completed"
+      assert changeset.changes.stripe_payment_intent_id == "pi_completed_123"
 
-      assert Ecto.Changeset.get_change(changeset, :stripe_checkout_session_id) ==
-               "cs_completed_123"
+      assert changeset.changes.stripe_checkout_session_id == "cs_completed_123"
     end
 
     test "Scenario: Failed payment can be recorded", %{user: user, course: course} do
@@ -383,7 +383,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       assert changeset.valid?
 
       # And status should be failed
-      assert Ecto.Changeset.get_change(changeset, :status) == "failed"
+      assert changeset.changes.status == "failed"
     end
 
     test "Scenario: Refunded payment can be recorded", %{user: user, course: course} do
@@ -404,7 +404,7 @@ defmodule Alchemistdrops.Payments.PaymentTest do
       assert changeset.valid?
 
       # And status should be refunded
-      assert Ecto.Changeset.get_change(changeset, :status) == "refunded"
+      assert changeset.changes.status == "refunded"
     end
 
     test "Scenario: Money validates positive amounts only", %{user: user, course: course} do

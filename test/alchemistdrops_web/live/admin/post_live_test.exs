@@ -28,24 +28,24 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     setup [:register_and_log_in_admin_user, :create_post]
 
     test "lists all posts", %{conn: conn, post: post} do
-      {:ok, view, html} = live(conn, ~p"/admin/posts")
+      {:ok, view, _html} = live(conn, ~p"/admin/posts")
 
-      assert html =~ "Posts"
+      assert has_element?(view, "#admin-posts h1", "Posts")
       assert has_element?(view, "#posts-#{post.id}")
     end
 
     test "displays stats", %{conn: conn} do
-      {:ok, _view, html} = live(conn, ~p"/admin/posts")
+      {:ok, view, _html} = live(conn, ~p"/admin/posts")
 
-      assert html =~ "Total Posts"
-      assert html =~ "Total Views"
+      assert has_element?(view, "#admin-posts", "Total Posts")
+      assert has_element?(view, "#admin-posts", "Total Views")
     end
 
     test "formats views as 'k' when 1000 or more", %{conn: conn} do
       post_fixture(%{title: "Popular Post", views: 1500})
-      {:ok, _view, html} = live(conn, ~p"/admin/posts")
+      {:ok, view, _html} = live(conn, ~p"/admin/posts")
 
-      assert html =~ "1.5k"
+      assert has_element?(view, "#admin-posts", "1.5k")
     end
 
     test "saves new post", %{conn: conn} do
@@ -57,11 +57,13 @@ defmodule AlchemistdropsWeb.PostLiveTest do
                |> render_click()
                |> follow_redirect(conn, ~p"/admin/posts/new")
 
-      assert render(form_live) =~ "New Post"
+      assert has_element?(form_live, "#post-form")
 
-      assert form_live
-             |> form("#post-form", post: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
+      form_live
+      |> form("#post-form", post: @invalid_attrs)
+      |> render_change()
+
+      assert has_element?(form_live, "#post_title-error-0", "can't be blank")
 
       assert {:ok, index_live, _html} =
                form_live
@@ -69,20 +71,18 @@ defmodule AlchemistdropsWeb.PostLiveTest do
                |> render_submit()
                |> follow_redirect(conn, ~p"/admin/posts")
 
-      html = render(index_live)
-      assert html =~ "Post created successfully"
+      assert has_element?(index_live, "#flash-info", "Post created successfully")
     end
 
     test "shows errors when creating post with invalid data", %{conn: conn} do
       {:ok, form_live, _html} = live(conn, ~p"/admin/posts/new")
 
       # Submit invalid data - should show errors and stay on form
-      html =
-        form_live
-        |> form("#post-form", post: @invalid_attrs)
-        |> render_submit()
+      form_live
+      |> form("#post-form", post: @invalid_attrs)
+      |> render_submit()
 
-      assert html =~ "can&#39;t be blank"
+      assert has_element?(form_live, "#post_title-error-0", "can't be blank")
     end
 
     test "updates post in listing", %{conn: conn, post: post} do
@@ -94,11 +94,13 @@ defmodule AlchemistdropsWeb.PostLiveTest do
                |> render_click()
                |> follow_redirect(conn, ~p"/admin/posts/#{post}/edit")
 
-      assert render(form_live) =~ "Edit Post"
+      assert has_element?(form_live, "#post-form")
 
-      assert form_live
-             |> form("#post-form", post: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
+      form_live
+      |> form("#post-form", post: @invalid_attrs)
+      |> render_change()
+
+      assert has_element?(form_live, "#post_title-error-0", "can't be blank")
 
       assert {:ok, index_live, _html} =
                form_live
@@ -106,20 +108,18 @@ defmodule AlchemistdropsWeb.PostLiveTest do
                |> render_submit()
                |> follow_redirect(conn, ~p"/admin/posts")
 
-      html = render(index_live)
-      assert html =~ "Post updated successfully"
+      assert has_element?(index_live, "#flash-info", "Post updated successfully")
     end
 
     test "shows errors when updating post with invalid data", %{conn: conn, post: post} do
       {:ok, form_live, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
 
       # Submit invalid data - should show errors and stay on form
-      html =
-        form_live
-        |> form("#post-form", post: @invalid_attrs)
-        |> render_submit()
+      form_live
+      |> form("#post-form", post: @invalid_attrs)
+      |> render_submit()
 
-      assert html =~ "can&#39;t be blank"
+      assert has_element?(form_live, "#post_title-error-0", "can't be blank")
     end
 
     test "deletes post in listing", %{conn: conn, post: post} do
@@ -137,10 +137,10 @@ defmodule AlchemistdropsWeb.PostLiveTest do
     setup [:register_and_log_in_admin_user, :create_post]
 
     test "displays post", %{conn: conn, post: post} do
-      {:ok, _show_live, html} = live(conn, ~p"/admin/posts/#{post}")
+      {:ok, show_live, _html} = live(conn, ~p"/admin/posts/#{post}")
 
-      assert html =~ "Show Post"
-      assert html =~ post.background
+      assert has_element?(show_live, "#admin-post-show", "Post #{post.id}")
+      assert has_element?(show_live, "#admin-post-show", post.background)
     end
 
     test "updates post and returns to show", %{conn: conn, post: post} do
@@ -152,11 +152,13 @@ defmodule AlchemistdropsWeb.PostLiveTest do
                |> render_click()
                |> follow_redirect(conn, ~p"/admin/posts/#{post}/edit?return_to=show")
 
-      assert render(form_live) =~ "Edit Post"
+      assert has_element?(form_live, "#post-form")
 
-      assert form_live
-             |> form("#post-form", post: @invalid_attrs)
-             |> render_change() =~ "can&#39;t be blank"
+      form_live
+      |> form("#post-form", post: @invalid_attrs)
+      |> render_change()
+
+      assert has_element?(form_live, "#post_title-error-0", "can't be blank")
 
       assert {:ok, show_live, _html} =
                form_live
@@ -164,9 +166,8 @@ defmodule AlchemistdropsWeb.PostLiveTest do
                |> render_submit()
                |> follow_redirect(conn, ~p"/admin/posts/#{post}")
 
-      html = render(show_live)
-      assert html =~ "Post updated successfully"
-      assert html =~ "some updated background"
+      assert has_element?(show_live, "#flash-info", "Post updated successfully")
+      assert has_element?(show_live, "#admin-post-show", "some updated background")
     end
   end
 end

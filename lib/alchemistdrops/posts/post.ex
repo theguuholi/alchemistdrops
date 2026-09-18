@@ -1,4 +1,12 @@
 defmodule Alchemistdrops.Posts.Post do
+  @moduledoc """
+  Represents an editorial article throughout its draft and published lifecycle.
+
+  Posts own the content, SEO metadata, taxonomy, publication state, and optional
+  course relationship rendered by the public blog. Separate draft and publish
+  changesets keep incomplete editorial work private until it is ready.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -7,23 +15,84 @@ defmodule Alchemistdrops.Posts.Post do
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
 
+  @typedoc "Editorial publication state of a post."
+  @type status :: :draft | :published
+
+  @typedoc "Language used by article content and localized public copy."
+  @type language :: :en | :pt_br
+
+  @typedoc "Database identifier for the post. Nil before persistence."
+  @type id :: Ecto.UUID.t() | nil
+
+  @typedoc "CSS background value used by the post presentation. Nil when unavailable."
+  @type background :: String.t() | nil
+
+  @typedoc "Editorial post title. Nil before validation."
+  @type title :: String.t() | nil
+
+  @typedoc "URL-safe post identifier. Nil before slug generation."
+  @type slug :: String.t() | nil
+
+  @typedoc "Long-form article content. Nil while an incomplete draft is being edited."
+  @type body :: String.t() | nil
+
+  @typedoc "Recorded number of post views. Nil for legacy or incomplete data."
+  @type views :: integer() | nil
+
+  @typedoc "Timestamp when the post became public. Nil while it remains a draft."
+  @type published_at :: DateTime.t() | nil
+
+  @typedoc "Short article summary. Nil while an incomplete draft is being edited."
+  @type summary :: String.t() | nil
+
+  @typedoc "Search-engine title override. Nil when the article title should be used."
+  @type seo_title :: String.t() | nil
+
+  @typedoc "Search-engine description override. Nil when unavailable."
+  @type seo_description :: String.t() | nil
+
+  @typedoc "Absolute HTTPS URL for the cover image. Nil when no cover is configured."
+  @type cover_image_url :: String.t() | nil
+
+  @typedoc "Accessible alternative text for the cover image. Nil when no cover is configured."
+  @type cover_image_alt :: String.t() | nil
+
+  @typedoc "Category name supplied by editorial forms. Nil when a category ID is used."
+  @type category_name :: String.t() | nil
+
+  @typedoc "Identifier of the post's category. Nil while an incomplete draft is being edited."
+  @type category_id :: Ecto.UUID.t() | nil
+
+  @typedoc "Identifier of the course promoted by the post. Nil when no course is related."
+  @type related_course_id :: Ecto.UUID.t() | nil
+
+  @typedoc "Timestamp when the post was persisted. Nil before persistence."
+  @type inserted_at :: DateTime.t() | nil
+
+  @typedoc "Timestamp when the post was last updated. Nil before persistence."
+  @type updated_at :: DateTime.t() | nil
+
+  @typedoc "A post before or after persistence."
   @type t :: %__MODULE__{
-          id: Ecto.UUID.t() | nil,
-          background: String.t() | nil,
-          title: String.t() | nil,
-          slug: String.t() | nil,
-          body: String.t() | nil,
-          views: integer() | nil,
-          status: :draft | :published,
-          published_at: DateTime.t() | nil,
-          summary: String.t() | nil,
-          seo_title: String.t() | nil,
-          seo_description: String.t() | nil,
-          cover_image_url: String.t() | nil,
-          cover_image_alt: String.t() | nil,
-          language: :en | :pt_br,
-          inserted_at: DateTime.t() | nil,
-          updated_at: DateTime.t() | nil
+          id: id(),
+          background: background(),
+          title: title(),
+          slug: slug(),
+          body: body(),
+          views: views(),
+          status: status(),
+          published_at: published_at(),
+          summary: summary(),
+          seo_title: seo_title(),
+          seo_description: seo_description(),
+          cover_image_url: cover_image_url(),
+          cover_image_alt: cover_image_alt(),
+          language: language(),
+          category_name: category_name(),
+          category_id: category_id(),
+          related_course_id: related_course_id(),
+          inserted_at: inserted_at(),
+          updated_at: updated_at()
         }
 
   schema "posts" do
@@ -52,9 +121,31 @@ defmodule Alchemistdrops.Posts.Post do
     timestamps(type: :utc_datetime)
   end
 
-  @doc false
+  @doc """
+  Builds the default draft changeset.
+
+  This is equivalent to `draft_changeset/2` and does not require publish-only
+  content such as the body, summary, or category.
+
+  ## Examples
+
+      iex> changeset = Alchemistdrops.Posts.Post.changeset(%Alchemistdrops.Posts.Post{}, %{title: "Hello OTP"})
+      iex> {changeset.valid?, changeset.changes.slug}
+      {true, "hello-otp"}
+  """
+  @spec changeset(t(), map()) :: Ecto.Changeset.t(t())
   def changeset(post, attrs), do: draft_changeset(post, attrs)
 
+  @doc """
+  Builds a draft changeset with generated slug and editorial metadata validation.
+
+  ## Examples
+
+      iex> changeset = Alchemistdrops.Posts.Post.draft_changeset(%Alchemistdrops.Posts.Post{}, %{title: "Draft Article"})
+      iex> {Ecto.Changeset.get_field(changeset, :status), changeset.changes.slug}
+      {:draft, "draft-article"}
+  """
+  @spec draft_changeset(t(), map()) :: Ecto.Changeset.t(t())
   def draft_changeset(post, attrs) do
     post
     |> cast(attrs, [
@@ -85,6 +176,20 @@ defmodule Alchemistdrops.Posts.Post do
     |> unique_constraint(:slug)
   end
 
+  @doc """
+  Builds a publish changeset and requires complete body, summary, and category data.
+
+  ## Examples
+
+      iex> attrs = %{title: "Published Article", body: "Body", summary: "Summary", category_name: "Elixir"}
+      iex> changeset = Alchemistdrops.Posts.Post.publish_changeset(%Alchemistdrops.Posts.Post{}, attrs)
+      iex> {changeset.valid?, Ecto.Changeset.get_field(changeset, :status)}
+      {true, :published}
+
+      iex> Alchemistdrops.Posts.Post.publish_changeset(%Alchemistdrops.Posts.Post{}, %{title: "Incomplete"}).valid?
+      false
+  """
+  @spec publish_changeset(t(), map()) :: Ecto.Changeset.t(t())
   def publish_changeset(post, attrs) do
     post
     |> draft_changeset(put_status(attrs, :published))

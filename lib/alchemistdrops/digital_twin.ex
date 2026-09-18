@@ -5,16 +5,55 @@ defmodule Alchemistdrops.DigitalTwin do
   @openrouter_url "https://openrouter.ai/api/v1/chat/completions"
   @model "meta-llama/llama-3.3-70b-instruct:free"
 
+  @typedoc "Profile facts interpolated into the Digital Twin system prompt."
+  @type profile :: %{
+          required(:name) => String.t(),
+          required(:title) => String.t(),
+          required(:location) => String.t(),
+          required(:tagline) => String.t(),
+          required(:bio) => [String.t()],
+          required(:education) => String.t(),
+          required(:honors) => String.t()
+        }
+
+  @typedoc "One career entry supplied as factual model context."
+  @type career_entry :: %{
+          required(:role) => String.t(),
+          required(:company) => String.t(),
+          required(:period) => String.t(),
+          required(:location) => String.t(),
+          optional(:highlights) => [String.t()],
+          optional(:impact) => [String.t()]
+        }
+
+  @typedoc "A user or assistant message in the current conversation."
+  @type message :: %{required(:role) => String.t(), required(:content) => String.t()}
+
   @doc """
   Sends the conversation (with system context) to OpenRouter and returns the assistant reply.
 
   Options:
   - `:extra_context` — optional string (e.g. from docs/prompts/gustavo-career-and-impact.md) added to the system prompt.
+  - `:api_key` — overrides the configured OpenRouter key, primarily for isolated callers and tests.
+  - `:request_fun` — two-argument request function used to isolate the HTTP boundary in tests.
 
   Returns `{:ok, content}` or `{:error, reason}`.
+
+  ## Examples
+
+      iex> profile = %{name: "Gustavo", title: "Engineer", location: "Brazil", tagline: "Elixir", bio: ["Builds software."], education: "Computer Science", honors: "Community contributor"}
+      iex> Alchemistdrops.DigitalTwin.chat(profile, [], [], api_key: nil)
+      {:error, :api_key_not_configured}
   """
+  @spec chat(profile(), [career_entry()], [message()]) ::
+          {:ok, String.t()} | {:error, :api_key_not_configured | String.t()}
+  @spec chat(profile(), [career_entry()], [message()], keyword()) ::
+          {:ok, String.t()} | {:error, :api_key_not_configured | String.t()}
   def chat(profile, career, messages, opts \\ []) do
-    api_key = Application.get_env(:alchemistdrops, :openrouter_api_key)
+    api_key =
+      Keyword.get_lazy(opts, :api_key, fn ->
+        Application.get_env(:alchemistdrops, :openrouter_api_key)
+      end)
 
     if is_nil(api_key) or api_key == "" do
       {:error, :api_key_not_configured}
@@ -32,14 +71,18 @@ defmodule Alchemistdrops.DigitalTwin do
         temperature: 0.7
       }
 
-      case Req.post(@openrouter_url,
-             json: body,
-             headers: [
-               {"Authorization", "Bearer #{api_key}"},
-               {"Content-Type", "application/json"}
-             ],
-             receive_timeout: 60_000
-           ) do
+      request_fun = Keyword.get(opts, :request_fun, &Req.post/2)
+
+      request_opts = [
+        json: body,
+        headers: [
+          {"Authorization", "Bearer #{api_key}"},
+          {"Content-Type", "application/json"}
+        ],
+        receive_timeout: 60_000
+      ]
+
+      case request_fun.(@openrouter_url, request_opts) do
         {:ok, %{status: 200, body: %{"choices" => [%{"message" => %{"content" => content}} | _]}}} ->
           {:ok, String.trim(content)}
 

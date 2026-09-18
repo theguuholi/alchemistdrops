@@ -1,9 +1,70 @@
 defmodule Alchemistdrops.Courses.Course do
+  @moduledoc """
+  Represents a course offered through AlchemistDrops.
+
+  A course owns its lessons and acts as the purchasable and enrollable learning
+  unit. Its changeset protects the title and monetary invariants used by the
+  catalog and checkout flows.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
+
+  @typedoc "Database identifier for the course. Nil before persistence."
+  @type id :: Ecto.UUID.t() | nil
+
+  @typedoc "Course title shown in the catalog. Nil before validation."
+  @type title :: String.t() | nil
+
+  @typedoc "Short course summary. Nil before validation."
+  @type description :: String.t() | nil
+
+  @typedoc "Long-form course content. Nil when it has not been provided."
+  @type body :: String.t() | nil
+
+  @typedoc "Course price. Nil when the course has no configured price."
+  @type price :: Money.t() | nil
+
+  @typedoc "Stripe product identifier. Nil before the course is synchronized with Stripe."
+  @type stripe_product_id :: String.t() | nil
+
+  @typedoc "Stripe price identifier. Nil before the course is synchronized with Stripe."
+  @type stripe_price_id :: String.t() | nil
+
+  @typedoc "Whether the Stripe price is recurring."
+  @type price_recurring :: boolean()
+
+  @typedoc "Whether the course is visible in the public catalog."
+  @type published :: boolean()
+
+  @typedoc "Course thumbnail URL. Nil when no custom thumbnail has been provided."
+  @type thumbnail_url :: String.t() | nil
+
+  @typedoc "Timestamp when the course was persisted. Nil before persistence."
+  @type inserted_at :: DateTime.t() | nil
+
+  @typedoc "Timestamp when the course was last updated. Nil before persistence."
+  @type updated_at :: DateTime.t() | nil
+
+  @typedoc "A course before or after persistence."
+  @type t :: %__MODULE__{
+          id: id(),
+          title: title(),
+          description: description(),
+          body: body(),
+          price: price(),
+          stripe_product_id: stripe_product_id(),
+          stripe_price_id: stripe_price_id(),
+          price_recurring: price_recurring(),
+          published: published(),
+          thumbnail_url: thumbnail_url(),
+          inserted_at: inserted_at(),
+          updated_at: updated_at()
+        }
+
   schema "courses" do
     field :title, :string
     field :description, :string
@@ -22,7 +83,19 @@ defmodule Alchemistdrops.Courses.Course do
     timestamps(type: :utc_datetime)
   end
 
-  @doc false
+  @doc """
+  Builds a course changeset and validates its catalog fields.
+
+  ## Examples
+
+      iex> changeset = Alchemistdrops.Courses.Course.changeset(%Alchemistdrops.Courses.Course{}, %{title: "  Elixir  ", description: "OTP"})
+      iex> {changeset.valid?, changeset.changes.title}
+      {true, "Elixir"}
+
+      iex> Alchemistdrops.Courses.Course.changeset(%Alchemistdrops.Courses.Course{}, %{title: "", description: ""}).valid?
+      false
+  """
+  @spec changeset(t() | Ecto.Changeset.t(t()), map()) :: Ecto.Changeset.t(t())
   def changeset(course, attrs) do
     course
     |> cast(attrs, [

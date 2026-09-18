@@ -16,7 +16,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       {:ok, view, _html} = live(conn, ~p"/blog")
 
       # Then
-      assert has_element?(view, "main #blog-index[aria-labelledby='blog-title']")
+      assert has_element?(view, "main#blog-index[aria-labelledby='blog-title']")
       assert has_element?(view, "#blog-title", "Alchemist's Journal")
       assert has_element?(view, "#blog-description", "Discover insights")
       assert has_element?(view, "#posts-empty-state", "No posts yet")

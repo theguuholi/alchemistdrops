@@ -1,88 +1,90 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
-  <.header>
-    {@page_title}
-    <:subtitle>Manage course information and settings</:subtitle>
-  </.header>
+  <main id="admin-course-form">
+    <.header>
+      {@page_title}
+      <:subtitle>Manage course information and settings</:subtitle>
+    </.header>
 
-  <.form for={@form} id="course-form" phx-change="validate" phx-submit="save" class="space-y-4">
-    <.input field={@form[:title]} type="text" label="Title" placeholder="Enter course title" />
+    <.form for={@form} id="course-form" phx-change="validate" phx-submit="save" class="space-y-4">
+      <.input field={@form[:title]} type="text" label="Title" placeholder="Enter course title" />
 
-    <.input
-      field={@form[:description]}
-      type="textarea"
-      label="Description"
-      placeholder="Brief description of the course"
-    />
-
-    <.input
-      field={@form[:body]}
-      type="textarea"
-      label="Body"
-      placeholder="Full course content (supports markdown)"
-    />
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <.input
-        field={@form[:price]}
-        type="number"
-        label="Price (cents)"
-        placeholder="0 for free"
-        min="0"
+        field={@form[:description]}
+        type="textarea"
+        label="Description"
+        placeholder="Brief description of the course"
       />
 
       <.input
-        field={@form[:thumbnail_url]}
-        type="text"
-        label="Thumbnail URL"
-        placeholder="https://..."
+        field={@form[:body]}
+        type="textarea"
+        label="Body"
+        placeholder="Full course content (supports markdown)"
       />
-    </div>
 
-    <section
-      class="rounded-lg border border-base-300 bg-base-200/50 p-4"
-      aria-labelledby="stripe-heading"
-    >
-      <h3 id="stripe-heading" class="text-sm font-semibold text-base-content/80 mb-2">
-        Stripe (for paid courses)
-      </h3>
-      <p class="text-sm text-base-content/60 mb-3">
-        Create a Product and Price in the <a
-          href="https://dashboard.stripe.com/products"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="link link-primary"
-        >Stripe Dashboard</a>,
-        then paste the IDs below. Leave blank for free courses.
-      </p>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <.input
-          field={@form[:stripe_product_id]}
-          type="text"
-          label="Stripe Product ID"
-          placeholder="prod_..."
+          field={@form[:price]}
+          type="number"
+          label="Price (cents)"
+          placeholder="0 for free"
+          min="0"
         />
+
         <.input
-          field={@form[:stripe_price_id]}
+          field={@form[:thumbnail_url]}
           type="text"
-          label="Stripe Price ID"
-          placeholder="price_..."
+          label="Thumbnail URL"
+          placeholder="https://..."
         />
       </div>
-      <p class="text-sm text-base-content/60 mt-3">
-        If the price in Stripe is recurring (e.g. every 3 months), enable the option below so checkout uses subscription mode.
-      </p>
-      <.input
-        field={@form[:price_recurring]}
-        type="checkbox"
-        label="Recurring price (subscription)"
-      />
-    </section>
 
-    <.input field={@form[:published]} type="checkbox" label="Published" />
+      <section
+        class="rounded-lg border border-base-300 bg-base-200/50 p-4"
+        aria-labelledby="stripe-heading"
+      >
+        <h3 id="stripe-heading" class="text-sm font-semibold text-base-content/80 mb-2">
+          Stripe (for paid courses)
+        </h3>
+        <p class="text-sm text-base-content/60 mb-3">
+          Create a Product and Price in the <a
+            href="https://dashboard.stripe.com/products"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="link link-primary"
+          >Stripe Dashboard</a>,
+          then paste the IDs below. Leave blank for free courses.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <.input
+            field={@form[:stripe_product_id]}
+            type="text"
+            label="Stripe Product ID"
+            placeholder="prod_..."
+          />
+          <.input
+            field={@form[:stripe_price_id]}
+            type="text"
+            label="Stripe Price ID"
+            placeholder="price_..."
+          />
+        </div>
+        <p class="text-sm text-base-content/60 mt-3">
+          If the price in Stripe is recurring (e.g. every 3 months), enable the option below so checkout uses subscription mode.
+        </p>
+        <.input
+          field={@form[:price_recurring]}
+          type="checkbox"
+          label="Recurring price (subscription)"
+        />
+      </section>
 
-    <footer class="flex flex-col sm:flex-row gap-2 pt-4">
-      <.button phx-disable-with="Saving..." variant="primary">Save Course</.button>
-      <.button type="button" navigate={return_path(@return_to, @course)}>Cancel</.button>
-    </footer>
-  </.form>
+      <.input field={@form[:published]} type="checkbox" label="Published" />
+
+      <footer class="flex flex-col sm:flex-row gap-2 pt-4">
+        <.button phx-disable-with="Saving..." variant="primary">Save Course</.button>
+        <.button type="button" navigate={return_path(@return_to, @course)}>Cancel</.button>
+      </footer>
+    </.form>
+  </main>
 </Layouts.app>

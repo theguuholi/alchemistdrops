@@ -9,6 +9,8 @@ defmodule Alchemistdrops.Courses.CourseTest do
 
   alias Alchemistdrops.Courses.Course
 
+  doctest Alchemistdrops.Courses.Course
+
   describe "Feature: Course Changeset Validation with Money" do
     test "Scenario: Creating a course with valid required fields" do
       # Given valid course attributes with title and description

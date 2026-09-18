@@ -23,13 +23,12 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
   test "publishing reports missing publication fields", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/posts/new")
 
-    html =
-      render_submit(view, "save", %{
-        "intent" => "publish",
-        "post" => %{"title" => "Incomplete article"}
-      })
+    render_submit(view, "save", %{
+      "intent" => "publish",
+      "post" => %{"title" => "Incomplete article"}
+    })
 
-    assert html =~ "can&#39;t be blank"
+    assert has_element?(view, "#post-form .text-error", "can't be blank")
     assert has_element?(view, "#post-form [name='post[summary]']")
     assert has_element?(view, "#post-form [name='post[category_name]']")
   end
@@ -68,9 +67,11 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
 
-    refute view
-           |> form("#post-form", post: %{category_name: "AI"})
-           |> render_change() =~ "can&#39;t be blank"
+    view
+    |> form("#post-form", post: %{category_name: "AI"})
+    |> render_change()
+
+    refute has_element?(view, "[id^='post-category-error-']")
 
     assert {:error, {:live_redirect, %{to: "/admin/posts"}}} =
              view
@@ -84,7 +85,8 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
     post = post_fixture(%{title: "Published article"})
     {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
 
-    assert view |> element("#unpublish-post") |> render_click() =~ "Draft saved"
+    view |> element("#unpublish-post") |> render_click()
+    assert has_element?(view, "#flash-info", "Draft saved")
     assert Posts.get_post!(post.id).status == :draft
   end
 
@@ -97,28 +99,32 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
     assert has_element?(view, "#seo-preview")
     assert has_element?(view, "#preview-article[phx-hook='Mermaid']")
 
-    html =
-      view
-      |> form("#post-form",
-        post: %{
-          title: "Too many tags",
-          tag_names: "one, two, three, four, five, six"
-        }
-      )
-      |> render_submit()
+    view
+    |> form("#post-form",
+      post: %{
+        title: "Too many tags",
+        tag_names: "one, two, three, four, five, six"
+      }
+    )
+    |> render_submit()
 
-    assert html =~ "must contain at most 5 tags"
+    assert has_element?(view, "#post-tags-error-0", "must contain at most 5 tags")
   end
 
   test "admin index displays editorial status and publication date", %{conn: conn} do
     published = post_fixture(%{title: "Published row"})
     draft_post_fixture(%{title: "Draft row"})
 
-    {:ok, view, html} = live(conn, ~p"/admin/posts")
+    {:ok, view, _html} = live(conn, ~p"/admin/posts")
 
-    assert html =~ "Published row"
-    assert html =~ "Draft row"
+    assert has_element?(view, "#admin-posts", "Published row")
+    assert has_element?(view, "#admin-posts", "Draft row")
     assert has_element?(view, "#posts-#{published.id} [data-role='post-status']", "Published")
-    assert html =~ Calendar.strftime(published.published_at, "%b %-d, %Y")
+
+    assert has_element?(
+             view,
+             "#posts-#{published.id}",
+             Calendar.strftime(published.published_at, "%b %-d, %Y")
+           )
   end
 end

@@ -11,9 +11,9 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
     draft = draft_post_fixture(%{title: "Hidden draft"})
     published = post_fixture(%{title: "Visible article"})
 
-    {:ok, _view, html} = live(conn, ~p"/blog")
-    assert html =~ published.title
-    refute html =~ draft.title
+    {:ok, view, _html} = live(conn, ~p"/blog")
+    assert has_element?(view, "#posts-#{published.id}", published.title)
+    refute has_element?(view, "#posts-grid", draft.title)
 
     assert_raise Ecto.NoResultsError, fn -> live(conn, ~p"/blog/#{draft.slug}") end
     assert_raise Ecto.NoResultsError, fn -> live(conn, ~p"/blog/#{draft.id}") end
@@ -82,14 +82,14 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
 
     {:ok, _phoenix} = Posts.publish_post(phoenix)
 
-    {:ok, category_view, category_html} = live(conn, ~p"/blog?category=elixir")
-    assert category_html =~ "OTP patterns"
-    refute category_html =~ "LiveView patterns"
+    {:ok, category_view, _html} = live(conn, ~p"/blog?category=elixir")
+    assert has_element?(category_view, "#posts-grid", "OTP patterns")
+    refute has_element?(category_view, "#posts-grid", "LiveView patterns")
     assert has_element?(category_view, "a[href*='tag=otp']", "OTP")
 
-    {:ok, _tag_view, tag_html} = live(conn, ~p"/blog?tag=liveview")
-    assert tag_html =~ "LiveView patterns"
-    refute tag_html =~ "OTP patterns"
+    {:ok, tag_view, _html} = live(conn, ~p"/blog?tag=liveview")
+    assert has_element?(tag_view, "#posts-grid", "LiveView patterns")
+    refute has_element?(tag_view, "#posts-grid", "OTP patterns")
   end
 
   test "index cards expose editorial metadata and deterministic pagination", %{conn: conn} do
@@ -97,11 +97,11 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
       post_fixture(%{title: "Article #{number}", summary: "Summary #{number}"})
     end)
 
-    {:ok, view, html} = live(conn, ~p"/blog")
+    {:ok, view, _html} = live(conn, ~p"/blog")
 
     assert has_element?(view, ".post-card .post-category")
     assert has_element?(view, ".post-card .reading-time", "min read")
-    assert html =~ "Summary"
+    assert has_element?(view, "#posts-grid", "Summary")
     assert has_element?(view, "#blog-next[href='/blog?page=2']")
 
     {:ok, page_two, _html} = live(conn, ~p"/blog?page=2")
@@ -146,9 +146,9 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
   test "Portuguese articles localize reading labels", %{conn: conn} do
     post = post_fixture(%{title: "Leitura guiada", language: :pt_br, body: "## Primeiro passo"})
 
-    {:ok, view, html} = live(conn, ~p"/blog/#{post.slug}")
+    {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
-    assert html =~ "Neste artigo"
+    assert has_element?(view, "#article-toc", "Neste artigo")
     assert has_element?(view, ".reading-time", "min de leitura")
     assert has_element?(view, ".back-link", "Voltar ao blog")
   end
@@ -168,15 +168,29 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
     {:ok, _view, html} = live(conn, ~p"/blog/#{post.slug}")
 
     canonical = "http://localhost:4002/blog/#{post.slug}"
-    assert html =~ ~s(<html lang="pt-BR">)
-    assert html =~ ~s(<link rel="canonical" href="#{canonical}")
-    assert html =~ ~s(<meta property="og:type" content="article")
-    assert html =~ ~s(<meta property="og:image" content="https://example.com/cover.png")
-    assert html =~ ~s(<meta property="og:locale" content="pt_BR")
-    assert html =~ ~s(<meta property="article:published_time")
-    assert html =~ ~s(<script type="application/ld+json")
+    document = LazyHTML.from_document(html)
+    assert LazyHTML.attribute(LazyHTML.query(document, "html"), "lang") == ["pt-BR"]
 
-    [_, json] = Regex.run(~r/<script type="application\/ld\+json">\s*(.*?)\s*<\/script>/s, html)
+    assert LazyHTML.attribute(LazyHTML.query(document, "link[rel='canonical']"), "href") == [
+             canonical
+           ]
+
+    assert LazyHTML.attribute(LazyHTML.query(document, "meta[property='og:type']"), "content") ==
+             ["article"]
+
+    assert LazyHTML.attribute(LazyHTML.query(document, "meta[property='og:image']"), "content") ==
+             [
+               "https://example.com/cover.png"
+             ]
+
+    assert LazyHTML.attribute(LazyHTML.query(document, "meta[property='og:locale']"), "content") ==
+             [
+               "pt_BR"
+             ]
+
+    assert Enum.count(LazyHTML.query(document, "meta[property='article:published_time']")) == 1
+
+    json = document |> LazyHTML.query("script[type='application/ld+json']") |> LazyHTML.text()
     assert %{"@type" => "BlogPosting", "headline" => "Metadata <Guide>"} = Jason.decode!(json)
   end
 
@@ -185,7 +199,16 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
 
     {:ok, _view, html} = live(conn, ~p"/blog/#{post.slug}")
 
-    assert html =~ ~s(<meta name="description" content="Summary fallback")
-    assert html =~ ~s(<meta property="og:image" content="http://localhost:4002/images/logo.svg")
+    document = LazyHTML.from_document(html)
+
+    assert LazyHTML.attribute(LazyHTML.query(document, "meta[name='description']"), "content") ==
+             [
+               "Summary fallback"
+             ]
+
+    assert LazyHTML.attribute(LazyHTML.query(document, "meta[property='og:image']"), "content") ==
+             [
+               "http://localhost:4002/images/logo.svg"
+             ]
   end
 end

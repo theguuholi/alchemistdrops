@@ -35,9 +35,9 @@ defmodule AlchemistdropsWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <main class="p-4 sm:p-6 lg:p-8 w-full">
+    <div id="app-content" class="p-4 sm:p-6 lg:p-8 w-full">
       {render_slot(@inner_block)}
-    </main>
+    </div>
     <.flash_group flash={@flash} />
     """
   end

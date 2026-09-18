@@ -351,7 +351,7 @@ defmodule AlchemistdropsWeb.CourseLive.ShowTest do
 
       assert {:noreply, updated_socket} = Show.handle_event("purchase", %{}, socket)
 
-      assert updated_socket.assigns.enrolled == false
+      assert updated_socket.assigns.enrolled? == false
       assert Phoenix.Flash.get(updated_socket.assigns.flash, :error) =~ "free"
     end
 

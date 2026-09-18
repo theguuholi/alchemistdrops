@@ -2,6 +2,8 @@ defmodule Alchemistdrops.AccountsTest do
   use Alchemistdrops.DataCase
 
   doctest Alchemistdrops.Accounts
+  doctest Alchemistdrops.Accounts.Scope
+  doctest Alchemistdrops.Accounts.UserNotifier
 
   alias Alchemistdrops.Accounts
 

@@ -25,7 +25,7 @@ defmodule Alchemistdrops.Accounts.User do
   @type password :: String.t() | nil
 
   @typedoc "Persisted password hash. Nil until password authentication is configured."
-  @type password_hash :: String.t() | nil
+  @type hashed_password :: String.t() | nil
 
   @typedoc "Time at which the email was confirmed. Nil for an unconfirmed account."
   @type confirmed_at :: DateTime.t() | nil
@@ -33,21 +33,23 @@ defmodule Alchemistdrops.Accounts.User do
   @typedoc "Most recent authentication time carried by the virtual field."
   @type authenticated_at :: DateTime.t() | nil
 
-  @typedoc "Persistence timestamp. Nil for a schema that has not been stored yet."
-  @type persistence_time :: DateTime.t() | nil
+  @typedoc "Timestamp when the account was persisted. Nil before persistence."
+  @type inserted_at :: DateTime.t() | nil
+
+  @typedoc "Timestamp when the account was last updated. Nil before persistence."
+  @type updated_at :: DateTime.t() | nil
 
   @typedoc "A persisted or newly constructed Alchemistdrops account."
   @type t :: %__MODULE__{
-          __meta__: Ecto.Schema.Metadata.t(),
           id: id(),
           email: email(),
           password: password(),
-          hashed_password: password_hash(),
+          hashed_password: hashed_password(),
           confirmed_at: confirmed_at(),
           authenticated_at: authenticated_at(),
           role: role(),
-          inserted_at: persistence_time(),
-          updated_at: persistence_time()
+          inserted_at: inserted_at(),
+          updated_at: updated_at()
         }
 
   @primary_key {:id, :binary_id, autogenerate: true}
@@ -88,7 +90,7 @@ defmodule Alchemistdrops.Accounts.User do
       ...>   %{email: "preview@example.com"},
       ...>   validate_unique: false
       ...> )
-      iex> Ecto.Changeset.get_change(changeset, :email)
+      iex> changeset.changes.email
       "preview@example.com"
   """
   @spec email_changeset(t(), map()) :: Ecto.Changeset.t(t())
@@ -147,7 +149,7 @@ defmodule Alchemistdrops.Accounts.User do
       ...>   %Alchemistdrops.Accounts.User{},
       ...>   %{password: "SecurePassword123!"}
       ...> )
-      iex> is_binary(Ecto.Changeset.get_change(changeset, :hashed_password))
+      iex> is_binary(changeset.changes.hashed_password)
       true
 
       iex> changeset = Alchemistdrops.Accounts.User.password_changeset(
@@ -155,7 +157,7 @@ defmodule Alchemistdrops.Accounts.User do
       ...>   %{password: "SecurePassword123!"},
       ...>   hash_password: false
       ...> )
-      iex> Ecto.Changeset.get_change(changeset, :password)
+      iex> changeset.changes.password
       "SecurePassword123!"
   """
   @spec password_changeset(t(), map()) :: Ecto.Changeset.t(t())
@@ -205,7 +207,7 @@ defmodule Alchemistdrops.Accounts.User do
       iex> changeset = Alchemistdrops.Accounts.User.confirm_changeset(
       ...>   %Alchemistdrops.Accounts.User{}
       ...> )
-      iex> %DateTime{} = Ecto.Changeset.get_change(changeset, :confirmed_at)
+      iex> %DateTime{} = changeset.changes.confirmed_at
   """
   @spec confirm_changeset(t()) :: Ecto.Changeset.t(t())
   def confirm_changeset(user) do

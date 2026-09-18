@@ -8,6 +8,8 @@ defmodule Alchemistdrops.EnrollmentsTest do
   import Alchemistdrops.EnrollmentsFixtures
   import Alchemistdrops.AccountsFixtures
 
+  doctest Alchemistdrops.Enrollments
+
   describe "enroll_user/2" do
     test "Scenario: Enrolling user in a course" do
       # Given a user and a course exist

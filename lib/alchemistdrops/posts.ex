@@ -1,9 +1,14 @@
 defmodule Alchemistdrops.Posts do
   @moduledoc """
-  The Posts context.
+  Owns the editorial lifecycle and public discovery of blog posts.
+
+  This context keeps drafts private, publication requirements consistent, and
+  category/tag creation transactional. Public pages and admin tools use this
+  boundary instead of constructing Ecto queries or editorial rules themselves.
   """
 
   import Ecto.Query, warn: false
+  alias Alchemistdrops.Courses.Course
   alias Alchemistdrops.Posts.{Category, Post, Tag}
   alias Alchemistdrops.Repo
   alias Ecto.Multi
@@ -12,6 +17,7 @@ defmodule Alchemistdrops.Posts do
   @default_page_size 12
   @max_page_size 50
 
+  @typedoc "A normalized page of published posts and its URL-driven taxonomy state."
   @type published_page :: %{
           posts: [Post.t()],
           categories: [map()],
@@ -22,27 +28,41 @@ defmodule Alchemistdrops.Posts do
           has_next_page?: boolean()
         }
 
+  @typedoc "The post, optional published course, and related articles used by a public detail page."
   @type published_post_page :: %{
           post: Post.t(),
-          related_course: struct() | nil,
+          related_course: Course.t() | nil,
           related_posts: [Post.t()]
         }
 
   @doc """
-  Returns the list of published posts ordered by most recent.
+  Returns all posts ordered by most recently inserted.
 
   ## Examples
 
-      iex> list_posts()
-      [%Post{}, ...]
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture()
+      iex> Enum.map(Alchemistdrops.Posts.list_posts(), & &1.id)
+      [post.id]
 
   """
+  @spec list_posts() :: [Post.t()]
   def list_posts do
     Post
     |> order_by([p], desc: p.inserted_at)
     |> Repo.all()
   end
 
+  @doc """
+  Returns every post for administration with public associations preloaded.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.draft_post_fixture()
+      iex> [loaded] = Alchemistdrops.Posts.list_admin_posts()
+      iex> {loaded.id == post.id, Ecto.assoc_loaded?(loaded.category), Ecto.assoc_loaded?(loaded.tags)}
+      {true, true, true}
+  """
+  @spec list_admin_posts() :: [Post.t()]
   def list_admin_posts do
     Post
     |> order_by([p], desc: p.inserted_at)
@@ -50,18 +70,49 @@ defmodule Alchemistdrops.Posts do
     |> Repo.all()
   end
 
+  @doc """
+  Returns post categories ordered by name.
+
+  ## Examples
+
+      iex> category = Alchemistdrops.PostsFixtures.category_fixture(%{name: "Elixir"})
+      iex> Enum.map(Alchemistdrops.Posts.list_categories(), & &1.id)
+      [category.id]
+  """
+  @spec list_categories() :: [Category.t()]
   def list_categories do
     Category
     |> order_by([c], asc: c.name)
     |> Repo.all()
   end
 
+  @doc """
+  Loads one post with all associations required by the admin editor.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture()
+      iex> Alchemistdrops.Posts.get_admin_post!(post.id).id == post.id
+      true
+  """
+  @spec get_admin_post!(Ecto.UUID.t()) :: Post.t()
   def get_admin_post!(id) do
     Post
     |> Repo.get!(id)
     |> Repo.preload(@public_preloads)
   end
 
+  @doc """
+  Returns published posts with optional page, page-size, category, and tag filters.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture()
+      iex> Enum.map(Alchemistdrops.Posts.list_published_posts(page_size: 1), & &1.id)
+      [post.id]
+  """
+  @spec list_published_posts() :: [Post.t()]
+  @spec list_published_posts(keyword()) :: [Post.t()]
   def list_published_posts(opts \\ []) do
     page = positive_integer(Keyword.get(opts, :page), 1)
 
@@ -81,7 +132,15 @@ defmodule Alchemistdrops.Posts do
 
   The result includes a one-record lookahead as `has_next_page?`, while `posts`
   contains at most the requested page size.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture()
+      iex> page = Alchemistdrops.Posts.list_published_page(%{}, page_size: 1)
+      iex> {Enum.map(page.posts, & &1.id), page.current_page, page.has_next_page?}
+      {[post.id], 1, false}
   """
+  @spec list_published_page(map()) :: published_page()
   @spec list_published_page(map(), keyword()) :: published_page()
   def list_published_page(params, opts \\ []) when is_map(params) do
     page_size =
@@ -114,17 +173,49 @@ defmodule Alchemistdrops.Posts do
     }
   end
 
+  @doc """
+  Returns up to `limit` recent published posts.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture()
+      iex> Enum.map(Alchemistdrops.Posts.list_recent_published_posts(1), & &1.id)
+      [post.id]
+  """
+  @spec list_recent_published_posts(pos_integer()) :: [Post.t()]
   def list_recent_published_posts(limit) when is_integer(limit) and limit > 0 do
     published_query()
     |> limit(^limit)
     |> Repo.all()
   end
 
+  @doc """
+  Returns every published post without pagination.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture()
+      iex> Enum.map(Alchemistdrops.Posts.list_all_published_posts(), & &1.id)
+      [post.id]
+  """
+  @spec list_all_published_posts() :: [Post.t()]
   def list_all_published_posts do
     published_query()
     |> Repo.all()
   end
 
+  @doc """
+  Returns categories that have published posts together with their counts.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture()
+      iex> [%{category: category, published_count: 1}] = Alchemistdrops.Posts.list_categories_with_published_counts()
+      iex> category.id == post.category_id
+      true
+  """
+  @spec list_categories_with_published_counts() ::
+          [%{category: Category.t(), published_count: non_neg_integer()}]
   def list_categories_with_published_counts do
     from(c in Category,
       join: p in assoc(c, :posts),
@@ -136,6 +227,18 @@ defmodule Alchemistdrops.Posts do
     |> Repo.all()
   end
 
+  @doc """
+  Returns tags that have published posts together with their counts.
+
+  ## Examples
+
+      iex> _post = Alchemistdrops.PostsFixtures.post_fixture(%{tag_names: "OTP"})
+      iex> [%{tag: tag, published_count: 1}] = Alchemistdrops.Posts.list_tags_with_published_counts()
+      iex> tag.name
+      "OTP"
+  """
+  @spec list_tags_with_published_counts() ::
+          [%{tag: Tag.t(), published_count: non_neg_integer()}]
   def list_tags_with_published_counts do
     from(t in Tag,
       join: p in assoc(t, :posts),
@@ -147,6 +250,18 @@ defmodule Alchemistdrops.Posts do
     |> Repo.all()
   end
 
+  @doc """
+  Returns published posts related by shared tags and then category.
+
+  ## Examples
+
+      iex> category = Alchemistdrops.PostsFixtures.category_fixture(%{name: "Architecture"})
+      iex> current = Alchemistdrops.PostsFixtures.post_fixture(%{title: "Current", category_id: category.id})
+      iex> related = Alchemistdrops.PostsFixtures.post_fixture(%{title: "Related", category_id: category.id})
+      iex> Enum.map(Alchemistdrops.Posts.list_related_posts(current, 1), & &1.id)
+      [related.id]
+  """
+  @spec list_related_posts(Post.t(), pos_integer()) :: [Post.t()]
   def list_related_posts(%Post{} = post, limit) when is_integer(limit) and limit > 0 do
     post = Repo.preload(post, [:tags])
     tag_ids = Enum.map(post.tags, & &1.id)
@@ -185,10 +300,13 @@ defmodule Alchemistdrops.Posts do
 
   ## Examples
 
-      iex> increment_views(post)
-      {:ok, %Post{}}
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture(%{views: 4})
+      iex> {:ok, updated} = Alchemistdrops.Posts.increment_views(post)
+      iex> updated.views
+      5
 
   """
+  @spec increment_views(Post.t()) :: {:ok, Post.t()} | {:error, :not_found}
   def increment_views(%Post{} = post) do
     case from(p in Post, where: p.id == ^post.id) |> Repo.update_all(inc: [views: 1]) do
       {1, _rows} -> {:ok, Repo.get!(Post, post.id)}
@@ -203,41 +321,82 @@ defmodule Alchemistdrops.Posts do
 
   ## Examples
 
-      iex> get_post!(123)
-      %Post{}
-
-      iex> get_post!(456)
-      ** (Ecto.NoResultsError)
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture()
+      iex> Alchemistdrops.Posts.get_post!(post.id).id == post.id
+      true
 
   """
+  @spec get_post!(Ecto.UUID.t()) :: Post.t()
   def get_post!(id), do: Repo.get!(Post, id)
 
   @doc """
   Gets a single post by slug.
 
   Raises `Ecto.NoResultsError` if the Post does not exist.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture(%{title: "Slug lookup"})
+      iex> Alchemistdrops.Posts.get_post_by_slug!(post.slug).id == post.id
+      true
   """
+  @spec get_post_by_slug!(String.t()) :: Post.t()
   def get_post_by_slug!(slug), do: Repo.get_by!(Post, slug: slug)
 
   @doc """
   Gets a single post by slug.
 
   Returns `nil` if the Post does not exist.
+
+  ## Examples
+
+      iex> Alchemistdrops.Posts.get_post_by_slug("missing")
+      nil
   """
+  @spec get_post_by_slug(String.t()) :: Post.t() | nil
   def get_post_by_slug(slug), do: Repo.get_by(Post, slug: slug)
 
+  @doc """
+  Loads a published post by slug and raises when it is not public.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture(%{title: "Public slug"})
+      iex> Alchemistdrops.Posts.get_published_post_by_slug!(post.slug).id == post.id
+      true
+  """
+  @spec get_published_post_by_slug!(String.t()) :: Post.t()
   def get_published_post_by_slug!(slug) do
     published_query()
     |> where([p], p.slug == ^slug)
     |> Repo.one!()
   end
 
+  @doc """
+  Loads a published post by slug or returns `nil`.
+
+  ## Examples
+
+      iex> Alchemistdrops.Posts.get_published_post_by_slug("missing")
+      nil
+  """
+  @spec get_published_post_by_slug(String.t()) :: Post.t() | nil
   def get_published_post_by_slug(slug) do
     published_query()
     |> where([p], p.slug == ^slug)
     |> Repo.one()
   end
 
+  @doc """
+  Loads a published post by UUID and raises when it is not public.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture()
+      iex> Alchemistdrops.Posts.get_published_post_by_id!(post.id).id == post.id
+      true
+  """
+  @spec get_published_post_by_id!(Ecto.UUID.t()) :: Post.t()
   def get_published_post_by_id!(id) do
     published_query()
     |> where([p], p.id == ^id)
@@ -248,6 +407,13 @@ defmodule Alchemistdrops.Posts do
   Loads the public data for a post detail page by canonical slug or legacy UUID.
 
   Canonical slugs take precedence even when the slug itself has UUID syntax.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture()
+      iex> page = Alchemistdrops.Posts.get_published_post_page!(post.slug)
+      iex> page.post.id == post.id
+      true
   """
   @spec get_published_post_page!(String.t()) :: published_post_page()
   def get_published_post_page!(identifier) when is_binary(identifier) do
@@ -269,13 +435,16 @@ defmodule Alchemistdrops.Posts do
 
   ## Examples
 
-      iex> create_post(%{field: value})
-      {:ok, %Post{}}
+      iex> {:ok, post} = Alchemistdrops.Posts.create_post(%{title: "Draft"})
+      iex> {post.title, post.status}
+      {"Draft", :draft}
 
-      iex> create_post(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+      iex> {:error, changeset} = Alchemistdrops.Posts.create_post(%{})
+      iex> changeset.valid?
+      false
 
   """
+  @spec create_post(map()) :: {:ok, Post.t()} | {:error, Ecto.Changeset.t()}
   def create_post(attrs) do
     with {:ok, tag_names} <- validate_tag_names(attrs) do
       Multi.new()
@@ -297,13 +466,13 @@ defmodule Alchemistdrops.Posts do
 
   ## Examples
 
-      iex> update_post(post, %{field: new_value})
-      {:ok, %Post{}}
-
-      iex> update_post(post, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+      iex> post = Alchemistdrops.PostsFixtures.draft_post_fixture()
+      iex> {:ok, updated} = Alchemistdrops.Posts.update_post(post, %{title: "Updated draft"})
+      iex> updated.title
+      "Updated draft"
 
   """
+  @spec update_post(Post.t(), map()) :: {:ok, Post.t()} | {:error, Ecto.Changeset.t()}
   def update_post(%Post{} = post, attrs) do
     with {:ok, tag_names} <- validate_tag_names(attrs) do
       post = Repo.preload(post, [:category, :tags])
@@ -322,6 +491,19 @@ defmodule Alchemistdrops.Posts do
     end
   end
 
+  @doc """
+  Publishes a complete draft and records its first publication timestamp.
+
+  ## Examples
+
+      iex> draft = Alchemistdrops.PostsFixtures.draft_post_fixture(%{body: "Body", summary: "Summary"})
+      iex> category = Alchemistdrops.PostsFixtures.category_fixture()
+      iex> {:ok, ready} = Alchemistdrops.Posts.update_post(draft, %{category_id: category.id})
+      iex> {:ok, published} = Alchemistdrops.Posts.publish_post(ready)
+      iex> {published.status, is_struct(published.published_at, DateTime)}
+      {:published, true}
+  """
+  @spec publish_post(Post.t()) :: {:ok, Post.t()} | {:error, Ecto.Changeset.t()}
   def publish_post(%Post{} = post) do
     published_at = post.published_at || DateTime.utc_now() |> DateTime.truncate(:second)
 
@@ -332,6 +514,17 @@ defmodule Alchemistdrops.Posts do
     |> Repo.update()
   end
 
+  @doc """
+  Returns a published post to draft state without deleting its content.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture()
+      iex> {:ok, draft} = Alchemistdrops.Posts.unpublish_post(post)
+      iex> draft.status
+      :draft
+  """
+  @spec unpublish_post(Post.t()) :: {:ok, Post.t()} | {:error, Ecto.Changeset.t()}
   def unpublish_post(%Post{} = post) do
     post
     |> Ecto.Changeset.change(status: :draft)
@@ -343,13 +536,13 @@ defmodule Alchemistdrops.Posts do
 
   ## Examples
 
-      iex> delete_post(post)
-      {:ok, %Post{}}
-
-      iex> delete_post(post)
-      {:error, %Ecto.Changeset{}}
+      iex> post = Alchemistdrops.PostsFixtures.draft_post_fixture()
+      iex> {:ok, deleted} = Alchemistdrops.Posts.delete_post(post)
+      iex> deleted.id == post.id
+      true
 
   """
+  @spec delete_post(Post.t()) :: {:ok, Post.t()} | {:error, Ecto.Changeset.t()}
   def delete_post(%Post{} = post) do
     Repo.delete(post)
   end
@@ -359,10 +552,13 @@ defmodule Alchemistdrops.Posts do
 
   ## Examples
 
-      iex> change_post(post)
-      %Ecto.Changeset{data: %Post{}}
+      iex> changeset = Alchemistdrops.Posts.change_post(%Alchemistdrops.Posts.Post{})
+      iex> match?(%Ecto.Changeset{}, changeset)
+      true
 
   """
+  @spec change_post(Post.t()) :: Ecto.Changeset.t()
+  @spec change_post(Post.t(), map()) :: Ecto.Changeset.t()
   def change_post(%Post{} = post, attrs \\ %{}) do
     update_changeset(post, attrs)
   end

@@ -5,15 +5,16 @@ defmodule AlchemistdropsWeb.UserLive.SettingsTest do
   import Phoenix.LiveViewTest
   import Alchemistdrops.AccountsFixtures
 
-  describe "Settings page" do
-    test "renders settings page", %{conn: conn} do
-      {:ok, _lv, html} =
+  describe "mount/3" do
+    test "given an authenticated user, when the page loads, then it renders both settings forms",
+         %{conn: conn} do
+      {:ok, view, _html} =
         conn
         |> log_in_user(user_fixture())
         |> live(~p"/users/settings")
 
-      assert html =~ "Change Email"
-      assert html =~ "Save Password"
+      assert has_element?(view, "#email_form button", "Change Email")
+      assert has_element?(view, "#password_form button", "Save Password")
     end
 
     test "redirects if user is not logged in", %{conn: conn} do
@@ -33,11 +34,12 @@ defmodule AlchemistdropsWeb.UserLive.SettingsTest do
         |> live(~p"/users/settings")
         |> follow_redirect(conn, ~p"/users/log-in")
 
-      assert conn.resp_body =~ "You must re-authenticate to access this page."
+      document = LazyHTML.from_document(conn.resp_body)
+      assert LazyHTML.text(LazyHTML.query(document, "#flash-error")) =~ "You must re-authenticate"
     end
   end
 
-  describe "update email form" do
+  describe "handle_event/3 - validate_email and update_email" do
     setup %{conn: conn} do
       user = user_fixture()
       %{conn: log_in_user(conn, user), user: user}
@@ -48,48 +50,41 @@ defmodule AlchemistdropsWeb.UserLive.SettingsTest do
 
       {:ok, lv, _html} = live(conn, ~p"/users/settings")
 
-      result =
-        lv
-        |> form("#email_form", %{
-          "user" => %{"email" => new_email}
-        })
-        |> render_submit()
+      lv
+      |> form("#email_form", %{"user" => %{"email" => new_email}})
+      |> render_submit()
 
-      assert result =~ "A link to confirm your email"
+      assert has_element?(lv, "#flash-info", "A link to confirm your email")
       assert Accounts.get_user_by_email(user.email)
     end
 
     test "renders errors with invalid data (phx-change)", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/users/settings")
 
-      result =
-        lv
-        |> element("#email_form")
-        |> render_change(%{
-          "action" => "update_email",
-          "user" => %{"email" => "with spaces"}
-        })
+      lv
+      |> element("#email_form")
+      |> render_change(%{
+        "action" => "update_email",
+        "user" => %{"email" => "with spaces"}
+      })
 
-      assert result =~ "Change Email"
-      assert result =~ "must have the @ sign and no spaces"
+      assert has_element?(lv, "#email_form button", "Change Email")
+      assert has_element?(lv, "#user_email-error-0", "must have the @ sign and no spaces")
     end
 
     test "renders errors with invalid data (phx-submit)", %{conn: conn, user: user} do
       {:ok, lv, _html} = live(conn, ~p"/users/settings")
 
-      result =
-        lv
-        |> form("#email_form", %{
-          "user" => %{"email" => user.email}
-        })
-        |> render_submit()
+      lv
+      |> form("#email_form", %{"user" => %{"email" => user.email}})
+      |> render_submit()
 
-      assert result =~ "Change Email"
-      assert result =~ "did not change"
+      assert has_element?(lv, "#email_form button", "Change Email")
+      assert has_element?(lv, "#user_email-error-0", "did not change")
     end
   end
 
-  describe "update password form" do
+  describe "handle_event/3 - validate_password and update_password" do
     setup %{conn: conn} do
       user = user_fixture()
       %{conn: log_in_user(conn, user), user: user}
@@ -126,41 +121,49 @@ defmodule AlchemistdropsWeb.UserLive.SettingsTest do
     test "renders errors with invalid data (phx-change)", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/users/settings")
 
-      result =
-        lv
-        |> element("#password_form")
-        |> render_change(%{
-          "user" => %{
-            "password" => "too short",
-            "password_confirmation" => "does not match"
-          }
-        })
+      lv
+      |> element("#password_form")
+      |> render_change(%{
+        "user" => %{
+          "password" => "too short",
+          "password_confirmation" => "does not match"
+        }
+      })
 
-      assert result =~ "Save Password"
-      assert result =~ "should be at least 12 character(s)"
-      assert result =~ "does not match password"
+      assert has_element?(lv, "#password_form button", "Save Password")
+      assert has_element?(lv, "[id^='user_password-error-']", "should be at least 12")
+
+      assert has_element?(
+               lv,
+               "#user_password_confirmation-error-0",
+               "does not match password"
+             )
     end
 
     test "renders errors with invalid data (phx-submit)", %{conn: conn} do
       {:ok, lv, _html} = live(conn, ~p"/users/settings")
 
-      result =
-        lv
-        |> form("#password_form", %{
-          "user" => %{
-            "password" => "too short",
-            "password_confirmation" => "does not match"
-          }
-        })
-        |> render_submit()
+      lv
+      |> form("#password_form", %{
+        "user" => %{
+          "password" => "too short",
+          "password_confirmation" => "does not match"
+        }
+      })
+      |> render_submit()
 
-      assert result =~ "Save Password"
-      assert result =~ "should be at least 12 character(s)"
-      assert result =~ "does not match password"
+      assert has_element?(lv, "#password_form button", "Save Password")
+      assert has_element?(lv, "[id^='user_password-error-']", "should be at least 12")
+
+      assert has_element?(
+               lv,
+               "#user_password_confirmation-error-0",
+               "does not match password"
+             )
     end
   end
 
-  describe "confirm email" do
+  describe "mount/3 - confirm email" do
     setup %{conn: conn} do
       user = user_fixture()
       email = unique_user_email()
