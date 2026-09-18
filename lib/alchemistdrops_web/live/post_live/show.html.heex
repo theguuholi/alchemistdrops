@@ -60,7 +60,7 @@
   </header>
 
   <section class="post-body px-5 py-10 sm:px-8 sm:py-14 lg:px-10">
-    <div class="mx-auto max-w-6xl">
+    <div class="mx-auto max-w-7xl">
       <div :if={@article.toc != []} id="article-mobile-toc" class="mb-8 lg:hidden">
         <details class="rounded-xl border border-base-300 bg-base-200/50 p-4">
           <summary class="cursor-pointer font-semibold">{@copy.outline}</summary>
@@ -74,7 +74,7 @@
         </details>
       </div>
 
-      <div class="lg:grid lg:grid-cols-[minmax(0,46rem)_15rem] lg:gap-16">
+      <div class="post-content-grid lg:grid lg:grid-cols-[minmax(0,1fr)_16rem] lg:gap-12 xl:gap-16">
         <article
           id="post-article"
           class="prose max-w-none"
