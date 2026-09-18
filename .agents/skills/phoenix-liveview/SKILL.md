@@ -30,6 +30,7 @@ lib/alchemistdrops_web/live/car_live/form.html.heex
 ## LiveView structure
 
 - Name LiveViews with a `Live` suffix and place routes in the existing router scope without repeating its module alias.
+- Keep LiveView page and stateful LiveComponent modules focused on framework callbacks: do not add `@moduledoc`, `@doc`, callback/helper `@spec`, local `@type`/`@typedoc`, ExDoc examples, or doctests. Retain `@impl true`, and document reusable APIs in the context, presenter, or function-component module that owns them.
 - Use `<.link navigate={...}>`, `<.link patch={...}>`, `push_navigate/2`, and `push_patch/2`; do not use deprecated `live_redirect` or `live_patch` APIs.
 - Reuse existing function components and LiveComponents. Creating a new component requires the approval process in the `phoenix-development` skill.
 - Assign only state needed to render or process later events. Do not retain large collections as ordinary assigns when a stream fits the interaction.

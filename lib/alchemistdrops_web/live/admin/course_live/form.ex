@@ -1,8 +1,4 @@
 defmodule AlchemistdropsWeb.Admin.CourseLive.Form do
-  @moduledoc """
-  Admin LiveView for creating and editing courses.
-  Mobile-first responsive design with proper validation.
-  """
   use AlchemistdropsWeb, :live_view
 
   alias Alchemistdrops.Courses

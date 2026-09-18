@@ -1,10 +1,4 @@
 defmodule AlchemistdropsWeb.Admin.EnrollmentLive.Index do
-  @moduledoc """
-  Admin LiveView for viewing enrollments.
-
-  Displays all enrollments with user and course information.
-  Mobile-first responsive design with proper accessibility.
-  """
   use AlchemistdropsWeb, :live_view
 
   alias Alchemistdrops.Enrollments

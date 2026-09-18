@@ -1,10 +1,4 @@
 defmodule AlchemistdropsWeb.Admin.PostLive.Index do
-  @moduledoc """
-  Admin LiveView for managing blog posts.
-
-  Displays all posts with their view counts.
-  Mobile-first responsive design with proper accessibility.
-  """
   use AlchemistdropsWeb, :live_view
 
   alias Alchemistdrops.Posts

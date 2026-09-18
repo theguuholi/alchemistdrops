@@ -1,10 +1,4 @@
 defmodule AlchemistdropsWeb.Admin.CourseLive.Index do
-  @moduledoc """
-  Admin LiveView for managing courses.
-
-  Displays all courses with their status and price information.
-  Mobile-first responsive design with proper accessibility.
-  """
   use AlchemistdropsWeb, :live_view
 
   alias Alchemistdrops.Courses

@@ -32,6 +32,9 @@ When approved, use a function component with explicit `attr` and `slot` contract
 - Use the imported `<.icon>` component rather than calling an icon library module directly.
 - Use the application's imported `<.input>` component when available. Supplying a custom `class` replaces its default classes, so provide the complete styling intentionally.
 - Build nested component forms with `Phoenix.Component.inputs_for/1`; do not reintroduce legacy `Phoenix.HTML.form_for` or `Phoenix.HTML.inputs_for` APIs.
+- Inspect `CoreComponents` and nearby feature components before creating new markup. Reuse a component only when its semantic contract, heading level, slots, DOM contract, and styling responsibility fit the new region; do not force reuse through incorrect headings or extensive overrides.
+- When one page contains several substantial, conceptually independent sections that are not reused elsewhere, define them as function components in a `components.ex` file beside that page. Keep the page template as a semantic composition of those sections, and keep section-specific child markup inside its owning component.
+- Promote a page-local component to `CoreComponents` or shared HTML helpers only after multiple pages genuinely reuse it. Name local components for the content responsibility or purpose they render, such as `toolkit_introduction`, not for their container tag or visual styling.
 - Put shared imports and aliases in the web module's `html_helpers` block when they genuinely apply to all HTML modules.
 
 ## HEEx rules
@@ -44,6 +47,8 @@ When approved, use a function component with explicit `attr` and `slot` contract
 - Use `cond` or `case` for multiple branches; Elixir has no `else if` syntax.
 - Express multiple or conditional classes as a list: `class={["base", @active && "active"]}`.
 - Add `phx-no-curly-interpolation` to a parent that displays literal braces in code snippets.
+- Choose HTML5 elements by document meaning: use `header`, `nav`, `main`, `section`, `article`, `aside`, `footer`, and lists when their semantics match the content. Reserve `div` and `span` for layout or decoration when no semantic element fits, and mark purely decorative elements with `aria-hidden="true"`.
+- Do not replace generic wrappers mechanically with landmarks. Each semantic region must have a real purpose and, when required, an accessible heading or label.
 
 ## Semantics, accessibility, and page metadata
 

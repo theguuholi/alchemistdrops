@@ -1,10 +1,4 @@
 defmodule AlchemistdropsWeb.Admin.UserLive.Index do
-  @moduledoc """
-  Admin LiveView for managing users.
-
-  Displays all users with their roles and registration dates.
-  Mobile-first responsive design with proper accessibility.
-  """
   use AlchemistdropsWeb, :live_view
 
   alias Alchemistdrops.Accounts

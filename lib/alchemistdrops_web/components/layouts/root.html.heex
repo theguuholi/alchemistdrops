@@ -69,14 +69,14 @@
   </head>
   <body class="min-h-screen bg-base-100">
     <header class="bg-base-200 border-b border-base-300">
-      <nav class="flex items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+      <nav class="flex flex-wrap items-center gap-4 px-4 py-3 sm:flex-nowrap sm:px-6 lg:px-8">
         <%!-- Logo --%>
-        <a href="/" class="flex items-center gap-2">
+        <a href="/" class="flex shrink-0 items-center gap-2">
           <img src={~p"/images/logo.svg"} width="36" alt="Alchemistdrops" />
         </a>
 
         <%!-- Navigation Links --%>
-        <ul class="flex items-center gap-4 sm:gap-6 text-sm">
+        <ul class="flex w-full flex-wrap items-center gap-4 text-sm sm:ml-auto sm:w-auto sm:flex-nowrap sm:gap-6">
           <li>
             <.link href={~p"/courses"} class="hover:text-primary transition-colors">
               Courses
@@ -85,6 +85,11 @@
           <li>
             <.link href={~p"/blog"} class="hover:text-primary transition-colors">
               Blog
+            </.link>
+          </li>
+          <li>
+            <.link href={~p"/skills"} class="hover:text-primary transition-colors">
+              Skills
             </.link>
           </li>
           <li>
