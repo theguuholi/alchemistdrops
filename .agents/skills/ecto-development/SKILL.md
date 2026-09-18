@@ -15,6 +15,14 @@ Enforce invariants at the changeset and database layers, and enforce ownership a
 - Do not pass unsupported options such as `allow_nil` to `validate_number/3`; validations run only for present non-nil changes unless presence is separately required.
 - Mirror important uniqueness and referential invariants with database constraints and translate them through changeset constraint functions.
 
+## Schema documentation and tests
+
+- Give every schema module an ExDoc-compatible `@moduledoc` that explains what the schema represents, why it matters to the domain, and its principal invariants and relationships. Do not use `@moduledoc false` for domain schemas.
+- Give every public changeset function an ExDoc `@doc` that states its purpose and includes at least one executable `iex>` example. Add `doctest SchemaModule` to that schema's test module; an example is not complete until the doctest executes it.
+- Do not exempt changesets that depend on the database. Run their doctests from a test module using the project's `DataCase` and SQL Sandbox. Make examples self-contained or call fixture helpers by their fully qualified module name, and generate deterministic unique values so examples remain isolated.
+- Create a dedicated `*_test.exs` module for every schema. Cover the valid changeset and every distinct observable behavior: each required field, validation and exact boundary, normalization, database constraint, declared association, default, protected/non-cast field, and public changeset variant. Internal branches with identical public results do not require duplicate cases.
+- Test every declared database constraint both as a translated changeset error and by proving the database rejects an invalid direct operation. Keep exhaustive schema tests even when context tests cover the same happy path.
+
 ## Context and ownership
 
 - Keep persistence and business validation in context functions rather than templates or controllers.
@@ -40,4 +48,4 @@ Enforce invariants at the changeset and database layers, and enforce ownership a
 
 ## Verification
 
-Test valid changes, validation errors, database constraints, association behavior, and query shape. For scoped resources, include own-resource, other-user/tenant, missing-resource, and explicit admin/system cases. Verify rejected operations do not mutate data.
+Run schema doctests and their dedicated test modules. Test valid changes, validation errors, database constraints, association behavior, and query shape. For scoped resources, include own-resource, other-user/tenant, missing-resource, and explicit admin/system cases. Verify rejected operations do not mutate data.
