@@ -1,8 +1,8 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
   <main id="skills-page" class="min-h-screen bg-base-100">
-    <Components.toolkit_header version={@version} />
-    <Components.skill_catalog skills={@skills} />
-    <Components.safety_rules version={@version} />
-    <Components.installation_guide />
+    <.toolkit_introduction version={@version} />
+    <.skill_catalog skills={@skills} />
+    <.safety_rules version={@version} />
+    <.installation_guide />
   </main>
 </Layouts.app>

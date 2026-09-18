@@ -3,6 +3,8 @@ defmodule AlchemistdropsWeb.SkillsLiveTest do
 
   import Phoenix.LiveViewTest
 
+  alias AlchemistdropsWeb.SkillsLive.Components
+
   doctest AlchemistdropsWeb.SkillsLive.Components
   doctest AlchemistdropsWeb.SkillsLive.Index
 
@@ -16,6 +18,38 @@ defmodule AlchemistdropsWeb.SkillsLiveTest do
     phoenix-liveview
   )
   @version "docs/agent-toolkit/VERSION" |> File.read!() |> String.trim()
+
+  describe "toolkit_introduction/1 - semantic structure" do
+    test "given the toolkit version, when the introduction renders, then its regions describe their purpose" do
+      # Given / When
+      document =
+        (&Components.toolkit_introduction/1)
+        |> render_component(version: @version)
+        |> LazyHTML.from_fragment()
+
+      # Then
+      assert Enum.count(
+               LazyHTML.query(
+                 document,
+                 "header#toolkit-introduction"
+               )
+             ) == 1
+
+      assert Enum.count(
+               LazyHTML.query(
+                 document,
+                 "header#toolkit-introduction > section[aria-labelledby='toolkit-heading'] h1#toolkit-heading"
+               )
+             ) == 1
+
+      assert Enum.count(
+               LazyHTML.query(
+                 document,
+                 "aside#toolkit-download[aria-label='Toolkit download'] #download-complete-toolkit"
+               )
+             ) == 1
+    end
+  end
 
   describe "mount/3 - public skill catalog" do
     test "given a visitor, when they open the catalog, then it presents the complete toolkit",

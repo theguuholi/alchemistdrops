@@ -13,49 +13,60 @@ defmodule AlchemistdropsWeb.SkillsLive.Components do
 
   ## Examples
 
-      iex> html = Phoenix.LiveViewTest.render_component(&AlchemistdropsWeb.SkillsLive.Components.toolkit_header/1, version: "1.0.0")
+      iex> html = Phoenix.LiveViewTest.render_component(&AlchemistdropsWeb.SkillsLive.Components.toolkit_introduction/1, version: "1.0.0")
       iex> html =~ ~s(id="download-complete-toolkit")
       true
 
   """
   attr :version, :string, required: true
 
-  @spec toolkit_header(map()) :: Phoenix.LiveView.Rendered.t()
-  def toolkit_header(assigns) do
+  @spec toolkit_introduction(map()) :: Phoenix.LiveView.Rendered.t()
+  def toolkit_introduction(assigns) do
     ~H"""
-    <header class="relative overflow-hidden border-b border-base-300 bg-base-200/60">
-      <div
+    <header
+      id="toolkit-introduction"
+      class="relative overflow-hidden border-b border-base-300 bg-base-200/60"
+    >
+      <span
         class="absolute inset-y-0 right-0 w-2/3 bg-[radial-gradient(circle_at_80%_20%,oklch(var(--p)/0.14),transparent_55%)]"
         aria-hidden="true"
       >
-      </div>
+      </span>
 
-      <div class="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
-        <div class="max-w-3xl">
-          <p class="mb-5 font-mono text-sm text-primary">.agents/skills · v{@version}</p>
-          <h1 class="text-4xl font-bold tracking-tight text-base-content sm:text-6xl">
-            Elixir agent toolkit
-          </h1>
-          <p class="mt-6 max-w-2xl text-lg leading-8 text-base-content/75 sm:text-xl">
-            Practical instructions for agents working with Elixir, Phoenix, LiveView, and Ecto.
-            Download the complete toolkit or choose only the skill your project needs.
+      <section
+        aria-labelledby="toolkit-heading"
+        class="relative mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8"
+      >
+        <p class="mb-5 font-mono text-sm text-primary">.agents/skills · v{@version}</p>
+        <h1
+          id="toolkit-heading"
+          class="text-4xl font-bold tracking-tight text-base-content sm:text-6xl"
+        >
+          Elixir agent toolkit
+        </h1>
+        <p class="mt-6 max-w-2xl text-lg leading-8 text-base-content/75 sm:text-xl">
+          Practical instructions for agents working with Elixir, Phoenix, LiveView, and Ecto.
+          Download the complete toolkit or choose only the skill your project needs.
+        </p>
+
+        <aside
+          id="toolkit-download"
+          aria-label="Toolkit download"
+          class="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center"
+        >
+          <a
+            id="download-complete-toolkit"
+            href={"/downloads/agent-toolkit/alchemistdrops-agent-toolkit-v#{@version}.zip"}
+            download
+            class="btn btn-primary min-h-12 justify-center gap-2 sm:px-6"
+          >
+            <.icon name="hero-arrow-down-tray" class="size-5" /> Download complete toolkit
+          </a>
+          <p class="text-sm text-base-content/60">
+            7 skills · AGENTS.md · optional safety rules
           </p>
-
-          <div class="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <a
-              id="download-complete-toolkit"
-              href={"/downloads/agent-toolkit/alchemistdrops-agent-toolkit-v#{@version}.zip"}
-              download
-              class="btn btn-primary min-h-12 justify-center gap-2 sm:px-6"
-            >
-              <.icon name="hero-arrow-down-tray" class="size-5" /> Download complete toolkit
-            </a>
-            <span class="text-sm text-base-content/60">
-              7 skills · AGENTS.md · optional safety rules
-            </span>
-          </div>
-        </div>
-      </div>
+        </aside>
+      </section>
     </header>
     """
   end

@@ -16,7 +16,7 @@ defmodule AlchemistdropsWeb.SkillsLive.Index do
   """
   use AlchemistdropsWeb, :live_view
 
-  alias AlchemistdropsWeb.SkillsLive.Components
+  import AlchemistdropsWeb.SkillsLive.Components
 
   @version_file Path.expand("../../../../docs/agent-toolkit/VERSION", __DIR__)
   @external_resource @version_file
