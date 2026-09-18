@@ -11,7 +11,7 @@ Enforce invariants at the changeset and database layers, and enforce ownership a
 
 - Use `:string` in `Ecto.Schema` for both varchar and text-backed string columns; the migration chooses `:string` or `:text` storage.
 - Cast only user-editable fields. Set trusted ownership or system fields such as `user_id`, status transitions, and audit values explicitly from trusted context.
-- Access changeset data with `Ecto.Changeset.get_field/2`; do not use struct-style Access syntax on changesets.
+- In changeset implementation code, use `Ecto.Changeset.get_field/2` for the effective value and `Ecto.Changeset.get_change/2` only when behavior must distinguish a submitted change from existing data. Never use Access syntax such as `changeset[:field]`.
 - Do not pass unsupported options such as `allow_nil` to `validate_number/3`; validations run only for present non-nil changes unless presence is separately required.
 - Mirror important uniqueness and referential invariants with database constraints and translate them through changeset constraint functions.
 
@@ -24,6 +24,7 @@ Enforce invariants at the changeset and database layers, and enforce ownership a
 - Give every public changeset function a precise spec such as `@spec changeset(t(), map()) :: Ecto.Changeset.t()`. Context functions that accept or return schemas must reference `Schema.t()` in their specs.
 - Database-backed doctests run from a test module using the project's `DataCase` and SQL Sandbox. Keep examples self-contained and generate deterministic unique values so they remain isolated.
 - Create a dedicated `*_test.exs` module for every schema. Cover the valid changeset and every distinct observable behavior: each required field, validation and exact boundary, normalization, database constraint, declared association, default, protected/non-cast field, and public changeset variant. Internal branches with identical public results do not require duplicate cases.
+- When a test must prove which values were recorded as changes, assert against the changes map directly, such as `assert changeset.changes.name == "Elixir Patterns"` and `assert changeset.changes.slug == "elixir-patterns"`. Do not call `Ecto.Changeset.get_change/2` for these assertions.
 - Test every declared database constraint both as a translated changeset error and by proving the database rejects an invalid direct operation. Keep exhaustive schema tests even when context tests cover the same happy path.
 
 ## Context and ownership
