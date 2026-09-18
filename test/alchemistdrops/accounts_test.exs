@@ -1,6 +1,8 @@
 defmodule Alchemistdrops.AccountsTest do
   use Alchemistdrops.DataCase
 
+  doctest Alchemistdrops.Accounts
+
   alias Alchemistdrops.Accounts
 
   import Alchemistdrops.AccountsFixtures

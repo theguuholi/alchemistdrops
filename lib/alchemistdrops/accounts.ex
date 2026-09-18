@@ -20,10 +20,11 @@ defmodule Alchemistdrops.Accounts do
 
   ## Examples
 
-      iex> get_user_by_email("foo@example.com")
-      %User{}
-
-      iex> get_user_by_email("unknown@example.com")
+      iex> email = "lookup-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> Alchemistdrops.Accounts.get_user_by_email(email).id == user.id
+      true
+      iex> Alchemistdrops.Accounts.get_user_by_email("unknown@example.com")
       nil
 
   """
@@ -37,10 +38,18 @@ defmodule Alchemistdrops.Accounts do
 
   ## Examples
 
-      iex> get_user_by_email_and_password("foo@example.com", "correct_password")
-      %User{}
-
-      iex> get_user_by_email_and_password("foo@example.com", "invalid_password")
+      iex> email = "password-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> {:ok, {user, []}} = Alchemistdrops.Accounts.update_user_password(
+      ...>   user,
+      ...>   %{password: "SecurePassword123!"}
+      ...> )
+      iex> Alchemistdrops.Accounts.get_user_by_email_and_password(
+      ...>   email,
+      ...>   "SecurePassword123!"
+      ...> ).id == user.id
+      true
+      iex> Alchemistdrops.Accounts.get_user_by_email_and_password(email, "invalid")
       nil
 
   """
@@ -58,11 +67,10 @@ defmodule Alchemistdrops.Accounts do
 
   ## Examples
 
-      iex> get_user!(123)
-      %User{}
-
-      iex> get_user!(456)
-      ** (Ecto.NoResultsError)
+      iex> email = "get-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> Alchemistdrops.Accounts.get_user!(user.id).id == user.id
+      true
 
   """
   @spec get_user!(Ecto.UUID.t()) :: User.t()
@@ -75,11 +83,12 @@ defmodule Alchemistdrops.Accounts do
 
   ## Examples
 
-      iex> register_user(%{field: value})
-      {:ok, %User{}}
-
-      iex> register_user(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
+      iex> email = "register-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, %Alchemistdrops.Accounts.User{email: ^email}} =
+      ...>   Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> {:error, changeset} = Alchemistdrops.Accounts.register_user(%{email: "invalid"})
+      iex> changeset.valid?
+      false
 
   """
   @spec register_user(map()) :: {:ok, User.t()} | {:error, Ecto.Changeset.t(User.t())}
@@ -96,6 +105,14 @@ defmodule Alchemistdrops.Accounts do
 
   The user is in sudo mode when the last authentication was done no further
   than 20 minutes ago. The limit can be given as second argument in minutes.
+
+  ## Examples
+
+      iex> user = %Alchemistdrops.Accounts.User{authenticated_at: DateTime.utc_now()}
+      iex> Alchemistdrops.Accounts.sudo_mode?(user)
+      true
+      iex> Alchemistdrops.Accounts.sudo_mode?(%Alchemistdrops.Accounts.User{}, -10)
+      false
   """
   @spec sudo_mode?(User.t()) :: boolean()
   @spec sudo_mode?(User.t(), integer()) :: boolean()
@@ -114,8 +131,17 @@ defmodule Alchemistdrops.Accounts do
 
   ## Examples
 
-      iex> change_user_email(user)
-      %Ecto.Changeset{data: %User{}}
+      iex> user = %Alchemistdrops.Accounts.User{}
+      iex> %Ecto.Changeset{} = Alchemistdrops.Accounts.change_user_email(user)
+      iex> Alchemistdrops.Accounts.change_user_email(user, %{email: "person@example.com"}).valid?
+      true
+      iex> changeset = Alchemistdrops.Accounts.change_user_email(
+      ...>   user,
+      ...>   %{email: "preview@example.com"},
+      ...>   validate_unique: false
+      ...> )
+      iex> Ecto.Changeset.get_change(changeset, :email)
+      "preview@example.com"
 
   """
   @spec change_user_email(User.t()) :: Ecto.Changeset.t(User.t())
@@ -129,6 +155,13 @@ defmodule Alchemistdrops.Accounts do
   Updates the user email using the given token.
 
   If the token matches, the user email is updated and the token is deleted.
+
+  ## Examples
+
+      iex> email = "update-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> Alchemistdrops.Accounts.update_user_email(user, "invalid-token")
+      {:error, :transaction_aborted}
   """
   @spec update_user_email(User.t(), String.t()) ::
           {:ok, User.t()} | {:error, :transaction_aborted}
@@ -155,8 +188,20 @@ defmodule Alchemistdrops.Accounts do
 
   ## Examples
 
-      iex> change_user_password(user)
-      %Ecto.Changeset{data: %User{}}
+      iex> user = %Alchemistdrops.Accounts.User{}
+      iex> %Ecto.Changeset{} = Alchemistdrops.Accounts.change_user_password(user)
+      iex> Alchemistdrops.Accounts.change_user_password(
+      ...>   user,
+      ...>   %{password: "SecurePassword123!"}
+      ...> ).valid?
+      true
+      iex> changeset = Alchemistdrops.Accounts.change_user_password(
+      ...>   user,
+      ...>   %{password: "SecurePassword123!"},
+      ...>   hash_password: false
+      ...> )
+      iex> Ecto.Changeset.get_change(changeset, :password)
+      "SecurePassword123!"
 
   """
   @spec change_user_password(User.t()) :: Ecto.Changeset.t(User.t())
@@ -173,11 +218,17 @@ defmodule Alchemistdrops.Accounts do
 
   ## Examples
 
-      iex> update_user_password(user, %{password: ...})
-      {:ok, {%User{}, [...]}}
-
-      iex> update_user_password(user, %{password: "too short"})
-      {:error, %Ecto.Changeset{}}
+      iex> email = "change-password-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> {:ok, {%Alchemistdrops.Accounts.User{}, []}} =
+      ...>   Alchemistdrops.Accounts.update_user_password(
+      ...>     user,
+      ...>     %{password: "SecurePassword123!"}
+      ...>   )
+      iex> {:error, changeset} =
+      ...>   Alchemistdrops.Accounts.update_user_password(user, %{password: "too short"})
+      iex> changeset.valid?
+      false
 
   """
   @spec update_user_password(User.t(), map()) ::
@@ -192,6 +243,14 @@ defmodule Alchemistdrops.Accounts do
 
   @doc """
   Generates a session token.
+
+  ## Examples
+
+      iex> email = "session-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> token = Alchemistdrops.Accounts.generate_user_session_token(user)
+      iex> is_binary(token)
+      true
   """
   @spec generate_user_session_token(User.t()) :: binary()
   def generate_user_session_token(user) do
@@ -204,6 +263,15 @@ defmodule Alchemistdrops.Accounts do
   Gets the user with the given signed token.
 
   If the token is valid `{user, token_inserted_at}` is returned, otherwise `nil` is returned.
+
+  ## Examples
+
+      iex> email = "signed-session-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> token = Alchemistdrops.Accounts.generate_user_session_token(user)
+      iex> {session_user, %DateTime{}} = Alchemistdrops.Accounts.get_user_by_session_token(token)
+      iex> session_user.id == user.id
+      true
   """
   @spec get_user_by_session_token(binary()) :: {User.t(), DateTime.t()} | nil
   def get_user_by_session_token(token) do
@@ -213,6 +281,16 @@ defmodule Alchemistdrops.Accounts do
 
   @doc """
   Gets the user with the given magic link token.
+
+  ## Examples
+
+      iex> email = "magic-lookup-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> {token, user_token} =
+      ...>   Alchemistdrops.Accounts.UserToken.build_email_token(user, "login")
+      iex> {:ok, _user_token} = Alchemistdrops.Repo.insert(user_token)
+      iex> Alchemistdrops.Accounts.get_user_by_magic_link_token(token).id == user.id
+      true
   """
   @spec get_user_by_magic_link_token(String.t()) :: User.t() | nil
   def get_user_by_magic_link_token(token) do
@@ -241,6 +319,18 @@ defmodule Alchemistdrops.Accounts do
      This cannot happen in the default implementation but may be the
      source of security pitfalls. See the "Mixing magic link and password registration" section of
      `mix help phx.gen.auth`.
+
+  ## Examples
+
+      iex> email = "magic-login-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> {token, user_token} =
+      ...>   Alchemistdrops.Accounts.UserToken.build_email_token(user, "login")
+      iex> {:ok, _user_token} = Alchemistdrops.Repo.insert(user_token)
+      iex> {:ok, {confirmed_user, [_expired_token]}} =
+      ...>   Alchemistdrops.Accounts.login_user_by_magic_link(token)
+      iex> confirmed_user.confirmed_at != nil
+      true
   """
   @spec login_user_by_magic_link(String.t()) ::
           {:ok, {User.t(), [struct()]}} | {:error, :not_found}
@@ -277,8 +367,16 @@ defmodule Alchemistdrops.Accounts do
 
   ## Examples
 
-      iex> deliver_user_update_email_instructions(user, current_email, &url(~p"/users/settings/confirm-email/#{&1}"))
-      {:ok, %{to: ..., body: ...}}
+      iex> email = "deliver-update-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> {:ok, delivered_email} =
+      ...>   Alchemistdrops.Accounts.deliver_user_update_email_instructions(
+      ...>     user,
+      ...>     user.email,
+      ...>     &"https://example.test/change-email/#{&1}"
+      ...>   )
+      iex> delivered_email.to
+      [{"", email}]
 
   """
   @spec deliver_user_update_email_instructions(
@@ -296,6 +394,17 @@ defmodule Alchemistdrops.Accounts do
 
   @doc """
   Delivers the magic link login instructions to the given user.
+
+  ## Examples
+
+      iex> email = "deliver-login-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> {:ok, delivered_email} = Alchemistdrops.Accounts.deliver_login_instructions(
+      ...>   user,
+      ...>   &"https://example.test/login/\#{&1}"
+      ...> )
+      iex> delivered_email.to
+      [{"", email}]
   """
   @spec deliver_login_instructions(User.t(), (String.t() -> String.t())) ::
           {:ok, Swoosh.Email.t()} | {:error, term()}
@@ -308,6 +417,16 @@ defmodule Alchemistdrops.Accounts do
 
   @doc """
   Deletes the signed token with the given context.
+
+  ## Examples
+
+      iex> email = "delete-session-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> token = Alchemistdrops.Accounts.generate_user_session_token(user)
+      iex> Alchemistdrops.Accounts.delete_user_session_token(token)
+      :ok
+      iex> Alchemistdrops.Accounts.get_user_by_session_token(token)
+      nil
   """
   @spec delete_user_session_token(binary()) :: :ok
   def delete_user_session_token(token) do
@@ -336,8 +455,10 @@ defmodule Alchemistdrops.Accounts do
 
   ## Examples
 
-      iex> list_users()
-      [%User{}, ...]
+      iex> email = "list-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> Enum.any?(Alchemistdrops.Accounts.list_users(), &(&1.id == user.id))
+      true
 
   """
   @spec list_users() :: [User.t()]
@@ -352,8 +473,11 @@ defmodule Alchemistdrops.Accounts do
 
   ## Examples
 
-      iex> count_users()
-      100
+      iex> before_count = Alchemistdrops.Accounts.count_users()
+      iex> email = "count-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, _user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> Alchemistdrops.Accounts.count_users() == before_count + 1
+      true
 
   """
   @spec count_users() :: non_neg_integer()
@@ -366,11 +490,11 @@ defmodule Alchemistdrops.Accounts do
 
   ## Examples
 
-      iex> update_user_role(user, :admin)
-      {:ok, %User{}}
-
-      iex> update_user_role(user, :invalid)
-      {:error, %Ecto.Changeset{}}
+      iex> email = "role-#{System.unique_integer([:positive])}@example.com"
+      iex> {:ok, user} = Alchemistdrops.Accounts.register_user(%{email: email})
+      iex> {:ok, updated_user} = Alchemistdrops.Accounts.update_user_role(user, :admin)
+      iex> updated_user.role
+      :admin
 
   """
   @spec update_user_role(User.t(), :user | :admin) ::
