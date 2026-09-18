@@ -71,7 +71,7 @@ excellent_migrations_check =
           #
           {Credo.Check.Consistency.ExceptionNames, []},
           {Credo.Check.Consistency.LineEndings, []},
-          {Credo.Check.Consistency.MultiAliasImportRequireUse, []},
+          {Credo.Check.Consistency.MultiAliasImportRequireUse, false},
           {Credo.Check.Consistency.ParameterPatternMatching, []},
           {Credo.Check.Consistency.SpaceAroundOperators, []},
           {Credo.Check.Consistency.SpaceInParentheses, []},
@@ -110,7 +110,7 @@ excellent_migrations_check =
           {Credo.Check.Readability.ModuleDoc, false},
           {Credo.Check.Readability.ModuleNames, []},
           {Credo.Check.Readability.MultiAlias, false},
-          {Credo.Check.Readability.NestedFunctionCalls, []},
+          {Credo.Check.Readability.NestedFunctionCalls, false},
           {Credo.Check.Readability.ParenthesesInCondition, []},
           {Credo.Check.Readability.ParenthesesOnZeroArityDefs, []},
           {Credo.Check.Readability.PredicateFunctionNames, []},
@@ -141,7 +141,7 @@ excellent_migrations_check =
           ## Refactoring Opportunities
           #
           {Credo.Check.Refactor.ABCSize, false},
-          {Credo.Check.Refactor.AppendSingleItem, []},
+          {Credo.Check.Refactor.AppendSingleItem, false},
           {Credo.Check.Refactor.CondStatements, []},
           {Credo.Check.Refactor.CyclomaticComplexity, []},
           {Credo.Check.Refactor.DoubleBooleanNegation, []},
@@ -152,7 +152,7 @@ excellent_migrations_check =
           {Credo.Check.Refactor.ModuleDependencies, false},
           {Credo.Check.Refactor.NegatedConditionsInUnless, []},
           {Credo.Check.Refactor.NegatedConditionsWithElse, []},
-          {Credo.Check.Refactor.NegatedIsNil, []},
+          {Credo.Check.Refactor.NegatedIsNil, false},
           {Credo.Check.Refactor.Nesting, []},
           # We have an exception for `from` which is useful for piping a query into a `Repo` function.
           {Credo.Check.Refactor.PipeChainStart, [excluded_functions: ["from"]]},

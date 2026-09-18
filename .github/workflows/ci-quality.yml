@@ -14,6 +14,18 @@ env:
   MIX_ENV: test
 
 jobs:
+  dependencies:
+    name: Unused Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-elixir
+        with:
+          elixir-version: ${{ inputs.elixir-version }}
+          otp-version: ${{ inputs.otp-version }}
+
+      - run: mix deps.unlock --check-unused
+
   format:
     name: Code Formatting
     runs-on: ubuntu-latest
