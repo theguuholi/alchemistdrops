@@ -10,9 +10,20 @@ Follow Phoenix 1.8 component, router, template, and asset conventions while pres
 ## Decide the boundary
 
 - Use a controller for request/response endpoints and a LiveView for stateful server-rendered interaction.
-- Prefer function components with explicit `attr` and `slot` contracts. Use a LiveComponent only when isolated state, events, or lifecycle justify it.
+- Reuse and compose the application's existing components before proposing another abstraction.
 - Inspect the existing router scope before adding a route. A scope alias already prefixes route modules; do not duplicate that namespace with a manual alias.
 - Do not introduce `Phoenix.View`; modern Phoenix applications use components and verified routes.
+
+## New component approval gate
+
+Do not create a new function component or LiveComponent without explicit approval from the software engineer. Before requesting approval:
+
+1. Search the existing shared components and page-local helpers for a suitable implementation.
+2. Explain why composing, extending, or reusing them does not fit.
+3. Define the proposed component's single responsibility, location, attributes, slots, and expected reuse.
+4. Wait for explicit approval before adding the component.
+
+When approved, use a function component with explicit `attr` and `slot` contracts by default. Use a LiveComponent only when isolated state, event targeting, or component lifecycle is necessary. This gate does not prevent using or extending an existing component within its established responsibility.
 
 ## Phoenix 1.8 components
 
@@ -27,12 +38,19 @@ Follow Phoenix 1.8 component, router, template, and asset conventions while pres
 
 - Use `~H` and `.html.heex`, never legacy `~E` templates.
 - Give forms, controls, stream containers, hook roots, and other test targets stable unique DOM IDs.
-- Render collections with `<%= for item <- @items do %>`, not `<% Enum.each %>`.
+- Render markup collections with `:for` on the repeated HTML or component element, such as `<li :for={item <- @items}>`. For streams, put `:for` on the child inside the stable `phx-update="stream"` container. Do not wrap repeated markup in a block-style `<%= for ... do %>` expression.
 - Use `<%!-- --%>` for template comments.
-- Use `{expression}` for attribute interpolation and ordinary values in tag bodies. Use `<%= ... %>` for block constructs such as `if`, `case`, `cond`, and `for`.
+- Use `{expression}` for attribute interpolation and ordinary values in tag bodies. Prefer `:if` on an element for a single conditional element; use `<%= ... %>` for multi-branch block constructs such as `case` and `cond`.
 - Use `cond` or `case` for multiple branches; Elixir has no `else if` syntax.
 - Express multiple or conditional classes as a list: `class={["base", @active && "active"]}`.
 - Add `phx-no-curly-interpolation` to a parent that displays literal braces in code snippets.
+
+## Semantics, accessibility, and page metadata
+
+- Use one `main` landmark and one meaningful `h1` for a page. Preserve heading order and choose semantic elements such as `nav`, `section`, `article`, `aside`, `header`, `footer`, lists, tables, `figure`, and `time` according to content meaning.
+- Set a meaningful `page_title` during LiveView mount or parameter handling and keep the page `h1` consistent with it. Provide a meta description through the established layout API when the page has useful descriptive copy.
+- Give informative images descriptive `alt` text and decorative images `alt=""`. Use links for navigation and buttons for actions; label icon-only controls with an accessible name.
+- Render dates with a machine-readable `datetime` value when using `time`, and use descriptive link text rather than generic phrases.
 
 ## Frontend assets
 
