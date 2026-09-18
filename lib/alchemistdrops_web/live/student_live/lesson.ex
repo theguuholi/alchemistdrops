@@ -119,10 +119,6 @@ defmodule AlchemistdropsWeb.StudentLive.Lesson do
     "#{minutes} min"
   end
 
-  @doc """
-  Converts a YouTube URL to an embed URL if applicable.
-  Returns {:youtube, embed_url} for YouTube videos or {:video, url} for others.
-  """
   def video_embed_info(url) when is_binary(url) and byte_size(url) > 0 do
     cond do
       # youtu.be short URL format

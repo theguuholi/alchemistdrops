@@ -1,7 +1,4 @@
 defmodule AlchemistdropsWeb.AboutLive.Index do
-  @moduledoc """
-  Professional About / Profile page: enterprise meets edgy.
-  """
   use AlchemistdropsWeb, :live_view
 
   @linkedin_url "https://www.linkedin.com/in/devgustavooliveira"

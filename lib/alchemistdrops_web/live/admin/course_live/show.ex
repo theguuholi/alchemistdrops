@@ -1,8 +1,4 @@
 defmodule AlchemistdropsWeb.Admin.CourseLive.Show do
-  @moduledoc """
-  Admin LiveView for displaying course details and managing lessons.
-  Mobile-first responsive design.
-  """
   use AlchemistdropsWeb, :live_view
 
   alias Alchemistdrops.Courses

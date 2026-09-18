@@ -6,7 +6,6 @@ defmodule AlchemistdropsWeb.SkillsLiveTest do
   alias AlchemistdropsWeb.SkillsLive.Components
 
   doctest AlchemistdropsWeb.SkillsLive.Components
-  doctest AlchemistdropsWeb.SkillsLive.Index
 
   @skills ~w(
     ecto-development

@@ -10,6 +10,7 @@ Test observable behavior through stable DOM contracts and verify persistence or 
 ## Test foundation
 
 - Use the application's `ConnCase`, not `ExUnit.Case` directly, and import `Phoenix.LiveViewTest` plus only the fixture modules the test needs.
+- Do not add `doctest` for LiveView page or stateful LiveComponent modules. Their contracts are callbacks and rendered interactions, so cover them through `Phoenix.LiveViewTest`; doctests remain appropriate for separately documented contexts, presenters, and function-component modules.
 - Use the project's authentication and scope setup helpers. Create scoped records through fixtures with the correct scope; do not bypass the public test setup with direct `Repo.insert!` calls.
 - Put setup that only serves one callback or behavior inside its `describe` block, and return named context values from setup helpers.
 - Match successful mounts as `{:ok, view, _html}`. Discard the initial HTML and make assertions against the current `view`.

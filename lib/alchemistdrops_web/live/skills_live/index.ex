@@ -1,19 +1,4 @@
 defmodule AlchemistdropsWeb.SkillsLive.Index do
-  @moduledoc """
-  Presents the reusable AlchemistDrops skills and safety rules.
-
-  The catalog explains which engineering problem each skill addresses and
-  exposes versioned downloads that can be inspected before they are copied
-  into an Elixir project.
-
-  ## Example
-
-      iex> socket = %Phoenix.LiveView.Socket{assigns: %{__changed__: %{}}}
-      iex> {:ok, mounted_socket} = AlchemistdropsWeb.SkillsLive.Index.mount(%{}, %{}, socket)
-      iex> is_binary(mounted_socket.assigns.version)
-      true
-
-  """
   use AlchemistdropsWeb, :live_view
 
   import AlchemistdropsWeb.SkillsLive.Components
@@ -22,24 +7,6 @@ defmodule AlchemistdropsWeb.SkillsLive.Index do
   @external_resource @version_file
   @version @version_file |> File.read!() |> String.trim()
 
-  @typedoc "A downloadable skill and the practical advantage it brings to an Elixir project."
-  @type skill :: %{
-          id: String.t(),
-          name: String.t(),
-          scope: String.t(),
-          advantage: String.t(),
-          description: String.t(),
-          benefits: [String.t()],
-          download_path: String.t()
-        }
-
-  @doc """
-  Loads the public toolkit catalog and its current release version.
-
-  Phoenix invokes this callback when a visitor opens `/skills`.
-  """
-  @spec mount(map(), map(), Phoenix.LiveView.Socket.t()) ::
-          {:ok, Phoenix.LiveView.Socket.t()}
   @impl true
   def mount(_params, _session, socket) do
     {:ok,
@@ -53,7 +20,6 @@ defmodule AlchemistdropsWeb.SkillsLive.Index do
      |> assign(:skills, skills())}
   end
 
-  @spec skills() :: [skill()]
   defp skills do
     [
       %{
@@ -157,6 +123,5 @@ defmodule AlchemistdropsWeb.SkillsLive.Index do
     ]
   end
 
-  @spec download_path(String.t()) :: String.t()
   defp download_path(id), do: "/downloads/agent-toolkit/#{id}-v#{@version}.zip"
 end
