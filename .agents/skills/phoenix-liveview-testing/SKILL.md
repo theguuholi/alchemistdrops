@@ -7,6 +7,26 @@ description: Use when writing, reviewing, or debugging Phoenix LiveView tests, H
 
 Test observable behavior through stable DOM contracts and verify persistence or navigation separately from rendered markup.
 
+## Mirror page ownership
+
+Follow the resource and page structure used by `mix phx.gen.live` when adding tests:
+
+```text
+lib/alchemistdrops_web/live/car_live/index.ex
+test/alchemistdrops_web/live/car_live/index_test.exs
+
+lib/alchemistdrops_web/live/car_live/show.ex
+test/alchemistdrops_web/live/car_live/show_test.exs
+
+lib/alchemistdrops_web/live/car_live/form.ex
+test/alchemistdrops_web/live/car_live/form_test.exs
+```
+
+- Keep the tests for one page module in its matching test file. A shared `Form` module serving `:new` and `:edit` remains one page responsibility and belongs in `form_test.exs`.
+- Mirror nested namespaces in test folders: tests for `Admin.CarLive.Index` belong in `test/alchemistdrops_web/live/admin/car_live/index_test.exs`.
+- When a product-specific flow differs from generator output, keep test ownership aligned with the actual page module rather than forcing one test file per route action.
+- Apply this layout to new tests and substantial page refactors. Moving unrelated legacy tests requires a separately reviewed migration.
+
 ## Test foundation
 
 - Use the application's `ConnCase`, not `ExUnit.Case` directly, and import `Phoenix.LiveViewTest` plus only the fixture modules the test needs.

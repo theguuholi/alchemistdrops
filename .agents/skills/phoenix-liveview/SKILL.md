@@ -7,12 +7,33 @@ description: Use when implementing or reviewing Phoenix LiveViews, navigation, s
 
 Keep socket state deliberate, templates component-driven, and collection/form updates consistent between server state and rendered DOM.
 
+## Generator-first page ownership
+
+Treat the structure produced by `mix phx.gen.live Cars Car cars name` as the default for new LiveView resources and substantial page refactors:
+
+```text
+lib/alchemistdrops_web/live/car_live/index.ex
+lib/alchemistdrops_web/live/car_live/index.html.heex
+lib/alchemistdrops_web/live/car_live/show.ex
+lib/alchemistdrops_web/live/car_live/show.html.heex
+lib/alchemistdrops_web/live/car_live/form.ex
+lib/alchemistdrops_web/live/car_live/form.html.heex
+```
+
+- Keep route, module, source folder, template, and test ownership aligned: `live "/cars", CarLive.Index, :index` maps to `car_live/index.ex` and `car_live/index.html.heex`.
+- A shared page module is valid when the generator uses one responsibility for multiple actions. In particular, keep `CarLive.Form` for both `:new` and `:edit`, including modal form flows, when that matches the interaction.
+- Mirror router namespaces in source paths. For example, `Admin.CarLive.Index` belongs in `live/admin/car_live/index.ex`.
+- Keep page markup in the matching `.html.heex` template. Do not add an inline `render/1` with `~H` when Phoenix can auto-render the matching template.
+- When a product-specific flow does not fit the generator exactly, preserve its page-focused module, external template, route action, and test organization as closely as the interaction allows.
+- Apply this standard prospectively. Do not reorganize unrelated legacy pages merely because they predate it; propose broad migrations separately.
+
 ## LiveView structure
 
 - Name LiveViews with a `Live` suffix and place routes in the existing router scope without repeating its module alias.
 - Use `<.link navigate={...}>`, `<.link patch={...}>`, `push_navigate/2`, and `push_patch/2`; do not use deprecated `live_redirect` or `live_patch` APIs.
-- Prefer function components. Introduce a LiveComponent only when isolated state, event targeting, or component lifecycle is necessary.
+- Reuse existing function components and LiveComponents. Creating a new component requires the approval process in the `phoenix-development` skill.
 - Assign only state needed to render or process later events. Do not retain large collections as ordinary assigns when a stream fits the interaction.
+- Name boolean assigns with a `?` suffix, such as `:empty?` or `:can_edit?`, so their intent remains clear in callbacks and templates.
 
 ## Clean semantic HEEx
 
@@ -41,6 +62,11 @@ LiveView is an interface and orchestration layer. Its callbacks call a context/d
 
 Small UI transformations such as selecting params, setting a changeset action for display, `to_form/2`, assigning values, updating streams, flash, and navigation belong in LiveView. If a decision changes domain behavior independently of the page, move it to a context or domain module and test it there.
 
+- Never call `Repo` directly from a LiveView, including for association preloads. Add or use a scoped context API that returns the data the page needs.
+- Guard PubSub subscriptions in `mount/3` with `connected?(socket)` so disconnected rendering does not subscribe or duplicate messages.
+- Order module contents as imports and aliases, public `@impl true` callbacks in lifecycle order, then private helpers.
+- When a context operation returns result tuples, handle both `{:ok, value}` and `{:error, reason}` deliberately. Do not silently assert away user-recoverable errors.
+
 ## URL-driven search and filters
 
 - Make the URL query string the source of truth for search, filters, sorting, and pagination. Handle those values in `handle_params/3`, including initial entry and every patch.
@@ -59,6 +85,7 @@ Use streams for growing, frequently updated, or server-patched collections. A sm
 - Streams are not enumerable and do not provide counts. Track counts and other derived state separately.
 - Use a sibling empty-state element with `hidden only:block` when its stream container supports that structure.
 - Do not use deprecated `phx-update="append"` or `phx-update="prepend"`.
+- Name stream keys with the schema's plural snake_case form and use that name consistently in callbacks and templates, such as `LoyaltyCard` becoming `:loyalty_cards`.
 
 When PubSub or concurrent events update a stream, make insert/update/delete handling idempotent and keep any separate count in sync.
 
