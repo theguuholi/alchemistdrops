@@ -1,6 +1,11 @@
 defmodule Alchemistdrops.Accounts do
   @moduledoc """
-  The Accounts context.
+  Defines the public boundary for account identity and authentication.
+
+  Callers use this context to register and find users, manage credentials and
+  roles, issue or revoke authentication tokens, and deliver account emails.
+  Keeping those operations here prevents web and background layers from
+  bypassing account invariants or depending directly on persistence details.
   """
 
   import Ecto.Query, warn: false
@@ -22,6 +27,7 @@ defmodule Alchemistdrops.Accounts do
       nil
 
   """
+  @spec get_user_by_email(String.t()) :: User.t() | nil
   def get_user_by_email(email) when is_binary(email) do
     Repo.get_by(User, email: email)
   end
@@ -38,6 +44,7 @@ defmodule Alchemistdrops.Accounts do
       nil
 
   """
+  @spec get_user_by_email_and_password(String.t(), String.t()) :: User.t() | nil
   def get_user_by_email_and_password(email, password)
       when is_binary(email) and is_binary(password) do
     user = Repo.get_by(User, email: email)
@@ -58,6 +65,7 @@ defmodule Alchemistdrops.Accounts do
       ** (Ecto.NoResultsError)
 
   """
+  @spec get_user!(Ecto.UUID.t()) :: User.t()
   def get_user!(id), do: Repo.get!(User, id)
 
   ## User registration
@@ -74,6 +82,7 @@ defmodule Alchemistdrops.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec register_user(map()) :: {:ok, User.t()} | {:error, Ecto.Changeset.t(User.t())}
   def register_user(attrs) do
     %User{}
     |> User.email_changeset(attrs)
@@ -88,6 +97,8 @@ defmodule Alchemistdrops.Accounts do
   The user is in sudo mode when the last authentication was done no further
   than 20 minutes ago. The limit can be given as second argument in minutes.
   """
+  @spec sudo_mode?(User.t()) :: boolean()
+  @spec sudo_mode?(User.t(), integer()) :: boolean()
   def sudo_mode?(user, minutes \\ -20)
 
   def sudo_mode?(%User{authenticated_at: ts}, minutes) when is_struct(ts, DateTime) do
@@ -107,6 +118,9 @@ defmodule Alchemistdrops.Accounts do
       %Ecto.Changeset{data: %User{}}
 
   """
+  @spec change_user_email(User.t()) :: Ecto.Changeset.t(User.t())
+  @spec change_user_email(User.t(), map()) :: Ecto.Changeset.t(User.t())
+  @spec change_user_email(User.t(), map(), keyword()) :: Ecto.Changeset.t(User.t())
   def change_user_email(user, attrs \\ %{}, opts \\ []) do
     User.email_changeset(user, attrs, opts)
   end
@@ -116,6 +130,8 @@ defmodule Alchemistdrops.Accounts do
 
   If the token matches, the user email is updated and the token is deleted.
   """
+  @spec update_user_email(User.t(), String.t()) ::
+          {:ok, User.t()} | {:error, :transaction_aborted}
   def update_user_email(user, token) do
     context = "change:#{user.email}"
 
@@ -143,6 +159,9 @@ defmodule Alchemistdrops.Accounts do
       %Ecto.Changeset{data: %User{}}
 
   """
+  @spec change_user_password(User.t()) :: Ecto.Changeset.t(User.t())
+  @spec change_user_password(User.t(), map()) :: Ecto.Changeset.t(User.t())
+  @spec change_user_password(User.t(), map(), keyword()) :: Ecto.Changeset.t(User.t())
   def change_user_password(user, attrs \\ %{}, opts \\ []) do
     User.password_changeset(user, attrs, opts)
   end
@@ -161,6 +180,8 @@ defmodule Alchemistdrops.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec update_user_password(User.t(), map()) ::
+          {:ok, {User.t(), [struct()]}} | {:error, Ecto.Changeset.t(User.t())}
   def update_user_password(user, attrs) do
     user
     |> User.password_changeset(attrs)
@@ -172,6 +193,7 @@ defmodule Alchemistdrops.Accounts do
   @doc """
   Generates a session token.
   """
+  @spec generate_user_session_token(User.t()) :: binary()
   def generate_user_session_token(user) do
     {token, user_token} = UserToken.build_session_token(user)
     Repo.insert!(user_token)
@@ -183,6 +205,7 @@ defmodule Alchemistdrops.Accounts do
 
   If the token is valid `{user, token_inserted_at}` is returned, otherwise `nil` is returned.
   """
+  @spec get_user_by_session_token(binary()) :: {User.t(), DateTime.t()} | nil
   def get_user_by_session_token(token) do
     {:ok, query} = UserToken.verify_session_token_query(token)
     Repo.one(query)
@@ -191,6 +214,7 @@ defmodule Alchemistdrops.Accounts do
   @doc """
   Gets the user with the given magic link token.
   """
+  @spec get_user_by_magic_link_token(String.t()) :: User.t() | nil
   def get_user_by_magic_link_token(token) do
     with {:ok, query} <- UserToken.verify_magic_link_token_query(token),
          {user, _token} <- Repo.one(query) do
@@ -218,6 +242,8 @@ defmodule Alchemistdrops.Accounts do
      source of security pitfalls. See the "Mixing magic link and password registration" section of
      `mix help phx.gen.auth`.
   """
+  @spec login_user_by_magic_link(String.t()) ::
+          {:ok, {User.t(), [struct()]}} | {:error, :not_found}
   def login_user_by_magic_link(token) do
     {:ok, query} = UserToken.verify_magic_link_token_query(token)
 
@@ -255,6 +281,11 @@ defmodule Alchemistdrops.Accounts do
       {:ok, %{to: ..., body: ...}}
 
   """
+  @spec deliver_user_update_email_instructions(
+          User.t(),
+          String.t(),
+          (String.t() -> String.t())
+        ) :: {:ok, Swoosh.Email.t()} | {:error, term()}
   def deliver_user_update_email_instructions(%User{} = user, current_email, update_email_url_fun)
       when is_function(update_email_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "change:#{current_email}")
@@ -266,6 +297,8 @@ defmodule Alchemistdrops.Accounts do
   @doc """
   Delivers the magic link login instructions to the given user.
   """
+  @spec deliver_login_instructions(User.t(), (String.t() -> String.t())) ::
+          {:ok, Swoosh.Email.t()} | {:error, term()}
   def deliver_login_instructions(%User{} = user, magic_link_url_fun)
       when is_function(magic_link_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "login")
@@ -276,6 +309,7 @@ defmodule Alchemistdrops.Accounts do
   @doc """
   Deletes the signed token with the given context.
   """
+  @spec delete_user_session_token(binary()) :: :ok
   def delete_user_session_token(token) do
     Repo.delete_all(from(UserToken, where: [token: ^token, context: "session"]))
     :ok
@@ -306,6 +340,7 @@ defmodule Alchemistdrops.Accounts do
       [%User{}, ...]
 
   """
+  @spec list_users() :: [User.t()]
   def list_users do
     User
     |> order_by([u], desc: u.inserted_at)
@@ -321,6 +356,7 @@ defmodule Alchemistdrops.Accounts do
       100
 
   """
+  @spec count_users() :: non_neg_integer()
   def count_users do
     Repo.aggregate(User, :count)
   end
@@ -337,6 +373,8 @@ defmodule Alchemistdrops.Accounts do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec update_user_role(User.t(), :user | :admin) ::
+          {:ok, User.t()} | {:error, Ecto.Changeset.t(User.t())}
   def update_user_role(%User{} = user, role) when role in [:user, :admin] do
     user
     |> Ecto.Changeset.change(role: role)

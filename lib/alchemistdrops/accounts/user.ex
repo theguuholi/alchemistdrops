@@ -1,8 +1,33 @@
 defmodule Alchemistdrops.Accounts.User do
+  @moduledoc """
+  Represents an account that can authenticate with Alchemistdrops.
+
+  The schema owns the user's identity, password credentials, confirmation state,
+  and authorization role. Its changesets protect credential invariants before
+  account data reaches the `Alchemistdrops.Accounts` context.
+  """
+
   use Ecto.Schema
   import Ecto.Changeset
 
   @user_role_type ~w(user admin student)a
+
+  @typedoc "The authorization role assigned to a user."
+  @type role :: :user | :admin | :student
+
+  @typedoc "A persisted or newly constructed Alchemistdrops account."
+  @type t :: %__MODULE__{
+          __meta__: Ecto.Schema.Metadata.t(),
+          id: Ecto.UUID.t() | nil,
+          email: String.t() | nil,
+          password: String.t() | nil,
+          hashed_password: String.t() | nil,
+          confirmed_at: DateTime.t() | nil,
+          authenticated_at: DateTime.t() | nil,
+          role: role(),
+          inserted_at: DateTime.t() | nil,
+          updated_at: DateTime.t() | nil
+        }
 
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
@@ -28,6 +53,8 @@ defmodule Alchemistdrops.Accounts.User do
       uniqueness of the email, useful when displaying live validations.
       Defaults to `true`.
   """
+  @spec email_changeset(t(), map()) :: Ecto.Changeset.t(t())
+  @spec email_changeset(t(), map(), keyword()) :: Ecto.Changeset.t(t())
   def email_changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:email, :role])
@@ -76,6 +103,8 @@ defmodule Alchemistdrops.Accounts.User do
       validations on a LiveView form), this option can be set to `false`.
       Defaults to `true`.
   """
+  @spec password_changeset(t(), map()) :: Ecto.Changeset.t(t())
+  @spec password_changeset(t(), map(), keyword()) :: Ecto.Changeset.t(t())
   def password_changeset(user, attrs, opts \\ []) do
     user
     |> cast(attrs, [:password])
@@ -116,6 +145,7 @@ defmodule Alchemistdrops.Accounts.User do
   @doc """
   Confirms the account by setting `confirmed_at`.
   """
+  @spec confirm_changeset(t()) :: Ecto.Changeset.t(t())
   def confirm_changeset(user) do
     now = DateTime.utc_now(:second)
     change(user, confirmed_at: now)
@@ -127,6 +157,7 @@ defmodule Alchemistdrops.Accounts.User do
   If there is no user or the user doesn't have a password, we call
   `Bcrypt.no_user_verify/0` to avoid timing attacks.
   """
+  @spec valid_password?(t() | nil, String.t()) :: boolean()
   def valid_password?(%Alchemistdrops.Accounts.User{hashed_password: hashed_password}, password)
       when is_binary(hashed_password) and byte_size(password) > 0 do
     Bcrypt.verify_pass(password, hashed_password)
