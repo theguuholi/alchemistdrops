@@ -16,7 +16,15 @@ defmodule AlchemistdropsWeb.PostLive.Show do
   end
 
   defp mount_post(socket, %{post: post} = page) do
-    if connected?(socket), do: Posts.increment_views(post)
+    page =
+      if connected?(socket) do
+        case Posts.increment_views(post) do
+          {:ok, updated_post} -> %{page | post: %{post | views: updated_post.views}}
+          {:error, :not_found} -> page
+        end
+      else
+        page
+      end
 
     {:ok, assign(socket, Presenter.show(page))}
   end
