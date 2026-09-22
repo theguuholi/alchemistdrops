@@ -236,76 +236,48 @@ defmodule Alchemistdrops.PostsTest do
       assert republished.published_at == first_published_at
     end
 
-    test "given a published article, when DEV.to accepts it, then publish_to_dev/3 records the remote identity" do
+    test "given a published article, when DEV.to accepts it, then publish_to_dev/2 records the remote identity" do
       post = post_fixture(%{title: "Distributed article", tag_names: "Elixir, OTP"})
 
-      Req.Test.expect(__MODULE__, fn conn ->
-        Req.Test.json(conn, %{
-          "id" => 991,
-          "url" => "https://dev.to/author/distributed"
-        })
+      Req.Test.expect(:dev_to, fn conn ->
+        Req.Test.json(conn, %{"id" => 991})
       end)
 
       assert {:ok, synchronized} =
-               Posts.publish_to_dev(
-                 post,
-                 "https://alchemistdrops.com/blog/#{post.slug}",
-                 dev_to_options()
-               )
+               Posts.publish_to_dev(post, "https://alchemistdrops.com/blog/#{post.slug}")
 
       assert synchronized.dev_to_article_id == 991
-      assert synchronized.dev_to_url == "https://dev.to/author/distributed"
-      assert %DateTime{} = synchronized.dev_to_synced_at
-
-      persisted = Posts.get_post!(post.id)
-      assert persisted.dev_to_article_id == 991
-      assert persisted.dev_to_url == "https://dev.to/author/distributed"
-      assert persisted.dev_to_synced_at == synchronized.dev_to_synced_at
+      assert Posts.get_post!(post.id).dev_to_article_id == 991
     end
 
-    test "given a DEV.to failure, when publish_to_dev/3 runs, then it leaves distribution fields unchanged" do
+    test "given a DEV.to failure, when publish_to_dev/2 runs, then it leaves the remote identity unchanged" do
       post = post_fixture(%{title: "Failed distribution"})
-      Req.Test.expect(__MODULE__, &Req.Test.transport_error(&1, :timeout))
+      Req.Test.expect(:dev_to, &Req.Test.transport_error(&1, :timeout))
 
       assert {:error, :request_failed} =
-               Posts.publish_to_dev(
-                 post,
-                 "https://alchemistdrops.com/blog/#{post.slug}",
-                 dev_to_options()
-               )
+               Posts.publish_to_dev(post, "https://alchemistdrops.com/blog/#{post.slug}")
 
-      persisted = Posts.get_post!(post.id)
-      assert persisted.dev_to_article_id == nil
-      assert persisted.dev_to_url == nil
-      assert persisted.dev_to_synced_at == nil
+      assert Posts.get_post!(post.id).dev_to_article_id == nil
     end
 
-    test "given a stale post struct, when another sync already stored an ID, then publish_to_dev/3 updates instead of creating" do
+    test "given a stale post struct, when another sync already stored an ID, then publish_to_dev/2 updates instead of creating" do
       stale_post = post_fixture(%{title: "Stale distribution state"})
 
       stale_post
-      |> Ecto.Changeset.change(%{
-        dev_to_article_id: 404,
-        dev_to_url: "https://dev.to/author/stale-distribution-state",
-        dev_to_synced_at: ~U[2026-09-22 12:00:00Z]
-      })
+      |> Ecto.Changeset.change(dev_to_article_id: 404)
       |> Repo.update!()
 
-      Req.Test.expect(__MODULE__, fn conn ->
+      Req.Test.expect(:dev_to, fn conn ->
         assert conn.method == "PUT"
         assert conn.request_path == "/api/articles/404"
 
-        Req.Test.json(conn, %{
-          "id" => 404,
-          "url" => "https://dev.to/author/stale-distribution-state"
-        })
+        Req.Test.json(conn, %{"id" => 404})
       end)
 
       assert {:ok, synchronized} =
                Posts.publish_to_dev(
                  stale_post,
-                 "https://alchemistdrops.com/blog/#{stale_post.slug}",
-                 dev_to_options()
+                 "https://alchemistdrops.com/blog/#{stale_post.slug}"
                )
 
       assert synchronized.dev_to_article_id == 404
@@ -495,12 +467,5 @@ defmodule Alchemistdrops.PostsTest do
       |> Repo.insert!()
 
     Repo.preload(post, [:category, :tags, :related_course])
-  end
-
-  defp dev_to_options do
-    [
-      api_key: "dev-api-key",
-      req_options: [plug: {Req.Test, __MODULE__}, retry: false]
-    ]
   end
 end

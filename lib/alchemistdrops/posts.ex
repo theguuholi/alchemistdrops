@@ -525,20 +525,18 @@ defmodule Alchemistdrops.Posts do
   Publishes or updates a locally published post on DEV.to and records its remote identity.
 
   The canonical URL must point to the public AlchemistDrops article. DEV.to API
-  failures are returned without changing local distribution fields.
+  failures are returned without changing the stored remote identity.
 
   ## Examples
 
-      iex> post = Alchemistdrops.PostsFixtures.post_fixture(%{title: "DEV.to doctest"})
-      iex> Alchemistdrops.Posts.publish_to_dev(post, "https://alchemistdrops.com/blog/example", api_key: nil)
-      {:error, :not_configured}
+      iex> post = Alchemistdrops.PostsFixtures.draft_post_fixture(%{title: "DEV.to doctest"})
+      iex> Alchemistdrops.Posts.publish_to_dev(post, "https://alchemistdrops.com/blog/example")
+      {:error, :post_not_published}
   """
   @spec publish_to_dev(Post.t(), String.t()) ::
           {:ok, Post.t()} | {:error, DevToPublisher.error_reason() | Ecto.Changeset.t()}
-  @spec publish_to_dev(Post.t(), String.t(), keyword()) ::
-          {:ok, Post.t()} | {:error, DevToPublisher.error_reason() | Ecto.Changeset.t()}
-  def publish_to_dev(%Post{} = post, canonical_url, options \\ []) do
-    fn -> sync_locked_post_to_dev(post.id, canonical_url, options) end
+  def publish_to_dev(%Post{} = post, canonical_url) do
+    fn -> sync_locked_post_to_dev(post.id, canonical_url) end
     |> Repo.transaction()
     |> case do
       {:ok, synchronized} -> {:ok, synchronized}
@@ -546,7 +544,7 @@ defmodule Alchemistdrops.Posts do
     end
   end
 
-  defp sync_locked_post_to_dev(post_id, canonical_url, options) do
+  defp sync_locked_post_to_dev(post_id, canonical_url) do
     post =
       Post
       |> where([persisted], persisted.id == ^post_id)
@@ -554,19 +552,15 @@ defmodule Alchemistdrops.Posts do
       |> Repo.one!()
       |> Repo.preload([:tags])
 
-    case DevToPublisher.sync_article(post, canonical_url, options) do
-      {:ok, publication} -> persist_dev_to_publication(post, publication)
+    case DevToPublisher.sync_article(post, canonical_url) do
+      {:ok, article_id} -> persist_dev_to_publication(post, article_id)
       {:error, reason} -> Repo.rollback(reason)
     end
   end
 
-  defp persist_dev_to_publication(post, publication) do
+  defp persist_dev_to_publication(post, article_id) do
     post
-    |> Post.dev_to_publication_changeset(%{
-      dev_to_article_id: publication.article_id,
-      dev_to_url: publication.url,
-      dev_to_synced_at: DateTime.utc_now() |> DateTime.truncate(:second)
-    })
+    |> Post.dev_to_publication_changeset(article_id)
     |> Repo.update()
     |> case do
       {:ok, synchronized} -> synchronized

@@ -159,10 +159,7 @@ defmodule AlchemistdropsWeb.PostLiveTest do
         assert conn.method == "POST"
         assert conn.request_path == "/api/articles"
 
-        Req.Test.json(conn, %{
-          "id" => 812,
-          "url" => "https://dev.to/theguuholi/#{post.slug}"
-        })
+        Req.Test.json(conn, %{"id" => 812})
       end)
 
       {:ok, view, _html} = live(conn, ~p"/admin/posts")
@@ -176,8 +173,6 @@ defmodule AlchemistdropsWeb.PostLiveTest do
 
       synchronized = Posts.get_post!(post.id)
       assert synchronized.dev_to_article_id == 812
-      assert synchronized.dev_to_url == "https://dev.to/theguuholi/#{post.slug}"
-      assert synchronized.dev_to_synced_at
     end
 
     test "given a published post, when DEV.to rejects it, then the index reports the failure",

@@ -12,9 +12,6 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
   @accept "application/vnd.forem.api-v1+json"
   @base_url "https://dev.to"
 
-  @typedoc "Remote identity returned after a successful DEV.to synchronization."
-  @type publication :: %{article_id: pos_integer(), url: String.t()}
-
   @typedoc "DEV.to article attributes derived from a locally published post."
   @type article :: %{required(String.t()) => String.t() | true | nil}
 
@@ -32,23 +29,19 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
   A post without `dev_to_article_id` is created with `POST`; a post with an
   existing remote identifier is updated with `PUT`. The payload always marks
   the AlchemistDrops URL as canonical and includes a visible attribution footer.
-  Runtime configuration supplies `:api_key` and optional Req configuration;
-  callers may override them through `options` for deterministic tests.
+  Runtime configuration supplies the API key and Req configuration.
   """
   @spec sync_article(Post.t(), String.t()) ::
-          {:ok, publication()} | {:error, error_reason()}
-  @spec sync_article(Post.t(), String.t(), keyword()) ::
-          {:ok, publication()} | {:error, error_reason()}
-  def sync_article(post, canonical_url, options \\ [])
+          {:ok, pos_integer()} | {:error, error_reason()}
 
-  def sync_article(%Post{status: status}, _canonical_url, _options) when status != :published,
+  def sync_article(%Post{status: status}, _canonical_url) when status != :published,
     do: {:error, :post_not_published}
 
-  def sync_article(%Post{} = post, canonical_url, options) do
-    with {:ok, api_key} <- fetch_api_key(options) do
+  def sync_article(%Post{} = post, canonical_url) do
+    with {:ok, api_key} <- fetch_api_key() do
       post
       |> build_request(canonical_url, api_key)
-      |> send_request(options)
+      |> send_request()
       |> normalize_response(post.dev_to_article_id)
     end
   end
@@ -87,8 +80,8 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
     }
   end
 
-  defp fetch_api_key(options) do
-    case option(options, :api_key) do
+  defp fetch_api_key do
+    case config(:api_key) do
       api_key when is_binary(api_key) ->
         if present?(api_key), do: {:ok, api_key}, else: {:error, :not_configured}
 
@@ -110,9 +103,9 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
     ]
   end
 
-  defp send_request(request_options, options) do
+  defp send_request(request_options) do
     request_options
-    |> Keyword.merge(option(options, :req_options) || [])
+    |> Keyword.merge(config(:req_options) || [])
     |> Req.request()
   rescue
     _error in [ArgumentError, KeyError] -> {:error, :request_failed}
@@ -132,8 +125,6 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
     |> Enum.join("\n\n")
   end
 
-  defp dev_to_tags(%Ecto.Association.NotLoaded{}), do: ""
-
   defp dev_to_tags(tags) do
     tags
     |> Enum.map(& &1.slug)
@@ -151,16 +142,12 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
     do: @base_url <> "/api/articles/#{article_id}"
 
   defp normalize_response(
-         {:ok, %{status: status, body: %{"id" => article_id, "url" => url}}},
+         {:ok, %{status: status, body: %{"id" => article_id}}},
          expected_article_id
        )
-       when status in 200..299 and is_integer(article_id) and article_id > 0 and is_binary(url) and
+       when status in 200..299 and is_integer(article_id) and article_id > 0 and
               (is_nil(expected_article_id) or article_id == expected_article_id) do
-    if absolute_https_url?(url) do
-      {:ok, %{article_id: article_id, url: url}}
-    else
-      {:error, :invalid_response}
-    end
+    {:ok, article_id}
   end
 
   defp normalize_response({:ok, %{status: status, body: _body}}, _expected_article_id)
@@ -172,20 +159,7 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
 
   defp normalize_response({:error, _reason}, _expected_article_id), do: {:error, :request_failed}
 
-  defp option(options, key) do
-    if Keyword.has_key?(options, key) do
-      Keyword.get(options, key)
-    else
-      :alchemistdrops
-      |> Application.get_env(:dev_to, [])
-      |> Keyword.get(key)
-    end
-  end
-
-  defp absolute_https_url?(url) do
-    uri = URI.parse(url)
-    uri.scheme == "https" and present?(uri.host)
-  end
+  defp config(key), do: :alchemistdrops |> Application.get_env(:dev_to, []) |> Keyword.get(key)
 
   defp present?(value), do: is_binary(value) and String.trim(value) != ""
 end
