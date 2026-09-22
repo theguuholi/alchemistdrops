@@ -6,10 +6,7 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
 
   alias Alchemistdrops.{Posts, Repo}
 
-  @dev_to_stub :dev_to
-
   setup :register_and_log_in_admin_user
-  setup {Req.Test, :verify_on_exit!}
 
   test "an incomplete article can be saved as a draft", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/posts/new")
@@ -59,105 +56,6 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
 
     {:ok, edit_view, _html} = live(conn, edit_path)
     assert has_element?(edit_view, "#public-post-link[href='/blog/#{post.slug}']")
-    assert has_element?(edit_view, "#publish-dev-to", "Publish on DEV.to")
-  end
-
-  test "given a published article, when DEV.to publishing runs twice, then it creates once and updates the same remote article",
-       %{conn: conn} do
-    post = post_fixture(%{title: "DEV.to distribution", tag_names: "Elixir, LiveView"})
-    owner = self()
-
-    Req.Test.expect(@dev_to_stub, 2, fn conn ->
-      send(owner, {:dev_to_http_request, conn.method, conn.request_path, Req.Test.raw_body(conn)})
-
-      status = if conn.method == "POST", do: 201, else: 200
-
-      conn
-      |> Plug.Conn.put_status(status)
-      |> Req.Test.json(%{
-        "id" => 812,
-        "url" => "https://dev.to/theguuholi/dev-to-distribution"
-      })
-    end)
-
-    {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
-    Req.Test.allow(@dev_to_stub, self(), view.pid)
-
-    view |> element("#publish-dev-to", "Publish on DEV.to") |> render_click()
-
-    assert has_element?(view, "#flash-info", "Article published on DEV.to")
-    assert has_element?(view, "#publish-dev-to", "Update on DEV.to")
-
-    assert has_element?(
-             view,
-             "#dev-to-article-link[href='https://dev.to/theguuholi/dev-to-distribution']"
-           )
-
-    assert_receive {:dev_to_http_request, "POST", "/api/articles", create_body}
-
-    assert %{
-             "article" => %{
-               "canonical_url" => canonical_url,
-               "published" => true
-             }
-           } = Jason.decode!(create_body)
-
-    assert canonical_url == "http://localhost:4002/blog/#{post.slug}"
-
-    view |> element("#publish-dev-to", "Update on DEV.to") |> render_click()
-
-    assert has_element?(view, "#flash-info", "Article updated on DEV.to")
-    assert_receive {:dev_to_http_request, "PUT", "/api/articles/812", _update_body}
-
-    persisted = Posts.get_post!(post.id)
-    assert persisted.dev_to_article_id == 812
-    assert persisted.dev_to_url == "https://dev.to/theguuholi/dev-to-distribution"
-    assert persisted.dev_to_synced_at
-  end
-
-  test "given DEV.to rejects an article, when publishing is requested, then it preserves local state and shows the error",
-       %{conn: conn} do
-    post = post_fixture(%{title: "Rejected distribution"})
-
-    Req.Test.expect(@dev_to_stub, fn conn ->
-      conn
-      |> Plug.Conn.put_status(422)
-      |> Req.Test.json(%{"error" => "Validation failed", "details" => ["Tag invalid"]})
-    end)
-
-    {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
-    Req.Test.allow(@dev_to_stub, self(), view.pid)
-
-    view |> element("#publish-dev-to") |> render_click()
-
-    assert has_element?(view, "#flash-error", "DEV.to rejected the article")
-    assert has_element?(view, "#publish-dev-to", "Publish on DEV.to")
-    refute has_element?(view, "#dev-to-article-link")
-
-    persisted = Posts.get_post!(post.id)
-    assert persisted.dev_to_article_id == nil
-    assert persisted.dev_to_url == nil
-    assert persisted.dev_to_synced_at == nil
-  end
-
-  test "given unsaved editor changes, when DEV.to publishing is considered, then the action is disabled without losing the changes",
-       %{conn: conn} do
-    post = post_fixture(%{title: "Persisted title"})
-    {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
-
-    view
-    |> form("#post-form", post: %{title: "Unsaved title"})
-    |> render_change()
-
-    assert has_element?(view, "#publish-dev-to[disabled]")
-    assert has_element?(view, "#dev-to-save-guidance", "Save changes before publishing to DEV.to")
-    assert has_element?(view, "#post_title[value='Unsaved title']")
-
-    render_hook(view, "publish-dev-to", %{})
-
-    assert has_element?(view, "#flash-error", "Save your changes before publishing to DEV.to")
-    assert has_element?(view, "#post_title[value='Unsaved title']")
-    assert Posts.get_post!(post.id).title == "Persisted title"
   end
 
   test "assigns a new category to a legacy published article", %{conn: conn} do
@@ -183,13 +81,12 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
     assert Posts.get_admin_post!(post.id).category.name == "AI"
   end
 
-  test "unpublishes an article and removes distribution controls", %{conn: conn} do
+  test "unpublishes an article", %{conn: conn} do
     post = post_fixture(%{title: "Published article"})
     {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
 
     view |> element("#unpublish-post") |> render_click()
     assert has_element?(view, "#flash-info", "Draft saved")
-    refute has_element?(view, "#publish-dev-to")
     assert Posts.get_post!(post.id).status == :draft
   end
 

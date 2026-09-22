@@ -562,12 +562,11 @@ defmodule Alchemistdrops.Posts do
 
   defp persist_dev_to_publication(post, publication) do
     post
-    |> Ecto.Changeset.change(%{
+    |> Post.dev_to_publication_changeset(%{
       dev_to_article_id: publication.article_id,
       dev_to_url: publication.url,
       dev_to_synced_at: DateTime.utc_now() |> DateTime.truncate(:second)
     })
-    |> Ecto.Changeset.unique_constraint(:dev_to_article_id)
     |> Repo.update()
     |> case do
       {:ok, synchronized} -> synchronized

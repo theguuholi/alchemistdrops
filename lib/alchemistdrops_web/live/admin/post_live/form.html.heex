@@ -171,37 +171,6 @@
             >
               Unpublish
             </.button>
-            <.button
-              :if={@post.status == :published}
-              id="publish-dev-to"
-              type="button"
-              phx-click="publish-dev-to"
-              disabled={@form_dirty?}
-              phx-disable-with={
-                if @post.dev_to_article_id,
-                  do: "Updating DEV.to...",
-                  else: "Publishing to DEV.to..."
-              }
-            >
-              {if @post.dev_to_article_id, do: "Update on DEV.to", else: "Publish on DEV.to"}
-            </.button>
-            <p
-              :if={@post.status == :published && @form_dirty?}
-              id="dev-to-save-guidance"
-              class="basis-full text-sm text-warning"
-            >
-              Save changes before publishing to DEV.to.
-            </p>
-            <.link
-              :if={@post.dev_to_url}
-              id="dev-to-article-link"
-              href={@post.dev_to_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn btn-sm btn-ghost"
-            >
-              View on DEV.to <.icon name="hero-arrow-up-right" class="size-4" />
-            </.link>
             <.button navigate={return_path(@return_to, @post)}>Cancel</.button>
           </footer>
         </.form>

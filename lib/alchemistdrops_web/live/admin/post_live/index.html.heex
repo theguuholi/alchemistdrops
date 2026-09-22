@@ -45,6 +45,17 @@
         <:action :let={{id, post}}>
           <.link navigate={~p"/admin/posts/#{post}"} class="link link-primary">View</.link>
           <.link navigate={~p"/admin/posts/#{post}/edit"} class="link link-primary">Edit</.link>
+          <button
+            :if={post.status == :published}
+            id={"publish-dev-to-#{post.id}"}
+            type="button"
+            phx-click="publish-dev-to"
+            phx-value-id={post.id}
+            phx-disable-with="Publishing..."
+            class="link link-primary"
+          >
+            Publish on DEV.to
+          </button>
           <.link
             phx-click={JS.push("delete", value: %{id: post.id}) |> hide("##{id}")}
             data-confirm="Are you sure?"

@@ -88,4 +88,36 @@ defmodule Alchemistdrops.Posts.PostTest do
              } = errors_on(changeset)
     end
   end
+
+  describe "dev_to_publication_changeset/2" do
+    test "given a valid DEV.to publication, when changed, then it records the system fields" do
+      synced_at = ~U[2026-09-22 12:00:00Z]
+
+      changeset =
+        Post.dev_to_publication_changeset(%Post{}, %{
+          dev_to_article_id: 123,
+          dev_to_url: "https://dev.to/example/article",
+          dev_to_synced_at: synced_at
+        })
+
+      assert changeset.valid?
+      assert changeset.changes.dev_to_article_id == 123
+      assert changeset.changes.dev_to_url == "https://dev.to/example/article"
+      assert changeset.changes.dev_to_synced_at == synced_at
+    end
+
+    test "given invalid DEV.to publication data, when changed, then it reports every invariant" do
+      changeset =
+        Post.dev_to_publication_changeset(%Post{}, %{
+          dev_to_article_id: 0,
+          dev_to_url: "http://dev.to/example/article"
+        })
+
+      assert %{
+               dev_to_article_id: ["must be greater than 0"],
+               dev_to_url: ["must be an absolute HTTPS URL"],
+               dev_to_synced_at: ["can't be blank"]
+             } = errors_on(changeset)
+    end
+  end
 end

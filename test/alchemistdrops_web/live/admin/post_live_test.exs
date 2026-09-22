@@ -2,7 +2,12 @@ defmodule AlchemistdropsWeb.PostLiveTest do
   use AlchemistdropsWeb.ConnCase
 
   import Alchemistdrops.PostsFixtures
+  import ExUnit.CaptureLog
   import Phoenix.LiveViewTest
+
+  alias Alchemistdrops.Posts
+
+  @dev_to_stub :dev_to
 
   @create_attrs %{
     title: "a new post title",
@@ -26,6 +31,7 @@ defmodule AlchemistdropsWeb.PostLiveTest do
 
   describe "Index" do
     setup [:register_and_log_in_admin_user, :create_post]
+    setup {Req.Test, :verify_on_exit!}
 
     test "lists all posts", %{conn: conn, post: post} do
       {:ok, view, _html} = live(conn, ~p"/admin/posts")
@@ -130,6 +136,70 @@ defmodule AlchemistdropsWeb.PostLiveTest do
              |> render_click()
 
       refute has_element?(index_live, "#posts-#{post.id}")
+    end
+
+    test "given published and draft posts, when listed, then only the published post can be sent to DEV.to",
+         %{conn: conn, post: post} do
+      draft = draft_post_fixture(%{title: "Unpublished draft"})
+
+      {:ok, view, _html} = live(conn, ~p"/admin/posts")
+
+      assert has_element?(
+               view,
+               "#posts-#{post.id} #publish-dev-to-#{post.id}",
+               "Publish on DEV.to"
+             )
+
+      refute has_element?(view, "#posts-#{draft.id} #publish-dev-to-#{draft.id}")
+    end
+
+    test "given a published post, when DEV.to accepts it, then the index reports publication",
+         %{conn: conn, post: post} do
+      Req.Test.expect(@dev_to_stub, fn conn ->
+        assert conn.method == "POST"
+        assert conn.request_path == "/api/articles"
+
+        Req.Test.json(conn, %{
+          "id" => 812,
+          "url" => "https://dev.to/theguuholi/#{post.slug}"
+        })
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/posts")
+      Req.Test.allow(@dev_to_stub, self(), view.pid)
+
+      view
+      |> element("#publish-dev-to-#{post.id}", "Publish on DEV.to")
+      |> render_click()
+
+      assert has_element?(view, "#flash-info", "Article published on DEV.to")
+
+      synchronized = Posts.get_post!(post.id)
+      assert synchronized.dev_to_article_id == 812
+      assert synchronized.dev_to_url == "https://dev.to/theguuholi/#{post.slug}"
+      assert synchronized.dev_to_synced_at
+    end
+
+    test "given a published post, when DEV.to rejects it, then the index reports the failure",
+         %{conn: conn, post: post} do
+      Req.Test.expect(@dev_to_stub, fn conn ->
+        conn
+        |> Plug.Conn.put_status(422)
+        |> Req.Test.json(%{"error" => "Validation failed"})
+      end)
+
+      {:ok, view, _html} = live(conn, ~p"/admin/posts")
+      Req.Test.allow(@dev_to_stub, self(), view.pid)
+
+      log =
+        capture_log(fn ->
+          view |> element("#publish-dev-to-#{post.id}") |> render_click()
+        end)
+
+      assert has_element?(view, "#flash-error", "Could not publish article on DEV.to")
+      assert Posts.get_post!(post.id).dev_to_article_id == nil
+      assert log =~ "Failed to publish post #{post.id} to DEV.to"
+      assert log =~ "{:api_error, 422}"
     end
   end
 

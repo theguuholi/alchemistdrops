@@ -15,6 +15,9 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
   @typedoc "Remote identity returned after a successful DEV.to synchronization."
   @type publication :: %{article_id: pos_integer(), url: String.t()}
 
+  @typedoc "DEV.to article attributes derived from a locally published post."
+  @type article :: %{required(String.t()) => String.t() | true | nil}
+
   @typedoc "Stable failure returned without exposing credentials or transport internals."
   @type error_reason ::
           :invalid_response
@@ -42,36 +45,37 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
     do: {:error, :post_not_published}
 
   def sync_article(%Post{} = post, canonical_url, options) do
-    api_key = option(options, :api_key)
-
-    if present?(api_key) do
-      request(post, canonical_url, api_key, options)
-    else
-      {:error, :not_configured}
+    with {:ok, api_key} <- fetch_api_key(options) do
+      post
+      |> build_request(canonical_url, api_key)
+      |> send_request(options)
+      |> normalize_response(post.dev_to_article_id)
     end
   end
 
-  defp request(post, canonical_url, api_key, options) do
-    request_options = [
-      method: request_method(post),
-      url: request_url(post),
-      headers: [
-        {"api-key", api_key},
-        {"accept", @accept},
-        {"content-type", "application/json"}
-      ],
-      json: %{"article" => article_payload(post, canonical_url)}
-    ]
+  @doc """
+  Transforms a post into the article attributes expected by DEV.to.
 
-    request_options
-    |> Keyword.merge(option(options, :req_options) || [])
-    |> Req.request()
-    |> normalize_response(post.dev_to_article_id)
-  rescue
-    _error in [ArgumentError, KeyError] -> {:error, :request_failed}
-  end
+  The transformation is pure: it adds canonical attribution, localizes the
+  footer, and limits tags without performing HTTP or persistence work.
 
-  defp article_payload(post, canonical_url) do
+  ## Examples
+
+      iex> post = %Alchemistdrops.Posts.Post{
+      ...>   title: "OTP in production",
+      ...>   body: "Article body",
+      ...>   language: :en,
+      ...>   tags: []
+      ...> }
+      iex> article = Alchemistdrops.Posts.DevToPublisher.build_article(
+      ...>   post,
+      ...>   "https://alchemistdrops.com/blog/otp"
+      ...> )
+      iex> {article["title"], article["published"], article["canonical_url"]}
+      {"OTP in production", true, "https://alchemistdrops.com/blog/otp"}
+  """
+  @spec build_article(Post.t(), String.t()) :: article()
+  def build_article(%Post{} = post, canonical_url) do
     %{
       "title" => post.title,
       "body_markdown" => body_with_attribution(post, canonical_url),
@@ -81,6 +85,37 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
       "description" => post.summary,
       "main_image" => post.cover_image_url
     }
+  end
+
+  defp fetch_api_key(options) do
+    case option(options, :api_key) do
+      api_key when is_binary(api_key) ->
+        if present?(api_key), do: {:ok, api_key}, else: {:error, :not_configured}
+
+      _missing ->
+        {:error, :not_configured}
+    end
+  end
+
+  defp build_request(post, canonical_url, api_key) do
+    [
+      method: request_method(post),
+      url: request_url(post),
+      headers: [
+        {"api-key", api_key},
+        {"accept", @accept},
+        {"content-type", "application/json"}
+      ],
+      json: %{"article" => build_article(post, canonical_url)}
+    ]
+  end
+
+  defp send_request(request_options, options) do
+    request_options
+    |> Keyword.merge(option(options, :req_options) || [])
+    |> Req.request()
+  rescue
+    _error in [ArgumentError, KeyError] -> {:error, :request_failed}
   end
 
   defp body_with_attribution(post, canonical_url) do
@@ -121,7 +156,7 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
        )
        when status in 200..299 and is_integer(article_id) and article_id > 0 and is_binary(url) and
               (is_nil(expected_article_id) or article_id == expected_article_id) do
-    if absolute_http_url?(url) do
+    if absolute_https_url?(url) do
       {:ok, %{article_id: article_id, url: url}}
     else
       {:error, :invalid_response}
@@ -147,9 +182,9 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
     end
   end
 
-  defp absolute_http_url?(url) do
+  defp absolute_https_url?(url) do
     uri = URI.parse(url)
-    uri.scheme in ["http", "https"] and present?(uri.host)
+    uri.scheme == "https" and present?(uri.host)
   end
 
   defp present?(value), do: is_binary(value) and String.trim(value) != ""

@@ -3,7 +3,35 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
 
   alias Alchemistdrops.Posts.{DevToPublisher, Post, Tag}
 
+  doctest DevToPublisher
+
   setup {Req.Test, :verify_on_exit!}
+
+  describe "build_article/2" do
+    test "given a Portuguese post, when transformed, then it returns the complete DEV.to article" do
+      canonical_url = "https://alchemistdrops.com/blog/otp-em-producao"
+
+      assert DevToPublisher.build_article(published_post(), canonical_url) == %{
+               "body_markdown" =>
+                 "## Corpo do artigo\n\n---\n\n_Este artigo foi publicado originalmente em [AlchemistDrops](https://alchemistdrops.com/blog/otp-em-producao)._",
+               "canonical_url" => canonical_url,
+               "description" => "Uma introdução prática",
+               "main_image" => "https://alchemistdrops.com/images/otp.png",
+               "published" => true,
+               "tags" => "elixir,phoenix,liveview,otp",
+               "title" => "OTP em produção"
+             }
+    end
+
+    test "given an English post, when transformed, then it uses English attribution" do
+      post = %{published_post() | language: :en, body: "Article body"}
+
+      assert DevToPublisher.build_article(post, "https://alchemistdrops.com/blog/english")[
+               "body_markdown"
+             ] ==
+               "Article body\n\n---\n\n_This article was originally published on [AlchemistDrops](https://alchemistdrops.com/blog/english)._"
+    end
+  end
 
   describe "sync_article/3" do
     test "given a new Portuguese article, when synchronized, then it creates a published DEV.to article with the original reference" do

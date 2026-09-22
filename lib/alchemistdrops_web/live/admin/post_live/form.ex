@@ -23,7 +23,6 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
     |> assign_editorial_options()
     |> assign(:page_title, "Edit Post")
     |> assign(:post, post)
-    |> assign(:form_dirty?, false)
     |> assign(:form, post_form(post))
     |> assign(:preview_html, render_preview(post.body))
   end
@@ -35,7 +34,6 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
     |> assign_editorial_options()
     |> assign(:page_title, "New Post")
     |> assign(:post, post)
-    |> assign(:form_dirty?, false)
     |> assign(:form, to_form(Posts.change_post(post)))
     |> assign(:preview_html, render_preview(nil))
   end
@@ -49,7 +47,6 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
     {:noreply,
      socket
      |> assign(:form, to_form(changeset, action: :validate))
-     |> assign(:form_dirty?, true)
      |> assign(:preview_html, preview_html)}
   end
 
@@ -74,31 +71,6 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
 
       {:error, changeset} ->
         {:noreply, assign(socket, :form, to_form(changeset))}
-    end
-  end
-
-  def handle_event("publish-dev-to", _params, %{assigns: %{form_dirty?: true}} = socket) do
-    {:noreply, put_flash(socket, :error, "Save your changes before publishing to DEV.to")}
-  end
-
-  def handle_event("publish-dev-to", _params, socket) do
-    post = socket.assigns.post
-    creating? = is_nil(post.dev_to_article_id)
-    canonical_url = url(~p"/blog/#{post.slug}")
-
-    case Posts.publish_to_dev(post, canonical_url) do
-      {:ok, synchronized} ->
-        synchronized = Posts.get_admin_post!(synchronized.id)
-
-        {:noreply,
-         socket
-         |> assign(:post, synchronized)
-         |> assign(:form, post_form(synchronized))
-         |> assign(:form_dirty?, false)
-         |> put_flash(:info, dev_to_success_message(creating?))}
-
-      {:error, reason} ->
-        {:noreply, put_flash(socket, :error, dev_to_error_message(reason))}
     end
   end
 
@@ -138,20 +110,6 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Form do
 
   defp success_message(%Post{id: nil}), do: "Post created successfully"
   defp success_message(%Post{}), do: "Post updated successfully"
-
-  defp dev_to_success_message(true), do: "Article published on DEV.to"
-  defp dev_to_success_message(false), do: "Article updated on DEV.to"
-
-  defp dev_to_error_message(:not_configured), do: "DEV.to integration is not configured"
-  defp dev_to_error_message(:post_not_published), do: "Publish this article locally first"
-  defp dev_to_error_message(:request_failed), do: "Could not reach DEV.to. Try again."
-  defp dev_to_error_message(:invalid_response), do: "DEV.to returned an invalid response"
-
-  defp dev_to_error_message({:api_error, status}),
-    do: "DEV.to rejected the article (HTTP #{status})"
-
-  defp dev_to_error_message(%Ecto.Changeset{}),
-    do: "DEV.to published the article, but its reference could not be saved"
 
   defp return_path("index", _post), do: ~p"/admin/posts"
   defp return_path("show", post), do: ~p"/admin/posts/#{post}"
