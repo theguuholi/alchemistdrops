@@ -6,7 +6,7 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
 
   alias Alchemistdrops.{Posts, Repo}
 
-  @dev_to_stub Alchemistdrops.Posts.DevToPublisher
+  @dev_to_stub :dev_to
 
   setup :register_and_log_in_admin_user
   setup {Req.Test, :verify_on_exit!}
