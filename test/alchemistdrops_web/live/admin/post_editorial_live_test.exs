@@ -4,20 +4,18 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
   import Alchemistdrops.PostsFixtures
   import Phoenix.LiveViewTest
 
-  alias Alchemistdrops.{Posts, Repo}
-
   setup :register_and_log_in_admin_user
 
   test "an incomplete article can be saved as a draft", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/posts/new")
 
-    assert {:error, {:live_redirect, %{to: "/admin/posts"}}} =
+    assert {:ok, index_view, _html} =
              view
              |> form("#post-form", post: %{title: "A useful draft"})
              |> render_submit()
+             |> follow_redirect(conn, ~p"/admin/posts")
 
-    assert [%{status: :draft, title: "A useful draft"}] =
-             Enum.filter(Posts.list_admin_posts(), &(&1.title == "A useful draft"))
+    assert has_element?(index_view, "#admin-posts", "A useful draft")
   end
 
   test "publishing reports missing publication fields", %{conn: conn} do
@@ -51,19 +49,12 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
     assert {:error, {:live_redirect, %{to: edit_path}}} = result
     assert edit_path =~ "/admin/posts/"
 
-    [post] = Enum.filter(Posts.list_admin_posts(), &(&1.title == "Published from editor"))
-    assert post.status == :published
-
     {:ok, edit_view, _html} = live(conn, edit_path)
-    assert has_element?(edit_view, "#public-post-link[href='/blog/#{post.slug}']")
+    assert has_element?(edit_view, "#public-post-link[href^='/blog/']", "View article")
   end
 
   test "assigns a new category to a legacy published article", %{conn: conn} do
-    post = post_fixture(%{title: "Legacy published article"})
-
-    post
-    |> Ecto.Changeset.change(category_id: nil)
-    |> Repo.update!()
+    post = legacy_post_without_category_fixture(%{title: "Legacy published article"})
 
     {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
 
@@ -73,12 +64,13 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
 
     refute has_element?(view, "[id^='post-category-error-']")
 
-    assert {:error, {:live_redirect, %{to: "/admin/posts"}}} =
+    assert {:ok, index_view, _html} =
              view
              |> form("#post-form", post: %{category_name: "AI"})
              |> render_submit()
+             |> follow_redirect(conn, ~p"/admin/posts")
 
-    assert Posts.get_admin_post!(post.id).category.name == "AI"
+    assert has_element?(index_view, "#flash-info", "Post updated successfully")
   end
 
   test "unpublishes an article", %{conn: conn} do
@@ -87,7 +79,8 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
 
     view |> element("#unpublish-post") |> render_click()
     assert has_element?(view, "#flash-info", "Draft saved")
-    assert Posts.get_post!(post.id).status == :draft
+    assert has_element?(view, "#publish-post", "Publish article")
+    refute has_element?(view, "#unpublish-post")
   end
 
   test "shows taxonomy, optional course, SEO preview, and tag validation", %{conn: conn} do

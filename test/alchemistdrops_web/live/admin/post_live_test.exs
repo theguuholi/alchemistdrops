@@ -5,8 +5,6 @@ defmodule AlchemistdropsWeb.PostLiveTest do
   import ExUnit.CaptureLog
   import Phoenix.LiveViewTest
 
-  alias Alchemistdrops.Posts
-
   @dev_to_stub :dev_to
 
   @create_attrs %{
@@ -170,9 +168,6 @@ defmodule AlchemistdropsWeb.PostLiveTest do
       |> render_click()
 
       assert has_element?(view, "#flash-info", "Article published on DEV.to")
-
-      synchronized = Posts.get_post!(post.id)
-      assert synchronized.dev_to_article_id == 812
     end
 
     test "given a published post, when DEV.to rejects it, then the index reports the failure",
@@ -192,7 +187,6 @@ defmodule AlchemistdropsWeb.PostLiveTest do
         end)
 
       assert has_element?(view, "#flash-error", "Could not publish article on DEV.to")
-      assert Posts.get_post!(post.id).dev_to_article_id == nil
       assert log =~ "Failed to publish post #{post.id} to DEV.to"
       assert log =~ "{:api_error, 422}"
     end

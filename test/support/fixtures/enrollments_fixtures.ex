@@ -3,6 +3,8 @@ defmodule Alchemistdrops.EnrollmentsFixtures do
   This module defines test fixtures for the Enrollments context.
   """
 
+  import Ecto.Query
+
   alias Alchemistdrops.AccountsFixtures
   alias Alchemistdrops.CoursesFixtures
   alias Alchemistdrops.Enrollments.Enrollment
@@ -59,5 +61,19 @@ defmodule Alchemistdrops.EnrollmentsFixtures do
   def cancelled_enrollment_fixture(attrs \\ %{}) do
     attrs = Map.put(attrs, :status, "cancelled")
     enrollment_fixture(attrs)
+  end
+
+  @doc """
+  Generate an enrollment with an unknown legacy status.
+  """
+  def unknown_status_enrollment_fixture(attrs \\ %{}) do
+    enrollment = enrollment_fixture(attrs)
+
+    Repo.update_all(
+      from(record in Enrollment, where: record.id == ^enrollment.id),
+      set: [status: "unknown_status"]
+    )
+
+    %{enrollment | status: "unknown_status"}
   end
 end

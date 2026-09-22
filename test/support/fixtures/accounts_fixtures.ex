@@ -109,6 +109,16 @@ defmodule Alchemistdrops.AccountsFixtures do
     token
   end
 
+  def login_token_fixture(user) do
+    extract_user_token(fn url -> Accounts.deliver_login_instructions(user, url) end)
+  end
+
+  def update_email_token_fixture(user, email) do
+    extract_user_token(fn url ->
+      Accounts.deliver_user_update_email_instructions(%{user | email: email}, user.email, url)
+    end)
+  end
+
   def override_token_authenticated_at(token, authenticated_at) when is_binary(token) do
     Alchemistdrops.Repo.update_all(
       from(t in Accounts.UserToken,

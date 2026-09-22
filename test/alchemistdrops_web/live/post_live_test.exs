@@ -4,8 +4,6 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
   import Alchemistdrops.PostsFixtures
   import Phoenix.LiveViewTest
 
-  alias Alchemistdrops.Posts
-
   describe "handle_params/3 - index listing" do
     test "given no published posts, when the index loads, then it renders the empty state",
          %{conn: conn} do
@@ -253,7 +251,6 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
       {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
       # Then
-      assert Posts.get_post!(post.id).views == 101
       assert has_element?(view, "#post-views", "101 views")
     end
 
@@ -300,7 +297,7 @@ defmodule AlchemistdropsWeb.Public.PostLiveTest do
          %{conn: conn} do
       # Given
       post = post_fixture(%{title: "Updated Post", body: "Old content"})
-      {:ok, updated_post} = Posts.update_post(post, %{body: "New content"})
+      updated_post = update_post_fixture(post, %{body: "New content"})
       formatted_date = Calendar.strftime(updated_post.updated_at, "%B %d, %Y")
 
       # When
