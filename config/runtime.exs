@@ -1,5 +1,10 @@
 import Config
 
+# DEV.to article distribution — provide DEV_TO_API_KEY to enable the admin action.
+if dev_to_api_key = System.get_env("DEV_TO_API_KEY") do
+  config :alchemistdrops, :dev_to, api_key: dev_to_api_key
+end
+
 # OpenRouter (Digital Twin chat) — provide OPENROUTER_API_KEY in the environment to enable
 config :alchemistdrops, :openrouter_api_key, System.get_env("OPENROUTER_API_KEY")
 

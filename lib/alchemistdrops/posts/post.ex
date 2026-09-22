@@ -58,6 +58,9 @@ defmodule Alchemistdrops.Posts.Post do
   @typedoc "Accessible alternative text for the cover image. Nil when no cover is configured."
   @type cover_image_alt :: String.t() | nil
 
+  @typedoc "Numeric DEV.to article identifier. Nil until the first successful cross-publication."
+  @type dev_to_article_id :: pos_integer() | nil
+
   @typedoc "Category name supplied by editorial forms. Nil when a category ID is used."
   @type category_name :: String.t() | nil
 
@@ -88,6 +91,7 @@ defmodule Alchemistdrops.Posts.Post do
           seo_description: seo_description(),
           cover_image_url: cover_image_url(),
           cover_image_alt: cover_image_alt(),
+          dev_to_article_id: dev_to_article_id(),
           language: language(),
           category_name: category_name(),
           category_id: category_id(),
@@ -109,6 +113,7 @@ defmodule Alchemistdrops.Posts.Post do
     field :seo_description, :string
     field :cover_image_url, :string
     field :cover_image_alt, :string
+    field :dev_to_article_id, :integer
     field :language, Ecto.Enum, values: [en: "en", pt_br: "pt-BR"], default: :en
     field :category_name, :string, virtual: true
 
@@ -196,6 +201,28 @@ defmodule Alchemistdrops.Posts.Post do
     |> draft_changeset(put_status(attrs, :published))
     |> validate_required([:body, :summary])
     |> validate_category()
+  end
+
+  @doc """
+  Builds the trusted changeset that records a successful DEV.to synchronization.
+
+  This system-owned field stays outside the editorial changesets so browser
+  parameters cannot replace the remote identity.
+
+  ## Examples
+
+      iex> changeset = Alchemistdrops.Posts.Post.dev_to_publication_changeset(
+      ...>   %Alchemistdrops.Posts.Post{},
+      ...>   123
+      ...> )
+      iex> changeset.changes.dev_to_article_id
+      123
+  """
+  @spec dev_to_publication_changeset(t(), pos_integer()) :: Ecto.Changeset.t(t())
+  def dev_to_publication_changeset(post, article_id) do
+    post
+    |> change(dev_to_article_id: article_id)
+    |> unique_constraint(:dev_to_article_id)
   end
 
   defp validate_category(changeset) do

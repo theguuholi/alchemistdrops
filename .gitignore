@@ -7,6 +7,11 @@
 # The directory Mix downloads your dependencies sources to.
 /deps/
 
+# Local environment variables and secrets.
+.env
+.env.*
+!.env.example
+
 # Where 3rd-party dependencies like ExDoc output generated docs.
 /doc/
 
@@ -37,4 +42,3 @@ npm-debug.log
 
 # Ignore Dialyzer PLT files
 /priv/plts/
-

@@ -11,19 +11,26 @@ defmodule Alchemistdrops.PostsFixtures do
   Generate a post.
   """
   def post_fixture(attrs \\ %{}) do
-    category_id = Map.get(attrs, :category_id) || category_fixture().id
+    attrs = Map.new(attrs)
+
+    category_attrs =
+      if Map.has_key?(attrs, :category_name) do
+        %{}
+      else
+        %{category_id: Map.get(attrs, :category_id) || category_fixture().id}
+      end
 
     {:ok, draft} =
       attrs
       |> Enum.into(%{
         background: "some background",
         body: "some body",
-        category_id: category_id,
         summary: "A concise article summary",
         title: "some title",
         views: 42,
         status: :published
       })
+      |> Map.merge(category_attrs)
       |> Alchemistdrops.Posts.create_post()
 
     {:ok, post} = Alchemistdrops.Posts.publish_post(draft)
@@ -44,6 +51,25 @@ defmodule Alchemistdrops.PostsFixtures do
       })
       |> Alchemistdrops.Posts.create_post()
 
+    post
+  end
+
+  @doc """
+  Generate a published post without a category, matching legacy data.
+  """
+  def legacy_post_without_category_fixture(attrs \\ %{}) do
+    post = post_fixture(attrs)
+
+    post
+    |> Ecto.Changeset.change(category_id: nil)
+    |> Repo.update!()
+  end
+
+  @doc """
+  Update a post for test setup.
+  """
+  def update_post_fixture(post, attrs) do
+    {:ok, post} = Alchemistdrops.Posts.update_post(post, attrs)
     post
   end
 

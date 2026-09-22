@@ -4,8 +4,6 @@ defmodule AlchemistdropsWeb.HomeLiveTest do
   import Alchemistdrops.PostsFixtures
   import Phoenix.LiveViewTest
 
-  alias Alchemistdrops.Repo
-
   describe "HomeLive" do
     test "renders home page successfully", %{conn: conn} do
       {:ok, view, _html} = live(conn, ~p"/")
@@ -205,11 +203,7 @@ defmodule AlchemistdropsWeb.HomeLiveTest do
     end
 
     test "renders a legacy published article without a category", %{conn: conn} do
-      post = post_fixture(%{title: "Legacy homepage article"})
-
-      post
-      |> Ecto.Changeset.change(category_id: nil)
-      |> Repo.update!()
+      legacy_post_without_category_fixture(%{title: "Legacy homepage article"})
 
       {:ok, view, _html} = live(conn, ~p"/")
 

@@ -13,6 +13,13 @@ mix deps.get
 # Setup database (create, migrate, seed)
 mix ecto.setup
 
+# Configure optional local integrations
+cp .env.example .env
+# Edit .env, then export its values into the current shell
+set -a
+source .env
+set +a
+
 # Start Phoenix server
 mix phx.server
 ```
@@ -213,4 +220,3 @@ mix test
 
 - Portfolio: [alchemistdrops.com](http://alchemistdrops.com)
 - Email: g.92oliveira@gmail.com
-

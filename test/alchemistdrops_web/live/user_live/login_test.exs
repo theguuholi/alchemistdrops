@@ -27,9 +27,6 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
         |> follow_redirect(conn, ~p"/users/log-in")
 
       assert has_element?(login_view, "#flash-info", "If your email is in our system")
-
-      assert Alchemistdrops.Repo.get_by!(Alchemistdrops.Accounts.UserToken, user_id: user.id).context ==
-               "login"
     end
 
     test "does not disclose if user is registered", %{conn: conn} do
@@ -119,9 +116,6 @@ defmodule AlchemistdropsWeb.UserLive.LoginTest do
 
       # Same message to prevent email enumeration
       assert has_element?(login_view, "#flash-info", "If your email is in our system")
-
-      # No token should be created for non-existent user
-      assert Alchemistdrops.Repo.all(Alchemistdrops.Accounts.UserToken) == []
     end
   end
 

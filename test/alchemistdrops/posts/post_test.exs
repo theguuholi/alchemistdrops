@@ -6,6 +6,19 @@ defmodule Alchemistdrops.Posts.PostTest do
   doctest Alchemistdrops.Posts.Post
 
   describe "draft_changeset/2" do
+    test "given DEV.to identity attributes, when a draft is changed, then system fields stay protected" do
+      post = %Post{}
+
+      changeset =
+        Post.draft_changeset(post, %{
+          title: "Protected distribution fields",
+          dev_to_article_id: 123
+        })
+
+      assert post.dev_to_article_id == nil
+      refute Map.has_key?(changeset.changes, :dev_to_article_id)
+    end
+
     test "given a title, when a draft is validated, then defaults and slug are present" do
       changeset = Post.draft_changeset(%Post{}, %{title: "Hello OTP"})
 
@@ -67,6 +80,15 @@ defmodule Alchemistdrops.Posts.PostTest do
                summary: ["can't be blank"],
                category_id: ["can't be blank"]
              } = errors_on(changeset)
+    end
+  end
+
+  describe "dev_to_publication_changeset/2" do
+    test "given a DEV.to article ID, when changed, then it records only that identity" do
+      changeset = Post.dev_to_publication_changeset(%Post{}, 123)
+
+      assert changeset.valid?
+      assert changeset.changes.dev_to_article_id == 123
     end
   end
 end

@@ -5,7 +5,7 @@ description: Use when writing, reviewing, or debugging Phoenix LiveView tests, H
 
 # Phoenix LiveView Testing
 
-Test observable behavior through stable DOM contracts and verify persistence or navigation separately from rendered markup.
+Test LiveViews exclusively through observable behavior and stable DOM contracts. Keep persistence assertions in context or domain tests.
 
 ## Mirror page ownership
 
@@ -31,14 +31,17 @@ test/alchemistdrops_web/live/car_live/form_test.exs
 
 - Use the application's `ConnCase`, not `ExUnit.Case` directly, and import `Phoenix.LiveViewTest` plus only the fixture modules the test needs.
 - Do not add `doctest` for LiveView page or stateful LiveComponent modules. Their contracts are callbacks and rendered interactions, so cover them through `Phoenix.LiveViewTest`; doctests remain appropriate for separately documented contexts, presenters, and function-component modules.
-- Use the project's authentication and scope setup helpers. Create scoped records through fixtures with the correct scope; do not bypass the public test setup with direct `Repo.insert!` calls.
+- Use the project's authentication and scope setup helpers. Create all setup state through fixtures with the correct scope.
+- Fixtures may be called from `setup` callbacks or from a test's Given phase. Prefer `setup` when several tests share the same state, and return records through the ExUnit context, such as `%{course: course_fixture()}`.
+- LiveView test modules must never alias or call `Repo` or application contexts, whether in a test body, a `setup` callback, or a private setup helper. A fixture may use those boundaries internally to establish Given state, including deliberate legacy or exceptional records.
+- Fixtures are setup tools only. Never hide a persistence assertion in a fixture or call a fixture from the Then phase to inspect state.
 - Put setup that only serves one callback or behavior inside its `describe` block, and return named context values from setup helpers.
 - Match successful mounts as `{:ok, view, _html}`. Discard the initial HTML and make assertions against the current `view`.
 
 ## Build the test around outcomes
 
 - Use `Phoenix.LiveViewTest` for server-rendered interaction and LazyHTML for focused DOM inspection.
-- Split major behaviors into small cases: mount/access, validation, successful interaction, failure, navigation, authorization, and persistence as applicable.
+- Split major behaviors into small cases: mount/access, validation, successful interaction, failure, navigation, and authorization.
 - Group tests by the callback and behavior that owns the interaction. Use names such as `describe "mount/3 - initial state"`, `describe "on_mount/4 - authorization"`, `describe "handle_params/3 - search"`, `describe "handle_event/3 - validate"`, and `describe "handle_info/2 - refresh"`.
 - Cover every observable scenario for each callback: success, empty or missing input, invalid input, context errors, unauthorized access, missing records, and repeated messages/events when applicable.
 - Authenticate through the project's test helpers and include anonymous, wrong-user, or wrong-role cases for protected LiveViews.
@@ -67,39 +70,39 @@ describe "handle_event/3 - validate" do
 end
 ```
 
-Describe user-visible behavior, not implementation trivia. Given establishes state, When performs one action, and Then proves the rendered, navigation, message, or persistence outcome.
+Describe user-visible behavior, not implementation trivia. Given establishes state with fixtures, When performs one action, and Then proves a rendered, navigation, flash, message, log, or external-integration outcome.
 
 ## Assert the right layer
 
 - Rendered state: assert the relevant element appears, changes, or disappears.
 - Validation errors: assert the field's dedicated error element through a stable ID, such as `#user-email-error`; never search the full rendered HTML for the message.
 - Navigation: use redirect, live redirect, patch, or current-path assertions matching the action.
-- Persistence: query the context or database after the event; HTML alone does not prove a write occurred.
-- Rejected actions: verify both the visible outcome and that data did not change.
+- Persistence: cover writes and domain invariants in context or domain tests, never by querying a context or `Repo` from a LiveView test.
+- Rejected actions: verify the visible rejection. Cover the unchanged data invariant at the context or domain layer.
 - Streams: assert inserted/removed row IDs, reset/filter results, empty state, and separately tracked counts.
 - Forms: drive `phx-change` and `phx-submit` through the form element with realistic nested params; test validation errors and successful results.
-- Context delegation: assert the LiveView exposes the context result correctly. Test business rules exhaustively in the context/domain tests rather than duplicating them through every UI path.
+- Context results: assert only how the LiveView exposes the result through DOM, flash, navigation, logs, messages, or an external test adapter. Test delegation and business rules in context/domain tests.
 
 ## Interactions and navigation
 
 - When a clickable element has a visible label, use `element(view, selector, label)` so the action identifies both its stable target and user-visible control.
-- Do not assert against the HTML returned by `render_click/1`, `render_change/1`, or `render_submit/1`. Perform the action, then assert the resulting `view`, navigation, message, or persisted state.
+- Do not assert against the HTML returned by `render_click/1`, `render_change/1`, or `render_submit/1`. Perform the action, then assert the resulting `view`, navigation, flash, message, log, or external interaction.
 - Drive forms through their stable form ID with params matching the actual field namespace.
 - Use `follow_redirect/3` when an action must mount the destination LiveView, `assert_patch/2` for `push_patch`, and `assert_redirect/2` for redirects that do not need to mount the destination.
 
 ## State changes and isolation
 
 - For PubSub behavior, broadcast on the exact topic exposed by the context subscription API, render the view, and assert the observable update through stable selectors.
-- To reproduce a race or stale-state case, mount first, change the persisted state through the appropriate fixture/context or a deliberate database update, then perform the user action and verify the outcome.
+- To reproduce a race or stale-state case, mount first, change the persisted state through a purpose-built fixture, then perform the user action and verify the observable outcome.
 - When a test overrides application configuration, capture the complete previous value and restore it with `on_exit/1`.
-- Do not assert internal socket assigns, CSS classes, or context implementation details. Assert DOM contracts and user-visible behavior; cover domain rules in context tests.
+- Do not assert internal socket assigns, CSS classes, context implementation details, or database state. Do not add hidden markup or `data-*` attributes solely to expose internal state to tests. Assert intentional DOM contracts and user-visible behavior; cover domain rules in context tests.
 
 ## URL-driven search and filters
 
 - Search, filtering, sorting, and pagination tests must drive URL query parameters and exercise `handle_params/3`.
 - Assert that form or control events patch to a RESTful resource URL, then assert the patched URL and rendered result. Do not treat socket-only search assigns as the source of truth.
 - Cover direct entry, patching, browser back/forward-compatible state, missing parameters, invalid parameters, empty results, and combinations of supported filters.
-- Verify `handle_params/3` delegates the query to the context and updates the visible collection; keep search rules and query construction covered in context tests.
+- Verify that `handle_params/3` updates the visible collection; keep context delegation, search rules, and query construction covered in context tests.
 
 Test the output that Phoenix actually renders. Function components such as `<.form>` may produce markup different from an assumed hand-written structure.
 

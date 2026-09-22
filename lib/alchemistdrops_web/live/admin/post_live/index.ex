@@ -1,6 +1,8 @@
 defmodule AlchemistdropsWeb.Admin.PostLive.Index do
   use AlchemistdropsWeb, :live_view
 
+  require Logger
+
   alias Alchemistdrops.Posts
 
   @impl true
@@ -33,6 +35,21 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Index do
      |> assign(:total_count, stats.total)
      |> assign(:total_views, stats.total_views)
      |> stream_delete(:posts, post)}
+  end
+
+  def handle_event("publish-dev-to", %{"id" => id}, socket) do
+    post = Posts.get_admin_post!(id)
+    canonical_url = url(~p"/blog/#{post.slug}")
+
+    case Posts.publish_to_dev(post, canonical_url) do
+      {:ok, _post} ->
+        {:noreply, put_flash(socket, :info, "Article published on DEV.to")}
+
+      {:error, reason} ->
+        Logger.error("Failed to publish post #{post.id} to DEV.to: #{inspect(reason)}")
+
+        {:noreply, put_flash(socket, :error, "Could not publish article on DEV.to")}
+    end
   end
 
   defp calculate_stats(posts) do

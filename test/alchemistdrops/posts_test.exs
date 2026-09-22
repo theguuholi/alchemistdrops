@@ -7,6 +7,8 @@ defmodule Alchemistdrops.PostsTest do
 
   doctest Alchemistdrops.Posts
 
+  setup {Req.Test, :verify_on_exit!}
+
   describe "posts" do
     import Alchemistdrops.PostsFixtures
 
@@ -232,6 +234,53 @@ defmodule Alchemistdrops.PostsTest do
 
       assert {:ok, republished} = Posts.publish_post(draft_again)
       assert republished.published_at == first_published_at
+    end
+
+    test "given a published article, when DEV.to accepts it, then publish_to_dev/2 records the remote identity" do
+      post = post_fixture(%{title: "Distributed article", tag_names: "Elixir, OTP"})
+
+      Req.Test.expect(:dev_to, fn conn ->
+        Req.Test.json(conn, %{"id" => 991})
+      end)
+
+      assert {:ok, synchronized} =
+               Posts.publish_to_dev(post, "https://alchemistdrops.com/blog/#{post.slug}")
+
+      assert synchronized.dev_to_article_id == 991
+      assert Posts.get_post!(post.id).dev_to_article_id == 991
+    end
+
+    test "given a DEV.to failure, when publish_to_dev/2 runs, then it leaves the remote identity unchanged" do
+      post = post_fixture(%{title: "Failed distribution"})
+      Req.Test.expect(:dev_to, &Req.Test.transport_error(&1, :timeout))
+
+      assert {:error, :request_failed} =
+               Posts.publish_to_dev(post, "https://alchemistdrops.com/blog/#{post.slug}")
+
+      assert Posts.get_post!(post.id).dev_to_article_id == nil
+    end
+
+    test "given a stale post struct, when another sync already stored an ID, then publish_to_dev/2 updates instead of creating" do
+      stale_post = post_fixture(%{title: "Stale distribution state"})
+
+      stale_post
+      |> Ecto.Changeset.change(dev_to_article_id: 404)
+      |> Repo.update!()
+
+      Req.Test.expect(:dev_to, fn conn ->
+        assert conn.method == "PUT"
+        assert conn.request_path == "/api/articles/404"
+
+        Req.Test.json(conn, %{"id" => 404})
+      end)
+
+      assert {:ok, synchronized} =
+               Posts.publish_to_dev(
+                 stale_post,
+                 "https://alchemistdrops.com/blog/#{stale_post.slug}"
+               )
+
+      assert synchronized.dev_to_article_id == 404
     end
 
     test "create_post/1 reuses category and tag names case-insensitively" do

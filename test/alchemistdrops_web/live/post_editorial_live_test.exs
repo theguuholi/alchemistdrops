@@ -5,8 +5,6 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
   import Alchemistdrops.PostsFixtures
   import Phoenix.LiveViewTest
 
-  alias Alchemistdrops.{Posts, Repo}
-
   test "drafts stay out of the public index and cannot be opened", %{conn: conn} do
     draft = draft_post_fixture(%{title: "Hidden draft"})
     published = post_fixture(%{title: "Visible article"})
@@ -20,11 +18,7 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
   end
 
   test "public index renders legacy published posts without a category", %{conn: conn} do
-    post = post_fixture(%{title: "Legacy article"})
-
-    post
-    |> Ecto.Changeset.change(category_id: nil)
-    |> Repo.update!()
+    post = legacy_post_without_category_fixture(%{title: "Legacy article"})
 
     {:ok, view, _html} = live(conn, ~p"/blog")
 
@@ -33,11 +27,7 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
   end
 
   test "article page renders a legacy published post without a category", %{conn: conn} do
-    post = post_fixture(%{title: "Legacy article detail"})
-
-    post
-    |> Ecto.Changeset.change(category_id: nil)
-    |> Repo.update!()
+    post = legacy_post_without_category_fixture(%{title: "Legacy article detail"})
 
     {:ok, view, _html} = live(conn, ~p"/blog/#{post.slug}")
 
@@ -47,11 +37,7 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
 
   test "article page renders a related legacy post without a category", %{conn: conn} do
     current = post_fixture(%{title: "Current tagged article", tag_names: "OTP"})
-    related = post_fixture(%{title: "Legacy related article", tag_names: "OTP"})
-
-    related
-    |> Ecto.Changeset.change(category_id: nil)
-    |> Repo.update!()
+    legacy_post_without_category_fixture(%{title: "Legacy related article", tag_names: "OTP"})
 
     {:ok, view, _html} = live(conn, ~p"/blog/#{current.slug}")
 
@@ -60,27 +46,21 @@ defmodule AlchemistdropsWeb.Public.PostEditorialLiveTest do
   end
 
   test "category and tag filters update the result set", %{conn: conn} do
-    {:ok, elixir} =
-      Posts.create_post(%{
-        title: "OTP patterns",
-        body: "Body",
-        summary: "Summary",
-        category_name: "Elixir",
-        tag_names: "OTP"
-      })
+    post_fixture(%{
+      title: "OTP patterns",
+      body: "Body",
+      summary: "Summary",
+      category_name: "Elixir",
+      tag_names: "OTP"
+    })
 
-    {:ok, _elixir} = Posts.publish_post(elixir)
-
-    {:ok, phoenix} =
-      Posts.create_post(%{
-        title: "LiveView patterns",
-        body: "Body",
-        summary: "Summary",
-        category_name: "Phoenix",
-        tag_names: "LiveView"
-      })
-
-    {:ok, _phoenix} = Posts.publish_post(phoenix)
+    post_fixture(%{
+      title: "LiveView patterns",
+      body: "Body",
+      summary: "Summary",
+      category_name: "Phoenix",
+      tag_names: "LiveView"
+    })
 
     {:ok, category_view, _html} = live(conn, ~p"/blog?category=elixir")
     assert has_element?(category_view, "#posts-grid", "OTP patterns")

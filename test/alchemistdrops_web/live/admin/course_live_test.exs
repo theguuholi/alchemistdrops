@@ -90,7 +90,7 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
     end
 
     test "displays empty state when no courses", %{conn: conn, course: course} do
-      Alchemistdrops.Courses.delete_course(course)
+      delete_course_fixture(course)
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
       assert has_element?(view, "#no-courses", "No courses yet")

@@ -3,6 +3,8 @@ defmodule Alchemistdrops.CoursesFixtures do
   This module defines test fixtures for the Courses context.
   """
 
+  import Ecto.Query
+
   alias Alchemistdrops.Courses.{Course, Lesson}
   alias Alchemistdrops.Repo
 
@@ -39,6 +41,20 @@ defmodule Alchemistdrops.CoursesFixtures do
     attrs = Map.put(attrs, :price, Money.new(0, :USD))
     course_fixture(attrs)
   end
+
+  @doc """
+  Generate a course without a price, matching legacy data.
+  """
+  def course_without_price_fixture(attrs \\ %{}) do
+    course = course_fixture(attrs)
+    Repo.update_all(from(record in Course, where: record.id == ^course.id), set: [price: nil])
+    %{course | price: nil}
+  end
+
+  @doc """
+  Remove a course while preparing a test scenario.
+  """
+  def delete_course_fixture(course), do: Repo.delete!(course)
 
   @doc """
   Generate a lesson with default or custom attributes.

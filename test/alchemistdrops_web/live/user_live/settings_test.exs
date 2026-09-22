@@ -4,8 +4,6 @@ defmodule AlchemistdropsWeb.UserLive.SettingsTest do
   import Alchemistdrops.AccountsFixtures
   import Phoenix.LiveViewTest
 
-  alias Alchemistdrops.Accounts
-
   describe "mount/3" do
     test "given an authenticated user, when the page loads, then it renders both settings forms",
          %{conn: conn} do
@@ -46,7 +44,7 @@ defmodule AlchemistdropsWeb.UserLive.SettingsTest do
       %{conn: log_in_user(conn, user), user: user}
     end
 
-    test "updates the user email", %{conn: conn, user: user} do
+    test "updates the user email", %{conn: conn} do
       new_email = unique_user_email()
 
       {:ok, lv, _html} = live(conn, ~p"/users/settings")
@@ -56,7 +54,6 @@ defmodule AlchemistdropsWeb.UserLive.SettingsTest do
       |> render_submit()
 
       assert has_element?(lv, "#flash-info", "A link to confirm your email")
-      assert Accounts.get_user_by_email(user.email)
     end
 
     test "renders errors with invalid data (phx-change)", %{conn: conn} do
@@ -115,8 +112,6 @@ defmodule AlchemistdropsWeb.UserLive.SettingsTest do
 
       assert Phoenix.Flash.get(new_password_conn.assigns.flash, :info) =~
                "Password updated successfully"
-
-      assert Accounts.get_user_by_email_and_password(user.email, new_password)
     end
 
     test "renders errors with invalid data (phx-change)", %{conn: conn} do
@@ -169,24 +164,18 @@ defmodule AlchemistdropsWeb.UserLive.SettingsTest do
       user = user_fixture()
       email = unique_user_email()
 
-      token =
-        extract_user_token(fn url ->
-          Accounts.deliver_user_update_email_instructions(%{user | email: email}, user.email, url)
-        end)
+      token = update_email_token_fixture(user, email)
 
-      %{conn: log_in_user(conn, user), token: token, email: email, user: user}
+      %{conn: log_in_user(conn, user), token: token}
     end
 
-    test "updates the user email once", %{conn: conn, user: user, token: token, email: email} do
+    test "updates the user email once", %{conn: conn, token: token} do
       {:error, redirect} = live(conn, ~p"/users/settings/confirm-email/#{token}")
 
       assert {:live_redirect, %{to: path, flash: flash}} = redirect
       assert path == ~p"/users/settings"
       assert %{"info" => message} = flash
       assert message == "Email changed successfully."
-      refute Accounts.get_user_by_email(user.email)
-      assert Accounts.get_user_by_email(email)
-
       # use confirm token again
       {:error, redirect} = live(conn, ~p"/users/settings/confirm-email/#{token}")
       assert {:live_redirect, %{to: path, flash: flash}} = redirect
@@ -195,13 +184,12 @@ defmodule AlchemistdropsWeb.UserLive.SettingsTest do
       assert message == "Email change link is invalid or it has expired."
     end
 
-    test "does not update email with invalid token", %{conn: conn, user: user} do
+    test "does not update email with invalid token", %{conn: conn} do
       {:error, redirect} = live(conn, ~p"/users/settings/confirm-email/oops")
       assert {:live_redirect, %{to: path, flash: flash}} = redirect
       assert path == ~p"/users/settings"
       assert %{"error" => message} = flash
       assert message == "Email change link is invalid or it has expired."
-      assert Accounts.get_user_by_email(user.email)
     end
 
     test "redirects if user is not logged in", %{token: token} do
