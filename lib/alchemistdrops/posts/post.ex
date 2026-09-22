@@ -58,6 +58,15 @@ defmodule Alchemistdrops.Posts.Post do
   @typedoc "Accessible alternative text for the cover image. Nil when no cover is configured."
   @type cover_image_alt :: String.t() | nil
 
+  @typedoc "Numeric DEV.to article identifier. Nil until the first successful cross-publication."
+  @type dev_to_article_id :: pos_integer() | nil
+
+  @typedoc "Public DEV.to article URL. Nil until DEV.to returns a successful publication."
+  @type dev_to_url :: String.t() | nil
+
+  @typedoc "Timestamp of the most recent successful DEV.to synchronization."
+  @type dev_to_synced_at :: DateTime.t() | nil
+
   @typedoc "Category name supplied by editorial forms. Nil when a category ID is used."
   @type category_name :: String.t() | nil
 
@@ -88,6 +97,9 @@ defmodule Alchemistdrops.Posts.Post do
           seo_description: seo_description(),
           cover_image_url: cover_image_url(),
           cover_image_alt: cover_image_alt(),
+          dev_to_article_id: dev_to_article_id(),
+          dev_to_url: dev_to_url(),
+          dev_to_synced_at: dev_to_synced_at(),
           language: language(),
           category_name: category_name(),
           category_id: category_id(),
@@ -109,6 +121,9 @@ defmodule Alchemistdrops.Posts.Post do
     field :seo_description, :string
     field :cover_image_url, :string
     field :cover_image_alt, :string
+    field :dev_to_article_id, :integer
+    field :dev_to_url, :string
+    field :dev_to_synced_at, :utc_datetime
     field :language, Ecto.Enum, values: [en: "en", pt_br: "pt-BR"], default: :en
     field :category_name, :string, virtual: true
 

@@ -10,7 +10,7 @@ defmodule Alchemistdrops.Posts do
   import Ecto.Query, warn: false
 
   alias Alchemistdrops.Courses.Course
-  alias Alchemistdrops.Posts.{Category, Post, Tag}
+  alias Alchemistdrops.Posts.{Category, DevToPublisher, Post, Tag}
   alias Alchemistdrops.Repo
   alias Ecto.Multi
 
@@ -519,6 +519,60 @@ defmodule Alchemistdrops.Posts do
     |> Post.publish_changeset(%{})
     |> Ecto.Changeset.put_change(:published_at, published_at)
     |> Repo.update()
+  end
+
+  @doc """
+  Publishes or updates a locally published post on DEV.to and records its remote identity.
+
+  The canonical URL must point to the public AlchemistDrops article. DEV.to API
+  failures are returned without changing local distribution fields.
+
+  ## Examples
+
+      iex> post = Alchemistdrops.PostsFixtures.post_fixture(%{title: "DEV.to doctest"})
+      iex> Alchemistdrops.Posts.publish_to_dev(post, "https://alchemistdrops.com/blog/example", api_key: nil)
+      {:error, :not_configured}
+  """
+  @spec publish_to_dev(Post.t(), String.t()) ::
+          {:ok, Post.t()} | {:error, DevToPublisher.error_reason() | Ecto.Changeset.t()}
+  @spec publish_to_dev(Post.t(), String.t(), keyword()) ::
+          {:ok, Post.t()} | {:error, DevToPublisher.error_reason() | Ecto.Changeset.t()}
+  def publish_to_dev(%Post{} = post, canonical_url, options \\ []) do
+    fn -> sync_locked_post_to_dev(post.id, canonical_url, options) end
+    |> Repo.transaction()
+    |> case do
+      {:ok, synchronized} -> {:ok, synchronized}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
+  defp sync_locked_post_to_dev(post_id, canonical_url, options) do
+    post =
+      Post
+      |> where([persisted], persisted.id == ^post_id)
+      |> lock("FOR UPDATE")
+      |> Repo.one!()
+      |> Repo.preload([:tags])
+
+    case DevToPublisher.sync_article(post, canonical_url, options) do
+      {:ok, publication} -> persist_dev_to_publication(post, publication)
+      {:error, reason} -> Repo.rollback(reason)
+    end
+  end
+
+  defp persist_dev_to_publication(post, publication) do
+    post
+    |> Ecto.Changeset.change(%{
+      dev_to_article_id: publication.article_id,
+      dev_to_url: publication.url,
+      dev_to_synced_at: DateTime.utc_now() |> DateTime.truncate(:second)
+    })
+    |> Ecto.Changeset.unique_constraint(:dev_to_article_id)
+    |> Repo.update()
+    |> case do
+      {:ok, synchronized} -> synchronized
+      {:error, changeset} -> Repo.rollback(changeset)
+    end
   end
 
   @doc """

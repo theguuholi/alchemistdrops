@@ -6,6 +6,25 @@ defmodule Alchemistdrops.Posts.PostTest do
   doctest Alchemistdrops.Posts.Post
 
   describe "draft_changeset/2" do
+    test "given DEV.to identity attributes, when a draft is changed, then system fields stay protected" do
+      post = %Post{}
+
+      changeset =
+        Post.draft_changeset(post, %{
+          title: "Protected distribution fields",
+          dev_to_article_id: 123,
+          dev_to_url: "https://dev.to/example/article",
+          dev_to_synced_at: ~U[2026-09-22 12:00:00Z]
+        })
+
+      assert post.dev_to_article_id == nil
+      assert post.dev_to_url == nil
+      assert post.dev_to_synced_at == nil
+      refute Map.has_key?(changeset.changes, :dev_to_article_id)
+      refute Map.has_key?(changeset.changes, :dev_to_url)
+      refute Map.has_key?(changeset.changes, :dev_to_synced_at)
+    end
+
     test "given a title, when a draft is validated, then defaults and slug are present" do
       changeset = Post.draft_changeset(%Post{}, %{title: "Hello OTP"})
 

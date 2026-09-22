@@ -5,6 +5,13 @@ defmodule Alchemistdrops.PostsTest do
   alias Alchemistdrops.Posts.Post
   alias Alchemistdrops.Repo
 
+  defmodule DevToStubClient do
+    def request(options) do
+      send(self(), {:dev_to_request, options})
+      Process.get(:dev_to_response)
+    end
+  end
+
   doctest Alchemistdrops.Posts
 
   describe "posts" do
@@ -234,6 +241,83 @@ defmodule Alchemistdrops.PostsTest do
       assert republished.published_at == first_published_at
     end
 
+    @tag :dev_to
+    test "given a published article, when DEV.to accepts it, then publish_to_dev/3 records the remote identity" do
+      post = post_fixture(%{title: "Distributed article", tag_names: "Elixir, OTP"})
+
+      Process.put(:dev_to_response, {
+        :ok,
+        %{status: 201, body: %{"id" => 991, "url" => "https://dev.to/author/distributed"}}
+      })
+
+      assert {:ok, synchronized} =
+               Posts.publish_to_dev(
+                 post,
+                 "https://alchemistdrops.com/blog/#{post.slug}",
+                 dev_to_options()
+               )
+
+      assert synchronized.dev_to_article_id == 991
+      assert synchronized.dev_to_url == "https://dev.to/author/distributed"
+      assert %DateTime{} = synchronized.dev_to_synced_at
+
+      persisted = Posts.get_post!(post.id)
+      assert persisted.dev_to_article_id == 991
+      assert persisted.dev_to_url == "https://dev.to/author/distributed"
+      assert persisted.dev_to_synced_at == synchronized.dev_to_synced_at
+    end
+
+    @tag :dev_to
+    test "given a DEV.to failure, when publish_to_dev/3 runs, then it leaves distribution fields unchanged" do
+      post = post_fixture(%{title: "Failed distribution"})
+      Process.put(:dev_to_response, {:error, %Req.TransportError{reason: :timeout}})
+
+      assert {:error, :request_failed} =
+               Posts.publish_to_dev(
+                 post,
+                 "https://alchemistdrops.com/blog/#{post.slug}",
+                 dev_to_options()
+               )
+
+      persisted = Posts.get_post!(post.id)
+      assert persisted.dev_to_article_id == nil
+      assert persisted.dev_to_url == nil
+      assert persisted.dev_to_synced_at == nil
+    end
+
+    @tag :dev_to
+    test "given a stale post struct, when another sync already stored an ID, then publish_to_dev/3 updates instead of creating" do
+      stale_post = post_fixture(%{title: "Stale distribution state"})
+
+      stale_post
+      |> Ecto.Changeset.change(%{
+        dev_to_article_id: 404,
+        dev_to_url: "https://dev.to/author/stale-distribution-state",
+        dev_to_synced_at: ~U[2026-09-22 12:00:00Z]
+      })
+      |> Repo.update!()
+
+      Process.put(:dev_to_response, {
+        :ok,
+        %{
+          status: 200,
+          body: %{"id" => 404, "url" => "https://dev.to/author/stale-distribution-state"}
+        }
+      })
+
+      assert {:ok, synchronized} =
+               Posts.publish_to_dev(
+                 stale_post,
+                 "https://alchemistdrops.com/blog/#{stale_post.slug}",
+                 dev_to_options()
+               )
+
+      assert synchronized.dev_to_article_id == 404
+      assert_receive {:dev_to_request, request}
+      assert request[:method] == :put
+      assert request[:url] == "https://dev.to/api/articles/404"
+    end
+
     test "create_post/1 reuses category and tag names case-insensitively" do
       attrs = %{
         title: "Taxonomy article",
@@ -418,5 +502,13 @@ defmodule Alchemistdrops.PostsTest do
       |> Repo.insert!()
 
     Repo.preload(post, [:category, :tags, :related_course])
+  end
+
+  defp dev_to_options do
+    [
+      api_key: "dev-api-key",
+      base_url: "https://dev.to",
+      http_client: DevToStubClient
+    ]
   end
 end

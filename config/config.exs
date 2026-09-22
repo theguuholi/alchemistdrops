@@ -27,6 +27,11 @@ config :alchemistdrops, AlchemistdropsWeb.Endpoint,
   pubsub_server: Alchemistdrops.PubSub,
   live_view: [signing_salt: "CNpJGqkr"]
 
+config :alchemistdrops, :dev_to,
+  api_key: nil,
+  base_url: "https://dev.to",
+  http_client: Alchemistdrops.Posts.DevToPublisher.ReqClient
+
 config :alchemistdrops, :scopes,
   user: [
     default: true,
@@ -74,6 +79,8 @@ config :phoenix, :json_library, Jason
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "4.1.7",
+  # Import environment specific config. This must remain at the bottom
+  # of this file so it overrides the configuration defined above.
   alchemistdrops: [
     args: ~w(
       --input=assets/css/app.css
@@ -82,6 +89,4 @@ config :tailwind,
     cd: Path.expand("..", __DIR__)
   ]
 
-# Import environment specific config. This must remain at the bottom
-# of this file so it overrides the configuration defined above.
 import_config "#{config_env()}.exs"
