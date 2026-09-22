@@ -27,10 +27,6 @@ config :alchemistdrops, AlchemistdropsWeb.Endpoint,
   pubsub_server: Alchemistdrops.PubSub,
   live_view: [signing_salt: "CNpJGqkr"]
 
-config :alchemistdrops, :dev_to,
-  api_key: nil,
-  req_options: []
-
 config :alchemistdrops, :scopes,
   user: [
     default: true,

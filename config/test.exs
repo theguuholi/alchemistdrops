@@ -25,10 +25,7 @@ config :alchemistdrops, AlchemistdropsWeb.Endpoint,
 
 config :alchemistdrops, :dev_to,
   api_key: "dev-test-key",
-  req_options: [
-    plug: {Req.Test, Alchemistdrops.Posts.DevToPublisher},
-    retry: false
-  ]
+  req_options: [plug: {Req.Test, Alchemistdrops.Posts.DevToPublisher}]
 
 # Stripe test configuration
 config :alchemistdrops, :stripe,
