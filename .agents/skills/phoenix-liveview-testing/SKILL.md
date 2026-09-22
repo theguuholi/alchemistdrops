@@ -32,7 +32,8 @@ test/alchemistdrops_web/live/car_live/form_test.exs
 - Use the application's `ConnCase`, not `ExUnit.Case` directly, and import `Phoenix.LiveViewTest` plus only the fixture modules the test needs.
 - Do not add `doctest` for LiveView page or stateful LiveComponent modules. Their contracts are callbacks and rendered interactions, so cover them through `Phoenix.LiveViewTest`; doctests remain appropriate for separately documented contexts, presenters, and function-component modules.
 - Use the project's authentication and scope setup helpers. Create all setup state through fixtures with the correct scope.
-- LiveView test modules must never alias or call `Repo` or application contexts. A fixture may use those boundaries internally to establish Given state, including deliberate legacy or exceptional records.
+- Fixtures may be called from `setup` callbacks or from a test's Given phase. Prefer `setup` when several tests share the same state, and return records through the ExUnit context, such as `%{course: course_fixture()}`.
+- LiveView test modules must never alias or call `Repo` or application contexts, whether in a test body, a `setup` callback, or a private setup helper. A fixture may use those boundaries internally to establish Given state, including deliberate legacy or exceptional records.
 - Fixtures are setup tools only. Never hide a persistence assertion in a fixture or call a fixture from the Then phase to inspect state.
 - Put setup that only serves one callback or behavior inside its `describe` block, and return named context values from setup helpers.
 - Match successful mounts as `{:ok, view, _html}`. Discard the initial HTML and make assertions against the current `view`.

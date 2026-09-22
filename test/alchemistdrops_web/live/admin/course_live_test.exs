@@ -56,28 +56,6 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
   describe "Index" do
     setup [:register_and_log_in_admin_user]
 
-    test "lists all courses", %{conn: conn} do
-      course = course_fixture()
-      {:ok, view, _html} = live(conn, ~p"/admin/courses")
-
-      assert has_element?(view, "#admin-courses", "Courses")
-      assert has_element?(view, "#courses-#{course.id}")
-    end
-
-    test "displays course title in listing", %{conn: conn} do
-      course = course_fixture()
-      {:ok, view, _html} = live(conn, ~p"/admin/courses")
-
-      assert has_element?(view, "#courses-#{course.id}", course.title)
-    end
-
-    test "shows draft badge for unpublished courses", %{conn: conn} do
-      course = course_fixture()
-      {:ok, view, _html} = live(conn, ~p"/admin/courses")
-
-      assert has_element?(view, "#courses-#{course.id} .badge", "Draft")
-    end
-
     test "shows published badge for published courses", %{conn: conn} do
       published = published_course_fixture()
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
@@ -109,9 +87,31 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
 
       assert has_element?(form_view, "#admin-course-form", "New Course")
     end
+  end
 
-    test "navigates to course show page", %{conn: conn} do
-      course = course_fixture()
+  describe "Index with an existing course" do
+    setup [:register_and_log_in_admin_user, :create_course]
+
+    test "lists all courses", %{conn: conn, course: course} do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      assert has_element?(view, "#admin-courses", "Courses")
+      assert has_element?(view, "#courses-#{course.id}")
+    end
+
+    test "displays course title in listing", %{conn: conn, course: course} do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      assert has_element?(view, "#courses-#{course.id}", course.title)
+    end
+
+    test "shows draft badge for unpublished courses", %{conn: conn, course: course} do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      assert has_element?(view, "#courses-#{course.id} .badge", "Draft")
+    end
+
+    test "navigates to course show page", %{conn: conn, course: course} do
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
       assert {:ok, show_view, _html} =
@@ -123,8 +123,7 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
       assert has_element?(show_view, "#admin-course-show", course.title)
     end
 
-    test "navigates to edit course form", %{conn: conn} do
-      course = course_fixture()
+    test "navigates to edit course form", %{conn: conn, course: course} do
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
       assert {:ok, form_view, _html} =
@@ -136,8 +135,7 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
       assert has_element?(form_view, "#admin-course-form", "Edit Course")
     end
 
-    test "deletes course in listing", %{conn: conn} do
-      course = course_fixture()
+    test "deletes course in listing", %{conn: conn, course: course} do
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
       assert has_element?(view, "#courses-#{course.id}")
