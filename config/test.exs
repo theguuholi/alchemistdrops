@@ -23,6 +23,13 @@ config :alchemistdrops, AlchemistdropsWeb.Endpoint,
   secret_key_base: "yLme5Vmkm6txAa1y2hspQBSuarih2rNEo3xlkiFzjl35/Y3APIvUTWHUD/o1lB2d",
   server: false
 
+config :alchemistdrops, :dev_to,
+  api_key: "dev-test-key",
+  req_options: [
+    plug: {Req.Test, Alchemistdrops.Posts.DevToPublisher},
+    retry: false
+  ]
+
 # Stripe test configuration
 config :alchemistdrops, :stripe,
   secret_key: "sk_test_mock",

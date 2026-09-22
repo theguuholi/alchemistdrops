@@ -3,57 +3,54 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
 
   alias Alchemistdrops.Posts.{DevToPublisher, Post, Tag}
 
-  defmodule StubClient do
-    def request(options) do
-      send(self(), {:dev_to_request, options})
-      Process.get(:dev_to_response)
-    end
-  end
-
-  setup do
-    Process.put(:dev_to_response, {
-      :ok,
-      %{status: 201, body: %{"id" => 731, "url" => "https://dev.to/theguuholi/article-731"}}
-    })
-
-    :ok
-  end
+  setup {Req.Test, :verify_on_exit!}
 
   describe "sync_article/3" do
     test "given a new Portuguese article, when synchronized, then it creates a published DEV.to article with the original reference" do
       post = published_post()
       canonical_url = "https://alchemistdrops.com/blog/otp-em-producao"
 
+      Req.Test.expect(__MODULE__, fn conn ->
+        assert conn.method == "POST"
+        assert conn.request_path == "/api/articles"
+        assert Plug.Conn.get_req_header(conn, "api-key") == ["dev-api-key"]
+        assert Plug.Conn.get_req_header(conn, "accept") == ["application/vnd.forem.api-v1+json"]
+
+        assert Jason.decode!(Req.Test.raw_body(conn)) == %{
+                 "article" => %{
+                   "body_markdown" =>
+                     "## Corpo do artigo\n\n---\n\n_Este artigo foi publicado originalmente em [AlchemistDrops](https://alchemistdrops.com/blog/otp-em-producao)._",
+                   "canonical_url" => canonical_url,
+                   "description" => "Uma introdução prática",
+                   "main_image" => "https://alchemistdrops.com/images/otp.png",
+                   "published" => true,
+                   "tags" => "elixir,phoenix,liveview,otp",
+                   "title" => "OTP em produção"
+                 }
+               }
+
+        Req.Test.json(conn, %{
+          "id" => 731,
+          "url" => "https://dev.to/theguuholi/article-731"
+        })
+      end)
+
       assert {:ok, %{article_id: 731, url: "https://dev.to/theguuholi/article-731"}} =
                DevToPublisher.sync_article(post, canonical_url, options())
-
-      assert_receive {:dev_to_request, request}
-      assert request[:method] == :post
-      assert request[:url] == "https://dev.to/api/articles"
-      assert {"api-key", "dev-api-key"} in request[:headers]
-      assert {"accept", "application/vnd.forem.api-v1+json"} in request[:headers]
-
-      assert request[:json] == %{
-               "article" => %{
-                 "body_markdown" =>
-                   "## Corpo do artigo\n\n---\n\n_Este artigo foi publicado originalmente em [AlchemistDrops](https://alchemistdrops.com/blog/otp-em-producao)._",
-                 "canonical_url" => canonical_url,
-                 "description" => "Uma introdução prática",
-                 "main_image" => "https://alchemistdrops.com/images/otp.png",
-                 "published" => true,
-                 "tags" => "elixir,phoenix,liveview,otp",
-                 "title" => "OTP em produção"
-               }
-             }
     end
 
     test "given a previously synchronized article, when synchronized, then it updates the stored DEV.to article" do
       post = %{published_post() | dev_to_article_id: 731}
 
-      Process.put(:dev_to_response, {
-        :ok,
-        %{status: 200, body: %{"id" => 731, "url" => "https://dev.to/theguuholi/article-731"}}
-      })
+      Req.Test.expect(__MODULE__, fn conn ->
+        assert conn.method == "PUT"
+        assert conn.request_path == "/api/articles/731"
+
+        Req.Test.json(conn, %{
+          "id" => 731,
+          "url" => "https://dev.to/theguuholi/article-731"
+        })
+      end)
 
       assert {:ok, %{article_id: 731}} =
                DevToPublisher.sync_article(
@@ -61,19 +58,14 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
                  "https://alchemistdrops.com/blog/otp-em-producao",
                  options()
                )
-
-      assert_receive {:dev_to_request, request}
-      assert request[:method] == :put
-      assert request[:url] == "https://dev.to/api/articles/731"
     end
 
     test "given an update response with another article ID, when synchronized, then it rejects the response" do
       post = %{published_post() | dev_to_article_id: 731}
 
-      Process.put(:dev_to_response, {
-        :ok,
-        %{status: 200, body: %{"id" => 999, "url" => "https://dev.to/theguuholi/wrong"}}
-      })
+      Req.Test.expect(__MODULE__, fn conn ->
+        Req.Test.json(conn, %{"id" => 999, "url" => "https://dev.to/theguuholi/wrong"})
+      end)
 
       assert {:error, :invalid_response} =
                DevToPublisher.sync_article(
@@ -86,17 +78,22 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
     test "given an English article, when synchronized, then it appends an English original reference" do
       post = %{published_post() | language: :en, body: "Article body"}
 
+      Req.Test.expect(__MODULE__, fn conn ->
+        assert Jason.decode!(Req.Test.raw_body(conn))["article"]["body_markdown"] ==
+                 "Article body\n\n---\n\n_This article was originally published on [AlchemistDrops](https://alchemistdrops.com/blog/english)._"
+
+        Req.Test.json(conn, %{
+          "id" => 731,
+          "url" => "https://dev.to/theguuholi/article-731"
+        })
+      end)
+
       assert {:ok, _publication} =
                DevToPublisher.sync_article(
                  post,
                  "https://alchemistdrops.com/blog/english",
                  options()
                )
-
-      assert_receive {:dev_to_request, request}
-
-      assert request[:json]["article"]["body_markdown"] ==
-               "Article body\n\n---\n\n_This article was originally published on [AlchemistDrops](https://alchemistdrops.com/blog/english)._"
     end
 
     test "given missing credentials, when synchronized, then it returns a configuration error without calling HTTP" do
@@ -106,8 +103,6 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
                  "https://alchemistdrops.com/blog/otp",
                  Keyword.put(options(), :api_key, nil)
                )
-
-      refute_received {:dev_to_request, _request}
     end
 
     test "given a draft, when synchronized, then it rejects the request without calling HTTP" do
@@ -117,12 +112,10 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
                  "https://alchemistdrops.com/blog/otp",
                  options()
                )
-
-      refute_received {:dev_to_request, _request}
     end
 
     test "given a transport failure, when synchronized, then it returns a safe request error" do
-      Process.put(:dev_to_response, {:error, %Req.TransportError{reason: :timeout}})
+      Req.Test.expect(__MODULE__, &Req.Test.transport_error(&1, :timeout))
 
       assert {:error, :request_failed} =
                DevToPublisher.sync_article(
@@ -133,10 +126,11 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
     end
 
     test "given a rejected DEV.to response, when synchronized, then it returns only the status" do
-      Process.put(:dev_to_response, {
-        :ok,
-        %{status: 422, body: %{"error" => "Validation failed", "details" => ["Tag invalid"]}}
-      })
+      Req.Test.expect(__MODULE__, fn conn ->
+        conn
+        |> Plug.Conn.put_status(422)
+        |> Req.Test.json(%{"error" => "Validation failed", "details" => ["Tag invalid"]})
+      end)
 
       assert {:error, {:api_error, 422}} =
                DevToPublisher.sync_article(
@@ -147,10 +141,11 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
     end
 
     test "given an error that reflects credentials, when synchronized, then it never returns remote content" do
-      Process.put(:dev_to_response, {
-        :ok,
-        %{status: 500, body: %{"error" => "dev-api-key", "details" => [%{"nested" => true}]}}
-      })
+      Req.Test.expect(__MODULE__, fn conn ->
+        conn
+        |> Plug.Conn.put_status(500)
+        |> Req.Test.json(%{"error" => "dev-api-key", "details" => [%{"nested" => true}]})
+      end)
 
       assert {:error, {:api_error, 500}} =
                DevToPublisher.sync_article(
@@ -161,7 +156,7 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
     end
 
     test "given an incomplete success response, when synchronized, then it returns an invalid response error" do
-      Process.put(:dev_to_response, {:ok, %{status: 201, body: %{"id" => 731}}})
+      Req.Test.expect(__MODULE__, fn conn -> Req.Test.json(conn, %{"id" => 731}) end)
 
       assert {:error, :invalid_response} =
                DevToPublisher.sync_article(
@@ -173,7 +168,10 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
   end
 
   defp options do
-    [api_key: "dev-api-key", base_url: "https://dev.to", http_client: StubClient]
+    [
+      api_key: "dev-api-key",
+      req_options: [plug: {Req.Test, __MODULE__}, retry: false]
+    ]
   end
 
   defp published_post do

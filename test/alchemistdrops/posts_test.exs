@@ -5,14 +5,9 @@ defmodule Alchemistdrops.PostsTest do
   alias Alchemistdrops.Posts.Post
   alias Alchemistdrops.Repo
 
-  defmodule DevToStubClient do
-    def request(options) do
-      send(self(), {:dev_to_request, options})
-      Process.get(:dev_to_response)
-    end
-  end
-
   doctest Alchemistdrops.Posts
+
+  setup {Req.Test, :verify_on_exit!}
 
   describe "posts" do
     import Alchemistdrops.PostsFixtures
@@ -241,14 +236,15 @@ defmodule Alchemistdrops.PostsTest do
       assert republished.published_at == first_published_at
     end
 
-    @tag :dev_to
     test "given a published article, when DEV.to accepts it, then publish_to_dev/3 records the remote identity" do
       post = post_fixture(%{title: "Distributed article", tag_names: "Elixir, OTP"})
 
-      Process.put(:dev_to_response, {
-        :ok,
-        %{status: 201, body: %{"id" => 991, "url" => "https://dev.to/author/distributed"}}
-      })
+      Req.Test.expect(__MODULE__, fn conn ->
+        Req.Test.json(conn, %{
+          "id" => 991,
+          "url" => "https://dev.to/author/distributed"
+        })
+      end)
 
       assert {:ok, synchronized} =
                Posts.publish_to_dev(
@@ -267,10 +263,9 @@ defmodule Alchemistdrops.PostsTest do
       assert persisted.dev_to_synced_at == synchronized.dev_to_synced_at
     end
 
-    @tag :dev_to
     test "given a DEV.to failure, when publish_to_dev/3 runs, then it leaves distribution fields unchanged" do
       post = post_fixture(%{title: "Failed distribution"})
-      Process.put(:dev_to_response, {:error, %Req.TransportError{reason: :timeout}})
+      Req.Test.expect(__MODULE__, &Req.Test.transport_error(&1, :timeout))
 
       assert {:error, :request_failed} =
                Posts.publish_to_dev(
@@ -285,7 +280,6 @@ defmodule Alchemistdrops.PostsTest do
       assert persisted.dev_to_synced_at == nil
     end
 
-    @tag :dev_to
     test "given a stale post struct, when another sync already stored an ID, then publish_to_dev/3 updates instead of creating" do
       stale_post = post_fixture(%{title: "Stale distribution state"})
 
@@ -297,13 +291,15 @@ defmodule Alchemistdrops.PostsTest do
       })
       |> Repo.update!()
 
-      Process.put(:dev_to_response, {
-        :ok,
-        %{
-          status: 200,
-          body: %{"id" => 404, "url" => "https://dev.to/author/stale-distribution-state"}
-        }
-      })
+      Req.Test.expect(__MODULE__, fn conn ->
+        assert conn.method == "PUT"
+        assert conn.request_path == "/api/articles/404"
+
+        Req.Test.json(conn, %{
+          "id" => 404,
+          "url" => "https://dev.to/author/stale-distribution-state"
+        })
+      end)
 
       assert {:ok, synchronized} =
                Posts.publish_to_dev(
@@ -313,9 +309,6 @@ defmodule Alchemistdrops.PostsTest do
                )
 
       assert synchronized.dev_to_article_id == 404
-      assert_receive {:dev_to_request, request}
-      assert request[:method] == :put
-      assert request[:url] == "https://dev.to/api/articles/404"
     end
 
     test "create_post/1 reuses category and tag names case-insensitively" do
@@ -507,8 +500,7 @@ defmodule Alchemistdrops.PostsTest do
   defp dev_to_options do
     [
       api_key: "dev-api-key",
-      base_url: "https://dev.to",
-      http_client: DevToStubClient
+      req_options: [plug: {Req.Test, __MODULE__}, retry: false]
     ]
   end
 end

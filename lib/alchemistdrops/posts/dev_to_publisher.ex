@@ -10,6 +10,7 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
   alias Alchemistdrops.Posts.Post
 
   @accept "application/vnd.forem.api-v1+json"
+  @base_url "https://dev.to"
 
   @typedoc "Remote identity returned after a successful DEV.to synchronization."
   @type publication :: %{article_id: pos_integer(), url: String.t()}
@@ -28,7 +29,7 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
   A post without `dev_to_article_id` is created with `POST`; a post with an
   existing remote identifier is updated with `PUT`. The payload always marks
   the AlchemistDrops URL as canonical and includes a visible attribution footer.
-  Runtime configuration supplies `:api_key`, `:base_url`, and `:http_client`;
+  Runtime configuration supplies `:api_key` and optional Req configuration;
   callers may override them through `options` for deterministic tests.
   """
   @spec sync_article(Post.t(), String.t()) ::
@@ -51,11 +52,9 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
   end
 
   defp request(post, canonical_url, api_key, options) do
-    http_client = option(options, :http_client)
-
     request_options = [
       method: request_method(post),
-      url: request_url(post, option(options, :base_url)),
+      url: request_url(post),
       headers: [
         {"api-key", api_key},
         {"accept", @accept},
@@ -65,10 +64,11 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
     ]
 
     request_options
-    |> http_client.request()
+    |> Keyword.merge(option(options, :req_options) || [])
+    |> Req.request()
     |> normalize_response(post.dev_to_article_id)
   rescue
-    _error in [ArgumentError, KeyError, UndefinedFunctionError] -> {:error, :request_failed}
+    _error in [ArgumentError, KeyError] -> {:error, :request_failed}
   end
 
   defp article_payload(post, canonical_url) do
@@ -110,11 +110,10 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
   defp request_method(%Post{dev_to_article_id: nil}), do: :post
   defp request_method(%Post{}), do: :put
 
-  defp request_url(%Post{dev_to_article_id: nil}, base_url),
-    do: String.trim_trailing(base_url, "/") <> "/api/articles"
+  defp request_url(%Post{dev_to_article_id: nil}), do: @base_url <> "/api/articles"
 
-  defp request_url(%Post{dev_to_article_id: article_id}, base_url),
-    do: String.trim_trailing(base_url, "/") <> "/api/articles/#{article_id}"
+  defp request_url(%Post{dev_to_article_id: article_id}),
+    do: @base_url <> "/api/articles/#{article_id}"
 
   defp normalize_response(
          {:ok, %{status: status, body: %{"id" => article_id, "url" => url}}},
@@ -137,7 +136,6 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
     do: {:error, {:api_error, status}}
 
   defp normalize_response({:error, _reason}, _expected_article_id), do: {:error, :request_failed}
-  defp normalize_response(_response, _expected_article_id), do: {:error, :invalid_response}
 
   defp option(options, key) do
     if Keyword.has_key?(options, key) do

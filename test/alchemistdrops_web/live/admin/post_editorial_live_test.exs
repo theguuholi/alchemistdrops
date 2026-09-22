@@ -6,20 +6,10 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
 
   alias Alchemistdrops.{Posts, Repo}
 
+  @dev_to_stub Alchemistdrops.Posts.DevToPublisher
+
   setup :register_and_log_in_admin_user
-
-  setup do
-    previous = Application.get_env(:alchemistdrops, :dev_to)
-
-    Application.put_env(:alchemistdrops, :dev_to,
-      api_key: "dev-test-key",
-      base_url: "https://dev.to",
-      http_client: Alchemistdrops.Posts.DevToPublisher.ReqClient,
-      req_options: [plug: {Req.Test, __MODULE__}]
-    )
-
-    on_exit(fn -> Application.put_env(:alchemistdrops, :dev_to, previous) end)
-  end
+  setup {Req.Test, :verify_on_exit!}
 
   test "an incomplete article can be saved as a draft", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/posts/new")
@@ -77,7 +67,7 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
     post = post_fixture(%{title: "DEV.to distribution", tag_names: "Elixir, LiveView"})
     owner = self()
 
-    Req.Test.expect(__MODULE__, 2, fn conn ->
+    Req.Test.expect(@dev_to_stub, 2, fn conn ->
       send(owner, {:dev_to_http_request, conn.method, conn.request_path, Req.Test.raw_body(conn)})
 
       status = if conn.method == "POST", do: 201, else: 200
@@ -91,7 +81,7 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
     end)
 
     {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
-    Req.Test.allow(__MODULE__, self(), view.pid)
+    Req.Test.allow(@dev_to_stub, self(), view.pid)
 
     view |> element("#publish-dev-to", "Publish on DEV.to") |> render_click()
 
@@ -129,14 +119,14 @@ defmodule AlchemistdropsWeb.Admin.PostEditorialLiveTest do
        %{conn: conn} do
     post = post_fixture(%{title: "Rejected distribution"})
 
-    Req.Test.expect(__MODULE__, fn conn ->
+    Req.Test.expect(@dev_to_stub, fn conn ->
       conn
       |> Plug.Conn.put_status(422)
       |> Req.Test.json(%{"error" => "Validation failed", "details" => ["Tag invalid"]})
     end)
 
     {:ok, view, _html} = live(conn, ~p"/admin/posts/#{post}/edit")
-    Req.Test.allow(__MODULE__, self(), view.pid)
+    Req.Test.allow(@dev_to_stub, self(), view.pid)
 
     view |> element("#publish-dev-to") |> render_click()
 

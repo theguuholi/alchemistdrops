@@ -29,8 +29,7 @@ config :alchemistdrops, AlchemistdropsWeb.Endpoint,
 
 config :alchemistdrops, :dev_to,
   api_key: nil,
-  base_url: "https://dev.to",
-  http_client: Alchemistdrops.Posts.DevToPublisher.ReqClient
+  req_options: []
 
 config :alchemistdrops, :scopes,
   user: [
