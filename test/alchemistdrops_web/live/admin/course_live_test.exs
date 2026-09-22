@@ -54,42 +54,6 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
   end
 
   describe "Index" do
-    setup [:register_and_log_in_admin_user]
-
-    test "shows published badge for published courses", %{conn: conn} do
-      published = published_course_fixture()
-      {:ok, view, _html} = live(conn, ~p"/admin/courses")
-
-      assert has_element?(view, "#courses-#{published.id} .badge", "Published")
-    end
-
-    test "shows Free for zero-price courses", %{conn: conn} do
-      free = free_course_fixture()
-      {:ok, view, _html} = live(conn, ~p"/admin/courses")
-
-      assert has_element?(view, "#courses-#{free.id}", "Free")
-    end
-
-    test "displays empty state when no courses", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/admin/courses")
-
-      assert has_element?(view, "#no-courses", "No courses yet")
-    end
-
-    test "navigates to new course form", %{conn: conn} do
-      {:ok, view, _html} = live(conn, ~p"/admin/courses")
-
-      assert {:ok, form_view, _html} =
-               view
-               |> element("a", "New Course")
-               |> render_click()
-               |> follow_redirect(conn, ~p"/admin/courses/new")
-
-      assert has_element?(form_view, "#admin-course-form", "New Course")
-    end
-  end
-
-  describe "Index with an existing course" do
     setup [:register_and_log_in_admin_user, :create_course]
 
     test "lists all courses", %{conn: conn, course: course} do
@@ -109,6 +73,39 @@ defmodule AlchemistdropsWeb.Admin.CourseLiveTest do
       {:ok, view, _html} = live(conn, ~p"/admin/courses")
 
       assert has_element?(view, "#courses-#{course.id} .badge", "Draft")
+    end
+
+    test "shows published badge for published courses", %{conn: conn} do
+      published = published_course_fixture()
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      assert has_element?(view, "#courses-#{published.id} .badge", "Published")
+    end
+
+    test "shows Free for zero-price courses", %{conn: conn} do
+      free = free_course_fixture()
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      assert has_element?(view, "#courses-#{free.id}", "Free")
+    end
+
+    test "displays empty state when no courses", %{conn: conn, course: course} do
+      delete_course_fixture(course)
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      assert has_element?(view, "#no-courses", "No courses yet")
+    end
+
+    test "navigates to new course form", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/admin/courses")
+
+      assert {:ok, form_view, _html} =
+               view
+               |> element("a", "New Course")
+               |> render_click()
+               |> follow_redirect(conn, ~p"/admin/courses/new")
+
+      assert has_element?(form_view, "#admin-course-form", "New Course")
     end
 
     test "navigates to course show page", %{conn: conn, course: course} do

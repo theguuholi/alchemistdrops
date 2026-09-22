@@ -52,6 +52,11 @@ defmodule Alchemistdrops.CoursesFixtures do
   end
 
   @doc """
+  Remove a course while preparing a test scenario.
+  """
+  def delete_course_fixture(course), do: Repo.delete!(course)
+
+  @doc """
   Generate a lesson with default or custom attributes.
   """
   def lesson_fixture(attrs \\ %{}) do
