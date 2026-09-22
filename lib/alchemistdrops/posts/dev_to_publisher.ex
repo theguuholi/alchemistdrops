@@ -15,6 +15,9 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
   @typedoc "DEV.to article attributes derived from a locally published post."
   @type article :: %{required(String.t()) => String.t() | true | nil}
 
+  @typedoc "Remote identity returned by DEV.to after a successful synchronization."
+  @type remote_article :: %{article_id: pos_integer(), article_url: String.t()}
+
   @typedoc "Stable failure returned without exposing credentials or transport internals."
   @type error_reason ::
           :invalid_response
@@ -32,7 +35,7 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
   Runtime configuration supplies the API key and Req configuration.
   """
   @spec sync_article(Post.t(), String.t()) ::
-          {:ok, pos_integer()} | {:error, error_reason()}
+          {:ok, remote_article()} | {:error, error_reason()}
 
   def sync_article(%Post{status: status}, _canonical_url) when status != :published,
     do: {:error, :post_not_published}
@@ -142,12 +145,17 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
     do: @base_url <> "/api/articles/#{article_id}"
 
   defp normalize_response(
-         {:ok, %{status: status, body: %{"id" => article_id}}},
+         {:ok, %{status: status, body: %{"id" => article_id, "url" => article_url}}},
          expected_article_id
        )
        when status in 200..299 and is_integer(article_id) and article_id > 0 and
+              is_binary(article_url) and
               (is_nil(expected_article_id) or article_id == expected_article_id) do
-    {:ok, article_id}
+    if dev_to_url?(article_url) do
+      {:ok, %{article_id: article_id, article_url: article_url}}
+    else
+      {:error, :invalid_response}
+    end
   end
 
   defp normalize_response({:ok, %{status: status, body: _body}}, _expected_article_id)
@@ -160,6 +168,13 @@ defmodule Alchemistdrops.Posts.DevToPublisher do
   defp normalize_response({:error, _reason}, _expected_article_id), do: {:error, :request_failed}
 
   defp config(key), do: :alchemistdrops |> Application.get_env(:dev_to, []) |> Keyword.get(key)
+
+  defp dev_to_url?(url) do
+    case URI.parse(url) do
+      %URI{scheme: "https", host: "dev.to"} -> true
+      _uri -> false
+    end
+  end
 
   defp present?(value), do: is_binary(value) and String.trim(value) != ""
 end

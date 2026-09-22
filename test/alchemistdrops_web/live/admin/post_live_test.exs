@@ -136,9 +136,16 @@ defmodule AlchemistdropsWeb.PostLiveTest do
       refute has_element?(index_live, "#posts-#{post.id}")
     end
 
-    test "given published and draft posts, when listed, then only the published post can be sent to DEV.to",
+    test "given local and synchronized posts, when listed, then it shows the matching DEV.to action",
          %{conn: conn, post: post} do
       draft = draft_post_fixture(%{title: "Unpublished draft"})
+
+      synchronized =
+        dev_to_post_fixture(%{
+          title: "Synchronized article",
+          dev_to_article_id: 711,
+          dev_to_article_url: "https://dev.to/alchemistdrops/synchronized-article-711"
+        })
 
       {:ok, view, _html} = live(conn, ~p"/admin/posts")
 
@@ -149,6 +156,29 @@ defmodule AlchemistdropsWeb.PostLiveTest do
              )
 
       refute has_element?(view, "#posts-#{draft.id} #publish-dev-to-#{draft.id}")
+      refute has_element?(view, "#posts-#{synchronized.id} #publish-dev-to-#{synchronized.id}")
+
+      assert has_element?(
+               view,
+               "#posts-#{synchronized.id} #view-dev-to-#{synchronized.id}[href='https://dev.to/alchemistdrops/synchronized-article-711'][target='_blank'][rel='noopener noreferrer']",
+               "View on DEV.to"
+             )
+    end
+
+    test "given a legacy DEV.to ID without a URL, when listed, then it reports publication without a publish button",
+         %{conn: conn} do
+      synchronized =
+        legacy_dev_to_post_fixture(%{title: "Legacy synchronization", dev_to_article_id: 712})
+
+      {:ok, view, _html} = live(conn, ~p"/admin/posts")
+
+      refute has_element?(view, "#publish-dev-to-#{synchronized.id}")
+
+      assert has_element?(
+               view,
+               "#dev-to-published-#{synchronized.id}",
+               "Published on DEV.to"
+             )
     end
 
     test "given a published post, when DEV.to accepts it, then the index reports publication",
@@ -157,7 +187,10 @@ defmodule AlchemistdropsWeb.PostLiveTest do
         assert conn.method == "POST"
         assert conn.request_path == "/api/articles"
 
-        Req.Test.json(conn, %{"id" => 812})
+        Req.Test.json(conn, %{
+          "id" => 812,
+          "url" => "https://dev.to/alchemistdrops/published-from-admin-812"
+        })
       end)
 
       {:ok, view, _html} = live(conn, ~p"/admin/posts")
@@ -168,6 +201,13 @@ defmodule AlchemistdropsWeb.PostLiveTest do
       |> render_click()
 
       assert has_element?(view, "#flash-info", "Article published on DEV.to")
+      refute has_element?(view, "#publish-dev-to-#{post.id}")
+
+      assert has_element?(
+               view,
+               "#view-dev-to-#{post.id}[href='https://dev.to/alchemistdrops/published-from-admin-812']",
+               "View on DEV.to"
+             )
     end
 
     test "given a published post, when DEV.to rejects it, then the index reports the failure",
