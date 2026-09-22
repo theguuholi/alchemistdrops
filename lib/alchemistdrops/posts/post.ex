@@ -61,6 +61,9 @@ defmodule Alchemistdrops.Posts.Post do
   @typedoc "Numeric DEV.to article identifier. Nil until the first successful cross-publication."
   @type dev_to_article_id :: pos_integer() | nil
 
+  @typedoc "Public DEV.to article URL. Nil until returned by a successful synchronization."
+  @type dev_to_article_url :: String.t() | nil
+
   @typedoc "Category name supplied by editorial forms. Nil when a category ID is used."
   @type category_name :: String.t() | nil
 
@@ -92,6 +95,7 @@ defmodule Alchemistdrops.Posts.Post do
           cover_image_url: cover_image_url(),
           cover_image_alt: cover_image_alt(),
           dev_to_article_id: dev_to_article_id(),
+          dev_to_article_url: dev_to_article_url(),
           language: language(),
           category_name: category_name(),
           category_id: category_id(),
@@ -114,6 +118,7 @@ defmodule Alchemistdrops.Posts.Post do
     field :cover_image_url, :string
     field :cover_image_alt, :string
     field :dev_to_article_id, :integer
+    field :dev_to_article_url, :string
     field :language, Ecto.Enum, values: [en: "en", pt_br: "pt-BR"], default: :en
     field :category_name, :string, virtual: true
 
@@ -213,15 +218,16 @@ defmodule Alchemistdrops.Posts.Post do
 
       iex> changeset = Alchemistdrops.Posts.Post.dev_to_publication_changeset(
       ...>   %Alchemistdrops.Posts.Post{},
-      ...>   123
+      ...>   123,
+      ...>   "https://dev.to/alchemistdrops/otp-in-production-123"
       ...> )
-      iex> changeset.changes.dev_to_article_id
-      123
+      iex> {changeset.changes.dev_to_article_id, changeset.changes.dev_to_article_url}
+      {123, "https://dev.to/alchemistdrops/otp-in-production-123"}
   """
-  @spec dev_to_publication_changeset(t(), pos_integer()) :: Ecto.Changeset.t(t())
-  def dev_to_publication_changeset(post, article_id) do
+  @spec dev_to_publication_changeset(t(), pos_integer(), String.t()) :: Ecto.Changeset.t(t())
+  def dev_to_publication_changeset(post, article_id, article_url) do
     post
-    |> change(dev_to_article_id: article_id)
+    |> change(dev_to_article_id: article_id, dev_to_article_url: article_url)
     |> unique_constraint(:dev_to_article_id)
   end
 

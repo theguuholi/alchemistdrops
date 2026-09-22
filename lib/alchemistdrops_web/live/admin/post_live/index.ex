@@ -42,8 +42,11 @@ defmodule AlchemistdropsWeb.Admin.PostLive.Index do
     canonical_url = url(~p"/blog/#{post.slug}")
 
     case Posts.publish_to_dev(post, canonical_url) do
-      {:ok, _post} ->
-        {:noreply, put_flash(socket, :info, "Article published on DEV.to")}
+      {:ok, synchronized} ->
+        {:noreply,
+         socket
+         |> stream_insert(:posts, synchronized)
+         |> put_flash(:info, "Article published on DEV.to")}
 
       {:error, reason} ->
         Logger.error("Failed to publish post #{post.id} to DEV.to: #{inspect(reason)}")

@@ -240,14 +240,25 @@ defmodule Alchemistdrops.PostsTest do
       post = post_fixture(%{title: "Distributed article", tag_names: "Elixir, OTP"})
 
       Req.Test.expect(:dev_to, fn conn ->
-        Req.Test.json(conn, %{"id" => 991})
+        Req.Test.json(conn, %{
+          "id" => 991,
+          "url" => "https://dev.to/alchemistdrops/distributed-article-991"
+        })
       end)
 
       assert {:ok, synchronized} =
                Posts.publish_to_dev(post, "https://alchemistdrops.com/blog/#{post.slug}")
 
       assert synchronized.dev_to_article_id == 991
-      assert Posts.get_post!(post.id).dev_to_article_id == 991
+
+      assert synchronized.dev_to_article_url ==
+               "https://dev.to/alchemistdrops/distributed-article-991"
+
+      persisted = Posts.get_post!(post.id)
+      assert persisted.dev_to_article_id == 991
+
+      assert persisted.dev_to_article_url ==
+               "https://dev.to/alchemistdrops/distributed-article-991"
     end
 
     test "given a DEV.to failure, when publish_to_dev/2 runs, then it leaves the remote identity unchanged" do
@@ -257,7 +268,9 @@ defmodule Alchemistdrops.PostsTest do
       assert {:error, :request_failed} =
                Posts.publish_to_dev(post, "https://alchemistdrops.com/blog/#{post.slug}")
 
-      assert Posts.get_post!(post.id).dev_to_article_id == nil
+      persisted = Posts.get_post!(post.id)
+      assert persisted.dev_to_article_id == nil
+      assert persisted.dev_to_article_url == nil
     end
 
     test "given a stale post struct, when another sync already stored an ID, then publish_to_dev/2 updates instead of creating" do
@@ -271,7 +284,10 @@ defmodule Alchemistdrops.PostsTest do
         assert conn.method == "PUT"
         assert conn.request_path == "/api/articles/404"
 
-        Req.Test.json(conn, %{"id" => 404})
+        Req.Test.json(conn, %{
+          "id" => 404,
+          "url" => "https://dev.to/alchemistdrops/stale-distribution-state-404"
+        })
       end)
 
       assert {:ok, synchronized} =
@@ -281,6 +297,9 @@ defmodule Alchemistdrops.PostsTest do
                )
 
       assert synchronized.dev_to_article_id == 404
+
+      assert synchronized.dev_to_article_url ==
+               "https://dev.to/alchemistdrops/stale-distribution-state-404"
     end
 
     test "create_post/1 reuses category and tag names case-insensitively" do

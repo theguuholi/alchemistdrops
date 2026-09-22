@@ -59,10 +59,17 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
                  }
                }
 
-        Req.Test.json(conn, %{"id" => 731})
+        Req.Test.json(conn, %{
+          "id" => 731,
+          "url" => "https://dev.to/alchemistdrops/otp-em-producao-731"
+        })
       end)
 
-      assert {:ok, 731} = DevToPublisher.sync_article(post, canonical_url)
+      assert {:ok,
+              %{
+                article_id: 731,
+                article_url: "https://dev.to/alchemistdrops/otp-em-producao-731"
+              }} = DevToPublisher.sync_article(post, canonical_url)
     end
 
     test "given a previously synchronized article, when synchronized, then it updates the stored DEV.to article" do
@@ -72,10 +79,17 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
         assert conn.method == "PUT"
         assert conn.request_path == "/api/articles/731"
 
-        Req.Test.json(conn, %{"id" => 731})
+        Req.Test.json(conn, %{
+          "id" => 731,
+          "url" => "https://dev.to/alchemistdrops/otp-em-producao-731"
+        })
       end)
 
-      assert {:ok, 731} =
+      assert {:ok,
+              %{
+                article_id: 731,
+                article_url: "https://dev.to/alchemistdrops/otp-em-producao-731"
+              }} =
                DevToPublisher.sync_article(
                  post,
                  "https://alchemistdrops.com/blog/otp-em-producao"
@@ -92,6 +106,18 @@ defmodule Alchemistdrops.Posts.DevToPublisherTest do
       assert {:error, :invalid_response} =
                DevToPublisher.sync_article(
                  post,
+                 "https://alchemistdrops.com/blog/otp-em-producao"
+               )
+    end
+
+    test "given a success response with a non-DEV URL, when synchronized, then it rejects the response" do
+      Req.Test.expect(@dev_to_stub, fn conn ->
+        Req.Test.json(conn, %{"id" => 731, "url" => "https://example.com/not-dev"})
+      end)
+
+      assert {:error, :invalid_response} =
+               DevToPublisher.sync_article(
+                 published_post(),
                  "https://alchemistdrops.com/blog/otp-em-producao"
                )
     end

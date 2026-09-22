@@ -46,7 +46,7 @@
           <.link navigate={~p"/admin/posts/#{post}"} class="link link-primary">View</.link>
           <.link navigate={~p"/admin/posts/#{post}/edit"} class="link link-primary">Edit</.link>
           <button
-            :if={post.status == :published}
+            :if={post.status == :published and is_nil(post.dev_to_article_id)}
             id={"publish-dev-to-#{post.id}"}
             type="button"
             phx-click="publish-dev-to"
@@ -56,6 +56,23 @@
           >
             Publish on DEV.to
           </button>
+          <.link
+            :if={post.dev_to_article_id && post.dev_to_article_url}
+            id={"view-dev-to-#{post.id}"}
+            href={post.dev_to_article_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="link link-primary"
+          >
+            View on DEV.to
+          </.link>
+          <span
+            :if={post.dev_to_article_id && is_nil(post.dev_to_article_url)}
+            id={"dev-to-published-#{post.id}"}
+            class="text-sm text-base-content/70"
+          >
+            Published on DEV.to
+          </span>
           <.link
             phx-click={JS.push("delete", value: %{id: post.id}) |> hide("##{id}")}
             data-confirm="Are you sure?"

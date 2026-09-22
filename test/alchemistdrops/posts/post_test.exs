@@ -12,11 +12,13 @@ defmodule Alchemistdrops.Posts.PostTest do
       changeset =
         Post.draft_changeset(post, %{
           title: "Protected distribution fields",
-          dev_to_article_id: 123
+          dev_to_article_id: 123,
+          dev_to_article_url: "https://dev.to/alchemistdrops/protected-123"
         })
 
       assert post.dev_to_article_id == nil
       refute Map.has_key?(changeset.changes, :dev_to_article_id)
+      refute Map.has_key?(changeset.changes, :dev_to_article_url)
     end
 
     test "given a title, when a draft is validated, then defaults and slug are present" do
@@ -83,12 +85,20 @@ defmodule Alchemistdrops.Posts.PostTest do
     end
   end
 
-  describe "dev_to_publication_changeset/2" do
-    test "given a DEV.to article ID, when changed, then it records only that identity" do
-      changeset = Post.dev_to_publication_changeset(%Post{}, 123)
+  describe "dev_to_publication_changeset/3" do
+    test "given a DEV.to article identity, when changed, then it records only trusted fields" do
+      changeset =
+        Post.dev_to_publication_changeset(
+          %Post{},
+          123,
+          "https://dev.to/alchemistdrops/published-123"
+        )
 
       assert changeset.valid?
       assert changeset.changes.dev_to_article_id == 123
+
+      assert changeset.changes.dev_to_article_url ==
+               "https://dev.to/alchemistdrops/published-123"
     end
   end
 end

@@ -553,14 +553,14 @@ defmodule Alchemistdrops.Posts do
       |> Repo.preload([:tags])
 
     case DevToPublisher.sync_article(post, canonical_url) do
-      {:ok, article_id} -> persist_dev_to_publication(post, article_id)
+      {:ok, remote_article} -> persist_dev_to_publication(post, remote_article)
       {:error, reason} -> Repo.rollback(reason)
     end
   end
 
-  defp persist_dev_to_publication(post, article_id) do
+  defp persist_dev_to_publication(post, %{article_id: article_id, article_url: article_url}) do
     post
-    |> Post.dev_to_publication_changeset(article_id)
+    |> Post.dev_to_publication_changeset(article_id, article_url)
     |> Repo.update()
     |> case do
       {:ok, synchronized} -> synchronized

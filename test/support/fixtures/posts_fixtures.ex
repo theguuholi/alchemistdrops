@@ -74,6 +74,35 @@ defmodule Alchemistdrops.PostsFixtures do
   end
 
   @doc """
+  Generate a post already published on DEV.to.
+  """
+  def dev_to_post_fixture(attrs \\ %{}) do
+    article_id = Map.get(attrs, :dev_to_article_id, System.unique_integer([:positive]))
+
+    article_url =
+      Map.get(attrs, :dev_to_article_url, "https://dev.to/alchemistdrops/post-#{article_id}")
+
+    attrs
+    |> Map.drop([:dev_to_article_id, :dev_to_article_url])
+    |> post_fixture()
+    |> Post.dev_to_publication_changeset(article_id, article_url)
+    |> Repo.update!()
+  end
+
+  @doc """
+  Generate a legacy post with a DEV.to ID but no stored public URL.
+  """
+  def legacy_dev_to_post_fixture(attrs \\ %{}) do
+    article_id = Map.get(attrs, :dev_to_article_id, System.unique_integer([:positive]))
+
+    attrs
+    |> Map.delete(:dev_to_article_id)
+    |> post_fixture()
+    |> Ecto.Changeset.change(dev_to_article_id: article_id)
+    |> Repo.update!()
+  end
+
+  @doc """
   Generate a post category.
   """
   def category_fixture(attrs \\ %{}) do
